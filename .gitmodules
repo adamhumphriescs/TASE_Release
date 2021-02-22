@@ -1,0 +1,28 @@
+[submodule "llvm"]
+	path = llvm
+	url = https://github.com/adamhumphriescs/TASE_LLVM_MIRROR.git
+	branch = tase_release
+[submodule "klee"]
+	path = klee
+	url = https://github.com/adamhumphriescs/TASE_KLEE.git
+	branch = tase_release
+[submodule "minisat"]
+	path = minisat
+	url = https://github.com/adamhumphriescs/TASE_minisat.git
+	branch = tase_release
+[submodule "stp"]
+	path = stp
+	url = https://github.com/adamhumphriescs/TASE_STP.git
+	branch = tase_release
+[submodule "clang"]
+	path = clang
+	url = https://github.com/llvm-mirror/clang.git
+	branch = release_80
+[submodule "openssl"]
+	path = openssl
+	url = https://github.com/adamhumphriescs/TASE_OpenSSL.git
+	branch = tase_release
+[submodule "musl"]
+	path = musl
+  url = https://github.com/adamhumphriescs/TASE_musl.git
+  branch = tase_release

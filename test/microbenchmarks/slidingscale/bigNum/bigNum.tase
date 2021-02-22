@@ -1,0 +1,5 @@
+begin_target_inner
+runTest
+initializeNums
+initializeAllOnes
+initializeAllZeros

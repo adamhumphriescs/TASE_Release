@@ -1,0 +1,6 @@
+begin_target_inner
+cksum
+fadvise
+strcmp
+umaxtostr
+xset_binary_mode

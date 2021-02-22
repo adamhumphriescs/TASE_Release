@@ -1,0 +1,15 @@
+*.ll
+*.bc
+*.dump
+*.log
+*.vars
+*.s
+!Makefile
+*.ref
+fruit_basket/fruit_basket
+aes/aes
+klee
+fruit.cpp
+*.interp.cpp
+*.interp.bc
+*.interp.ll
