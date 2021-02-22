@@ -10,7 +10,7 @@ STANDARD_ARGS=" -use-forked-solver=FALSE -rewrite-equalities=FALSE -use-independ
 
 #Concrete Overhead Tests
 
-echo "Benchmark", "Time(s)", "Run" > MicroLog.txt
+echo "Benchmark", "Time(s)", "Run" > ConcOverheadLog.txt
 
 
 #-------------------------------------------
@@ -26,7 +26,7 @@ BIGNUM_EVAL_CMD="./klee -project=bigNum $STANDARD_ARGS -symIndex=-1 -numEntries=
 echo "Running bigNum microbenchmark"
 for j in {0..4..1}
 do
-    echo "bigNum", `(time ( $BIGNUM_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> MicroLog.txt 2>&1
+    echo "bigNum", `(time ( $BIGNUM_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> ConcOverheadLog.txt 2>&1
 done
 
 echo "" > proj_defs.h
@@ -41,7 +41,7 @@ FACTOR_EVAL_CMD="./klee -project=factor $STANDARD_ARGS factor.interp.bc"
 echo "Running factor microbenchmark"
 for j in {0..4..1}
 do
-    echo "Factor", `(time ( $FACTOR_EVAL_CMD > /dev/null 2>&1 )) |& cat `,$j >> MicroLog.txt 2>&1
+    echo "Factor", `(time ( $FACTOR_EVAL_CMD > /dev/null 2>&1 )) |& cat `,$j >> ConcOverheadLog.txt 2>&1
 done
 
 #--------------------------------------------
@@ -55,7 +55,7 @@ TSORT_EVAL_CMD="./klee -project=tsort $STANDARD_ARGS tsort.interp.bc"
 echo "Running tsort microbenchmark"
 for j in {0..4..1}
 do
-    echo "Tsort", `(time ( $TSORT_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> MicroLog.txt 2>&1
+    echo "Tsort", `(time ( $TSORT_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> ConcOverheadLog.txt 2>&1
 done
 
 #-------------------------------------------
@@ -69,7 +69,7 @@ CKSUM_EVAL_CMD="./klee -project=cksum $STANDARD_ARGS cksum.interp.bc"
 echo "Running cksum microbenchmark"
 for j in {0..4..1}
 do
-    echo "Cksum", `(time ( $CKSUM_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> MicroLog.txt 2>&1
+    echo "Cksum", `(time ( $CKSUM_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> ConcOverheadLog.txt 2>&1
 done
 
 #-------------------------------------------
@@ -83,7 +83,7 @@ SHA256_EVAL_CMD="./klee -project=sha256 $STANDARD_ARGS sha256.interp.bc"
 echo "Running sha256 microbenchmark"
 for j in {0..4..1}
 do
-    echo "sha256", `(time ( $SHA256_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> MicroLog.txt 2>&1
+    echo "sha256", `(time ( $SHA256_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> ConcOverheadLog.txt 2>&1
 done
 
 #-------------------------------------------
@@ -97,5 +97,42 @@ MD5SUM_EVAL_CMD="./klee -project=md5sum $STANDARD_ARGS md5sum.interp.bc"
 echo "Running md5sum microbenchmark"
 for j in {0..4..1}
 do
-    echo "md5sum", `(time ( $MD5SUM_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> MicroLog.txt 2>&1
+    echo "md5sum", `(time ( $MD5SUM_EVAL_CMD > /dev/null 2>&1 )) |& cat `, $j >> ConcOverheadLog.txt 2>&1
 done
+
+
+#-------------------------------------------
+#Run the sliding scale microbenchmark
+echo "Running sliding scale microbenchmark"
+echo "#define TASE_BIGNUM" > proj_defs.h
+
+cd $MICRO_BENCH_PATH/slidingscale/bigNum
+./makeproj.sh
+cd $TEST_PATH
+./argsProjectLinkTase.sh bigNum $MICRO_BENCH_PATH/slidingscale/bigNum
+
+rm -f bigNumResultsTASE.csv
+
+#ID is 0 for TASE, 1 for KLEE, 2 for S2E
+echo "symIndex, time_s, ID" > TASEBigNumLog
+
+for j in {0..4..1}
+do
+
+    for i in {0..50000..1000}
+    do
+	        echo $i, `   (time( ./klee -project=bigNum -optimizeOvershiftChecks=TRUE -optimizeConstMemOps=TRUE  -use-forked-solver=FALSE -rewrite-equalities=FALSE -use-independent-solver=TRUE  -taseDebug=FALSE  -testType=VERIFICATION -taseManager=TRUE -execMode=MIXED  -use-cex-cache=TRUE -use-cache=FALSE   -killFlagsHack=TRUE -skipFree=FALSE -enableBounceback=TRUE  -measureTime=FALSE -retryMax=1 -tranBBMax=16 -QRMaxWorkers=7 -modelDebug=FALSE -useCMS4=TRUE  -output-source=false -output-stats=false -output-istats=false    -use-call-paths=false -use-legacy-independent-solver=TRUE -UseCanonicalization=TRUE -useXOROpt=TRUE -use-fast-cex-solver=FALSE -noLog=TRUE -symIndex=$i -numEntries=50000 bigNum.interp.bc >  /dev/null 2>&1) ) |&  cat `, 0 >> TASEBigNumLog 2>&1
+
+
+    done
+done
+
+
+echo "" > proj_defs.h
+#---------------------------------
+#Cleanup!
+
+rm -rf klee-out-*
+rm -rf klee-last
+rm *.interp.*
+rm *.vars
