@@ -3,6 +3,10 @@
 //the default 32-bit "0".
 #include <stdio.h>
 
+void tase_make_symbolic (void * ptr, unsigned long size, const char * name) __attribute__ ((optnone)) {
+  return;
+}
+
 void * malloc_tase(long int size) {
   return 0LL;
 }

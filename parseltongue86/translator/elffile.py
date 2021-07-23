@@ -101,7 +101,7 @@ class ELFFile(collections.abc.Mapping):
         result = self._regex_function_header.match(line)
         if result:
           fname = result.group(1)
-          if self._filter_functions is None or any(fname.startswith(f) for f in self._filter_functions):
+          if self._filter_functions is None or any(fname == f for f in self._filter_functions):
             if fname in self._function_asm:
               fname = '%s duplicate %d' % (fname, dupname_ctr)
               dupname_ctr += 1

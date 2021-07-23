@@ -518,7 +518,7 @@ class Instruction:
     elif self.op == 'cmc':
       self._emit_cmc()
     else:
-      raise ValueError("Encountered an operation that we do not handle : %s" % self.original)
+      raise ValueError("Encountered an instruction that we do not handle : %s" % self.original)
       # self.out.write('  // Unimplemented\n')
     if (Type == 0 or Type == 3):
       self._emit_function_epilog()
