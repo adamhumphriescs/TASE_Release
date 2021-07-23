@@ -327,11 +327,11 @@ setup_musl () {
   )
 }
 
-setup_basic_tools
+#setup_basic_tools
 #setup_alternatives
-setup_klee_prereqs
-setup_klee_solver
-setup_tsx_llvm
-setup_musl
-setup_openssl
+#setup_klee_prereqs
+#setup_klee_solver
+#setup_tsx_llvm
+#setup_musl
+#setup_openssl
 setup_klee

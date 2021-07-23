@@ -44,6 +44,11 @@ do
     cp $MUSL_PATH/obj/src/network/$NETLIB.o ./build/
 done
 
+#MATH
+cp $MUSL_PATH/obj/src/math/*.o ./build/
+cp $MUSL_PATH/obj/src/fenv/fenv.o ./build/
+cp $MUSL_PATH/obj/src/fenv/fesetround.o ./build/
+
 rm -f libtasec.a
 
 ar -r libtasec.a ./build/*.o

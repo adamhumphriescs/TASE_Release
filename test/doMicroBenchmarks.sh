@@ -20,7 +20,7 @@ echo "#define TASE_BIGNUM" > proj_defs.h
 cd $MICRO_BENCH_PATH/slidingscale/bigNum
 ./makeproj.sh
 cd $TEST_PATH
-./argsProjectLinkTase.sh bigNum $MICRO_BENCH_PATH/slidingscale/bigNum  
+./argsProjectLinkTase.sh bigNum $MICRO_BENCH_PATH/slidingscale/bigNum  .
 
 BIGNUM_EVAL_CMD="./klee -project=bigNum $STANDARD_ARGS -symIndex=-1 -numEntries=10000000 bigNum.interp.bc"
 echo "Running bigNum microbenchmark"
@@ -35,7 +35,7 @@ echo "" > proj_defs.h
 cd $MICRO_BENCH_PATH/concrete/factor
 ./makeproj.sh
 cd $TEST_PATH
-./argsProjectLinkTase.sh factor $MICRO_BENCH_PATH/concrete/factor
+./argsProjectLinkTase.sh factor $MICRO_BENCH_PATH/concrete/factor .
 
 FACTOR_EVAL_CMD="./klee -project=factor $STANDARD_ARGS factor.interp.bc"
 echo "Running factor microbenchmark"
@@ -49,7 +49,7 @@ done
 cd $MICRO_BENCH_PATH/concrete/tsort
 ./makeproj.sh
 cd $TEST_PATH
-./argsProjectLinkTase.sh tsort $MICRO_BENCH_PATH/concrete/tsort
+./argsProjectLinkTase.sh tsort $MICRO_BENCH_PATH/concrete/tsort .
 
 TSORT_EVAL_CMD="./klee -project=tsort $STANDARD_ARGS tsort.interp.bc"
 echo "Running tsort microbenchmark"
@@ -63,7 +63,7 @@ done
 cd $MICRO_BENCH_PATH/concrete/cksum
 ./makeproj.sh
 cd $TEST_PATH
-./argsProjectLinkTase.sh cksum $MICRO_BENCH_PATH/concrete/cksum
+./argsProjectLinkTase.sh cksum $MICRO_BENCH_PATH/concrete/cksum .
 
 CKSUM_EVAL_CMD="./klee -project=cksum $STANDARD_ARGS cksum.interp.bc"
 echo "Running cksum microbenchmark"
@@ -77,7 +77,7 @@ done
 cd $MICRO_BENCH_PATH/concrete/sha256
 ./makeproj.sh
 cd $TEST_PATH
-./argsProjectLinkTase.sh sha256 $MICRO_BENCH_PATH/concrete/sha256
+./argsProjectLinkTase.sh sha256 $MICRO_BENCH_PATH/concrete/sha256 .
 
 SHA256_EVAL_CMD="./klee -project=sha256 $STANDARD_ARGS sha256.interp.bc"
 echo "Running sha256 microbenchmark"
@@ -91,7 +91,7 @@ done
 cd $MICRO_BENCH_PATH/concrete/md5sum
 ./makeproj.sh
 cd $TEST_PATH
-./argsProjectLinkTase.sh md5sum $MICRO_BENCH_PATH/concrete/md5sum
+./argsProjectLinkTase.sh md5sum $MICRO_BENCH_PATH/concrete/md5sum .
 
 MD5SUM_EVAL_CMD="./klee -project=md5sum $STANDARD_ARGS md5sum.interp.bc"
 echo "Running md5sum microbenchmark"
@@ -109,7 +109,7 @@ echo "#define TASE_BIGNUM" > proj_defs.h
 cd $MICRO_BENCH_PATH/slidingscale/bigNum
 ./makeproj.sh
 cd $TEST_PATH
-./argsProjectLinkTase.sh bigNum $MICRO_BENCH_PATH/slidingscale/bigNum
+./argsProjectLinkTase.sh bigNum $MICRO_BENCH_PATH/slidingscale/bigNum .
 
 rm -f bigNumResultsTASE.csv
 

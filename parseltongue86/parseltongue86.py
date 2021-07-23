@@ -1,20 +1,29 @@
 import logging
 import operator
 import sys
+import os
 from translator import elffile
 
 
 def main():
   logging.basicConfig(level=logging.INFO)
-  assert(len(sys.argv) > 1)
+  assert(len(sys.argv) > 3)
 
   # Required argument 1 - path to binary to analyze
   target_binary = sys.argv[1]
-  # Optional argument 2 - path to file that contains the names of functions
+  # Argument 2 - path to file that contains the names of functions
   # for which parseltongue will gen IR.
-  # If this is not provided, a ".tase" file at the target binary's location is chosen.
-  functions_file = sys.argv[2] if len(sys.argv) > 2 else target_binary + '.tase'
+  functions_file = sys.argv[2] 
 
+  #Arg for root tase dir for use in "include" statement later
+  #e.g., /TASE/
+  tase_root_dir = sys.argv[3]
+  
+  #tase_root_dir = os.environ.get('TASE_ROOT_DIR')
+  #logging.info('tase_root_dir is %s ' % tase_root_dir)
+  #if tase_root_dir ==  'None':
+  #  raise ValueError('Unable to find TASE_ROOT_DIR environment variable.')
+  
   try:
     with open(functions_file, 'r') as f:
       filters = f.readlines()
@@ -48,7 +57,10 @@ def main():
   # md5/size/time-of-modification of input binaries.
 #  print('#include <cinttypes>')
   print('#include <stdint.h>')
-  print('#include "tase/tase_interp_alt.h"')
+
+  include_string = '#include "' + tase_root_dir + '/test/tase/include/tase/tase_interp_alt.h"'
+  print(include_string)
+  #print('#include "/test/tase/include/tase/tase_interp_alt.h"')
 
   print('void dummyMain () { ')
   print('return; } ')

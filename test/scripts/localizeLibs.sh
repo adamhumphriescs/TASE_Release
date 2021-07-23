@@ -33,7 +33,12 @@ WEAKS_AND_STATICS=" __isspace __bswap_32 __bswap_16 __isalnum_l isalnum_l __isxd
 tz  shl  shr  sift  trinkle __strcasec\
 mp_l strcasecmp_l  __strncasecmp_l  strncasecmp_l threebyte_strstr  twobyte_strstr twoway_strstr __tolower_l  tolower_l "
 
-for LIB in $STRLIBS $CTLIBS $STDLIBS $NETLIBS $WEAKS_AND_STATICS
+cat $LIBTASEC_PATH/math.syms | while read LIB
+do
+objcopy --localize-symbol=$LIB $BUILD_DIR/everything.o
+done
+
+for LIB in $STRLIBS $CTLIBS $STDLIBS $NETLIBS $WEAKS_AND_STATICS $MATHSYMS
 do
     objcopy --localize-symbol=$LIB $BUILD_DIR/everything.o
-    done
+done

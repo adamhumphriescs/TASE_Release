@@ -1,4 +1,6 @@
 set -e
+source ~/.bashrc
+
 TASE_CLANG=../../../../install_root/bin/clang
 TASE_DIR=../../../../test/tase
 KLEE_LIB_BUILD_DIR=../../../../build_klee/lib/
@@ -34,8 +36,13 @@ cp $TASE_DIR/springboard.o ./tmp/
 cp $TASE_DIR/log.o ./tmp/
 cp $TASE_DIR/modeled/exit_tase.o ./tmp/
 #--------------------------------------------
+#Float emulation
+$TASE_ROOT_DIR/compiler-rt_soft_float/buildSF.sh ./tmp/
+
+
+
 cd ./tmp/
-ar -r proj.a everything.o springboard.o log.o common.o  exit_tase.o
+ar -r proj.a everything.o springboard.o log.o common.o  exit_tase.o sf_native_routines.o
 cd ..
 cp ./tmp/proj.a .
 cp ./tmp/proj.a $KLEE_LIB_BUILD_DIR
