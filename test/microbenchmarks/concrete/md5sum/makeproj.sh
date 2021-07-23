@@ -15,7 +15,7 @@ cp md5sum.o ./tmp/
 cp harness.o ./tmp/
 
 #Tase mem function traps, e.g. malloc_tase, free_tase
-$TASE_CLANG -c -O1 $MODELED_FN_ARG $TASE_DIR/traps/mem_traps.c -o ./tmp/mem_traps.o
+$TASE_CLANG -c $NO_FLOAT_ARG -O0 $MODELED_FN_ARG $TASE_DIR/traps/tase_shims.c -o ./tmp/tase_shims.o
 
 #LIBC----------------------------------------------
 #Grab libTaseC

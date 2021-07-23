@@ -21,7 +21,7 @@ cp mini-gmp.o ./tmp/
 cp harness.o ./tmp/
 
 #Tase mem function traps, e.g. malloc_tase, free_tase
-$TASE_CLANG -c -O1 -mllvm -x86-tase-modeled-functions=$TASE_DIR/include/tase/core_modeled.h $TASE_DIR/traps/mem_traps.c -o ./tmp/mem_traps.o
+$TASE_CLANG -c -O0 $NO_FLOAT_ARG $MODELED_FN_ARG $TASE_DIR/traps/tase_shims.c -o ./tmp/tase_shims.o
 
 #LIBC----------------------------------------------
 #Grab libTaseC
