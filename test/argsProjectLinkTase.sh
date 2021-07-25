@@ -17,14 +17,14 @@ TASE_RUN_DIR=$3
 
 make -j $NCPU -C $TASE_PATH/build_klee/ 
 
-cp $TASE_PATH/build_klee/bin/klee $TASE_RUN_DIR
+cp $TASE_PATH/build_klee/bin/klee $TASE_RUN_DIR/TASE
 
 #Run preprocessing in TASE to dump cartridge info out once our static libraries are linked in at fixed addresses
-./klee -tasePreProcess=TRUE 
+./TASE -tasePreProcess=TRUE 
 
 #Note -- replaced third arg of $TASE_RUN_DIR/$PROJECT.interp.nop with root tase dir 07/23/2021.  
-python3 $TASE_PATH/parseltongue86/parseltongue86.py $TASE_RUN_DIR/klee $PROJECT_PATH/$PROJECT.tase $TASE_PATH  > $TASE_RUN_DIR/$PROJECT.interp.cpp 
-python3 $TASE_PATH/parseltongue86/rosettastone.py $TASE_RUN_DIR/klee $PROJECT_PATH/proj.a > $TASE_RUN_DIR/tmp.vars
+python3 $TASE_PATH/parseltongue86/parseltongue86.py $TASE_RUN_DIR/TASE $PROJECT_PATH/$PROJECT.tase $TASE_PATH  > $TASE_RUN_DIR/$PROJECT.interp.cpp 
+python3 $TASE_PATH/parseltongue86/rosettastone.py $TASE_RUN_DIR/TASE $PROJECT_PATH/proj.a > $TASE_RUN_DIR/tmp.vars
 
 sort tmp.vars | uniq > $TASE_RUN_DIR/$PROJECT.vars
 
