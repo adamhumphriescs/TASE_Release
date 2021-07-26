@@ -7,3 +7,7 @@ decode
 init64
 md5
 md5sum
+memset
+strcpy
+strlen
+__stpcpy
