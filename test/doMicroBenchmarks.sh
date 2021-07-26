@@ -28,8 +28,6 @@ echo "Benchmark", "Time(s)", "Run" > ConcreteOverheadMicrobenchmarksResults.txt
 
 rm -f ConcOverheadBuildLog.txt
 
->> $TEST_PATH/ConcOverheadBuildLog.txt 2>&1
-
 #-------------------------------------------
 #bigNum
 echo "#define TASE_BIGNUM" > proj_defs.h
@@ -164,5 +162,5 @@ echo "Microbenchmarks completed.  Results are in ConcreteOverheadMicrobenchmarks
 
 rm -rf klee-out-*
 rm -rf klee-last
-rm *.interp.*
-rm *.vars
+rm -f *.interp.*
+rm -f *.vars
