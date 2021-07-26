@@ -1,3 +1,11 @@
+Note for TASE -- This directory contains some of the files from the
+compiler-RT project.  We're using it in TASE to get softfloat function
+implementations (e.g., __adddf3).  We already have a large number of
+dependencies needed to build TASE, but will add a direct link to
+the Compiler-RT repo in the future if there's an easy way to only
+pull in the code we need.
+
+================================
 Compiler-RT
 ================================
 
