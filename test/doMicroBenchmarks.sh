@@ -6,7 +6,7 @@ MICRO_BENCH_PATH=$TEST_PATH/microbenchmarks
 #Format builtin "time" shell command to output real time in seconds
 TIMEFORMAT='%R'
 
-STANDARD_ARGS=" -use-forked-solver=FALSE -rewrite-equalities=FALSE -use-independent-solver=TRUE  -taseDebug=FALSE  -testType=VERIFICATION -taseManager=TRUE -execMode=MIXED  -use-cex-cache=TRUE -use-cache=FALSE   -killFlagsHack=TRUE -skipFree=FALSE -enableBounceback=TRUE  -measureTime=FALSE -retryMax=1 -tranBBMax=16 -QRMaxWorkers=7 -modelDebug=FALSE -useCMS4=TRUE  -output-source=false -output-stats=false -output-istats=false -disable-opt   -use-call-paths=false -use-legacy-independent-solver=TRUE -UseCanonicalization=TRUE -useXOROpt=TRUE -use-fast-cex-solver=FALSE -noLog=TRUE"
+STANDARD_ARGS=" -retryMax=1 -tranBBMax=16  -disable-opt  -noLog=TRUE"
 
 #Concrete Overhead Tests
 
@@ -121,7 +121,7 @@ do
 
     for i in {0..50000..1000}
     do
-	        echo $i, `   (time( ./TASE -project=bigNum -optimizeOvershiftChecks=TRUE -optimizeConstMemOps=TRUE  -use-forked-solver=FALSE -rewrite-equalities=FALSE -use-independent-solver=TRUE  -taseDebug=FALSE  -testType=VERIFICATION -taseManager=TRUE -execMode=MIXED  -use-cex-cache=TRUE -use-cache=FALSE   -killFlagsHack=TRUE -skipFree=FALSE -enableBounceback=TRUE  -measureTime=FALSE -retryMax=1 -tranBBMax=16 -QRMaxWorkers=7 -modelDebug=FALSE -useCMS4=TRUE  -output-source=false -output-stats=false -output-istats=false    -use-call-paths=false -use-legacy-independent-solver=TRUE -UseCanonicalization=TRUE -useXOROpt=TRUE -use-fast-cex-solver=FALSE -noLog=TRUE -symIndex=$i -numEntries=50000 bigNum.interp.bc >  /dev/null 2>&1) ) |&  cat `, 0 >> TASEBigNumLog 2>&1
+	        echo $i, `   (time( ./TASE -project=bigNum  -optimizeConstMemOps=TRUE  -use-forked-solver=FALSE -rewrite-equalities=FALSE -use-independent-solver=TRUE   -use-cex-cache=TRUE -use-cache=FALSE  -retryMax=1 -tranBBMax=16 -modelDebug=FALSE -useCMS4=TRUE  -use-legacy-independent-solver=TRUE -UseCanonicalization=TRUE  -noLog=TRUE -symIndex=$i -numEntries=50000 bigNum.interp.bc >  /dev/null 2>&1) ) |&  cat `, 0 >> TASEBigNumLog 2>&1
 
 
     done
