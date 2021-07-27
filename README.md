@@ -1,6 +1,4 @@
-# TASE_Release
-
-#TASE: Transactionally-Assisted Symbolic Execution
+# TASE: Transactionally-Assisted Symbolic Execution
 
 TASE is a symbolic execution tool.  TASE, short for "Transactionally-Assisted Symbolic Execution", uses 
 specialized hardware (Intel's TSX instructions) to speculatively execute code natively and concretely within a
@@ -18,7 +16,7 @@ but its core symbolic execution engine should be capable of the task.
 TASE requires several other code bases to build, including the llvm toolchain, klee, musl's libc implementation, 
 and others.  Because of this, we provide TASE with and dockerfile and recommend that it be used within a container.
 
-#Requirements
+# Requirements
 TASE can only run on a machine with support for Intel's Restricted Transactional Memory (RTM) instructions (i.e., XBEGIN, XEND, XABORT).  
 You can determine if your processor supports the XBEGIN/XEND/XABORT instructions by consulting the Intel processor 
 documentation at https://ark.intel.com/content/www/us/en/ark.html or looking for the 'rtm' flag in /proc/cpuinfo.  
@@ -26,7 +24,7 @@ TASE will not run on a machine with a non-Intel (e.g., AMD) processor.
 
 TASE can also only run on Linux-based operating systems.  Specifically, it has only been tested on Ubuntu 20.04.2.
 
-#Setup
+# Setup
 
 TASE is currently configured to run in a container due to hardcoded file paths.  Input the commands below to copy the source repo and
 build the docker container.
@@ -50,6 +48,6 @@ $ cd /TASE/test
 $ ./doMicrobenchmarks.sh
 ```
 
-#Using TASE
+# Using TASE
 
 More to come here later this week.
