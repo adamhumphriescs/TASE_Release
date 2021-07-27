@@ -4,13 +4,13 @@ TASE is a symbolic execution tool.  TASE, short for "Transactionally-Assisted Sy
 specialized hardware (Intel's TSX instructions) to speculatively execute code natively and concretely within a
 transaction during symbolic execution.  If symbolic data is encountered during the speculative concrete 
 execution, the transaction rolls back and control is given to a KLEE-based interpreter which handles operations
-on symbolic data.  See "Requirments" below for details on the necessary hardware and operating system needed to test TASE.
+on symbolic data.  See "Requirements" below for details on the necessary hardware and operating system needed to test TASE.
 The NDSS paper also has more specifics.
 
 TASE was originally created for expediting the speed of a special use case of symbolic execution called behavioral 
 verification.  Briefly, behavioral verification is a technique for inspecting network traffic and determining 
 if it could have been produced by a known client implementation by symbolically executing the client and marking its
-uknown client-side inputs as symbolic; see X Y Z for more details.  TASE is not specifically tooled for bugfinding,
+unknown client-side inputs as symbolic; see the TASE paper for more details.  TASE is not specifically tooled for bugfinding,
 but its core symbolic execution engine should be capable of the task.
 
 TASE requires several other code bases to build, including the llvm toolchain, klee, musl's libc implementation, 
@@ -27,7 +27,7 @@ TASE can also only run on Linux-based operating systems.  Specifically, it has o
 # Setup
 
 TASE is currently configured to run in a container due to hardcoded file paths.  Input the commands below to copy the source repo and
-build the docker container.
+build the docker container.  The build usually takes at least 30 minutes.
 
 ```
 $ git clone https://github.com/adamhumphriescs/TASE_Release.git
