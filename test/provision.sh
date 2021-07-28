@@ -5,10 +5,13 @@
 
 set -e
 umask 022
+source ~/.bashrc
+
 
 ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 NCPU=7
-KLEE_LLVM_DIR="/opt/llvm-3.4.2"
+KLEE_LLVM_DIR=$ROOTDIR/install_root/llvm-3.4.2
+
 
 aptcmd="sudo apt-get --yes"
 if [[ $1 == "vagrant" ]]; then
@@ -76,7 +79,7 @@ setup_basic_tools () {
   #${aptcmd} install clang-7 llvm-7 llvm-7-dev llvm-7-tools
   #${aptcmd} install clang-8 llvm-8 llvm-8-dev llvm-8-tools
 
-  echo "Dropping LLVM 3.4 in /opt"
+  echo "Dropping LLVM 3.4 in " $KLEE_LLVM_DIR
   sudo mkdir -p ${KLEE_LLVM_DIR}
   #Also appears to have dependency on libncurses5
   #Ran "sudo apt install libncurses5" to remove error when attempting to link in libtinfo
@@ -328,7 +331,7 @@ setup_musl () {
 }
 
 setup_basic_tools
-setup_alternatives
+#setup_alternatives
 setup_klee_prereqs
 setup_klee_solver
 setup_tsx_llvm

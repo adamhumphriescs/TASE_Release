@@ -11,7 +11,7 @@ cd  $TASE_ROOT_DIR/compiler-rt_soft_float/
 
 rm -f *.o
 
-/opt/llvm-3.4.2/bin/clang -c *.c
+$TASE_ROOT_DIR/install_root/llvm-3.4.2/bin/clang -c *.c
 
 ld -r *.o -o sf_native_routines.o
 

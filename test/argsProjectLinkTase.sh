@@ -28,7 +28,7 @@ python3 $TASE_PATH/parseltongue86/rosettastone.py $TASE_RUN_DIR/TASE $PROJECT_PA
 
 sort tmp.vars | uniq > $TASE_RUN_DIR/$PROJECT.vars
 
-/opt/llvm-3.4.2/bin/clang++ -fno-slp-vectorize  -Wall -Wextra -emit-llvm -Wno-unused  -O3  -std=c++11 -I./tase/include/ -c $TASE_RUN_DIR/$PROJECT.interp.cpp -o $TASE_RUN_DIR/$PROJECT.interp.bc 
+$TASE_ROOT_DIR/install_root/llvm-3.4.2/bin/clang++ -fno-slp-vectorize  -Wall -Wextra -emit-llvm -Wno-unused  -O3  -std=c++11 -I./tase/include/ -c $TASE_RUN_DIR/$PROJECT.interp.cpp -o $TASE_RUN_DIR/$PROJECT.interp.bc 
 
 rm -f Monitor*
 rm -f log*

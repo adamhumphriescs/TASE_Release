@@ -1,11 +1,13 @@
 .PHONY: init lint test run clean
 .DEFAULT_GOAL = run
 
+source ~/.bashrc
+
 # TODO: Use the llvm version that klee wants.
 
 TARGET_PROJ = aes
 TARGET_BIN = ../test/$(TARGET_PROJ)/$(TARGET_PROJ)
-LLVM_DIR = /opt/llvm-3.4.2/bin
+LLVM_DIR = $TASE_ROOT_DIR/install_root/llvm-3.4.2/bin
 
 CLEAN_FILES = $(TARGET_PROJ).cpp $(TARGET_PROJ).bc $(TARGET_PROJ).ll $(TARGET_PROJ).vars
 

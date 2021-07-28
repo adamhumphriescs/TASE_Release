@@ -2,6 +2,7 @@
 set -e
 
 NCPU=8
+source ~/.bashrc
 
 TASE_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 TEST_PATH=$TASE_PATH/test
@@ -26,7 +27,7 @@ python3 $TASE_PATH/parseltongue86/rosettastone.py $TEST_PATH/klee $PROJECT_PATH/
 
 sort tmp.vars | uniq > $TEST_PATH/$PROJECT.vars
 
-/opt/llvm-3.4.2/bin/clang++ -fno-slp-vectorize -fno-strict-aliasing -Wall -Wextra -emit-llvm  -O3  -std=c++11 -I./tase/include/ -c $TEST_PATH/$PROJECT.interp.cpp -o $TEST_PATH/$PROJECT.interp.bc > IR_build_log 2>&1
+$TASE_ROOT_DIR/install_root/llvm-3.4.2/bin/clang++ -fno-slp-vectorize -fno-strict-aliasing -Wall -Wextra -emit-llvm  -O3  -std=c++11 -I./tase/include/ -c $TEST_PATH/$PROJECT.interp.cpp -o $TEST_PATH/$PROJECT.interp.bc > IR_build_log 2>&1
 
 rm Monitor*
 rm log*

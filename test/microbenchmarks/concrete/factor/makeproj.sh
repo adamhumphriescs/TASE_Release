@@ -2,9 +2,9 @@ set -e
 
 source ~/.bashrc
 
-TASE_CLANG=../../../../install_root/bin/clang
-TASE_DIR=../../../../test/tase
-KLEE_LIB_BUILD_DIR=../../../../build_klee/lib/
+TASE_CLANG=$TASE_ROOT_DIR/install_root/bin/clang
+TASE_DIR=$TASE_ROOT_DIR/test/tase
+KLEE_LIB_BUILD_DIR=$TASE_ROOT_DIR/build_klee/lib/
 MODELED_FN_ARG="-mllvm -x86-tase-modeled-functions=$TASE_DIR/include/tase/core_modeled.h"
 NO_FLOAT_ARG="-mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 -mno-80387 -mno-avx"
 
@@ -28,12 +28,12 @@ $TASE_CLANG -c -O0 $NO_FLOAT_ARG $MODELED_FN_ARG $TASE_DIR/traps/tase_shims.c -o
 #Add libTaseC to project object files in tmp
 #Create one "everything.o" file from all object files
 #localize libc symbols (e.g., memcpy, memset, etc) in everything.o in tmp
-../../../../test/scripts/localizeLibs.sh ./tmp ../../../../test/libc
+$TASE_ROOT_DIR/test/scripts/localizeLibs.sh ./tmp $TASE_ROOT_DIR/test/libc
 
 #LIBTASE-------------------------------------------
 $TASE_CLANG -c -O1 -DTASE_TSX -DTASE_ENABLE=1 -I$TASE_DIR/include $MODELED_FN_ARG $TASE_DIR/springboard.S -o $TASE_DIR/springboard.o
-/opt/llvm-3.4.2/bin/clang -c -O1 -I$TASE_DIR/include $TASE_DIR/log.c -o $TASE_DIR/log.o
-/opt/llvm-3.4.2/bin/clang -c -O1 -I$TASE_DIR/include $TASE_DIR/common.c -o $TASE_DIR/common.o
+$TASE_ROOT_DIR/install_root/llvm-3.4.2/bin/clang -c -O1 -I$TASE_DIR/include $TASE_DIR/log.c -o $TASE_DIR/log.o
+$TASE_ROOT_DIR/install_root/llvm-3.4.2/bin/clang -c -O1 -I$TASE_DIR/include $TASE_DIR/common.c -o $TASE_DIR/common.o
 
 $TASE_CLANG -c -O1 -DTASE_TSX -DTASE_ENABLE=1 -I$TASE_DIR/include $MODELED_FN_ARG $TASE_DIR/modeled/exit_tase.c -o $TASE_DIR/modeled/exit_tase.o
 
