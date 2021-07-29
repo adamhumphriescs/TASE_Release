@@ -48,6 +48,14 @@ $ cd /TASE/test
 $ ./doMicrobenchmarks.sh
 ```
 
+As an alternative to Docker, if you'd like to try and build TASE outside a container, you can do so by cloning the repo and initializing the submodules as
+noted above.  However, you'll need to set the environment variable TASE_ROOT_DIR to the base directory of TASE_Release 
+(e.g., /Sample/Path/TASE_Release) , and then run the following commands.  Note that this build option has only recently been added, so use with caution.
+```
+$ cd /Sample/Path/TASE_Release/test
+$ ./provision.sh
+```
+
 # Using TASE
 
 More to come here later this week.
