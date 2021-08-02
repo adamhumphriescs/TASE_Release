@@ -7,8 +7,10 @@
 //the compiler expects a potentially 64 bit value returned, rather than
 //the default 32-bit "0".
 #include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
 
-void tase_make_symbolic (void * ptr, unsigned long size, const char * name) __attribute__ ((optnone)) {
+__attribute__ ((optnone)) void tase_make_symbolic (void * ptr, unsigned long size, const char * name)  {
   return;
 }
 
@@ -53,6 +55,27 @@ int * getc_unlocked_tase (FILE * f) {
 }
 int * getc_unlocked_tase_shim (FILE * f) {
   return getc_unlocked_tase(f);
+}
+
+int puts_tase (const char * str) {
+  return 0;
+}
+int puts_tase_shim(const char * str) {
+  return puts_tase(str);
+}
+
+//It would be nice to provide a shim wrapper for printf_tase, but that's harder
+//because of the use of varargs.  For now, we just change "printf" symbols in the
+//target project directly into "tase_printf".
+int printf_tase (const char * fmt, ...) {
+  return 0;
+}
+
+//Similar to printf_tase, no wrapper here because of varargs.  We're not fully
+//modeleing sprintf yet, just cherrypicking some of the specific calls that
+//come from the portions of musl libc that we do support.
+int sprintf_tase (char * str, const char * fmt, ...) {
+  return 0;
 }
 
 /////////Arithmetic
@@ -440,4 +463,145 @@ double __powidf2_tase (double x, int y) {
 }
 double __powidf2_tase_shim (double x, int y) {
   return __powidf2_tase(x,y);
+}
+
+//Some string to float and int fns that we include
+//as a workaround until we compile all of libc:
+double strtod_tase(const char *nptr, char **endptr) {
+  return 0LL;
+}
+double strtod_tase_shim(const char *nptr, char **endptr) {
+  return strtod_tase(nptr, endptr);
+}
+
+float strtof_tase(const char *nptr, char **endptr) {
+  return 0;
+}
+float strtof_tase_shim (const char *nptr, char **endptr) {
+  return strtof_tase(nptr, endptr);
+}
+
+double strtold_tase (const char *nptr, char **endptr) {
+  return 0LL;
+}
+double strtold_tase_shim (const char *nptr, char **endptr) {
+  return strtold_tase(nptr,endptr);
+}
+
+
+long strtol_tase(const char *nptr, char **endptr, int base) {
+  return 0LL;
+}
+
+long strtol_tase_shim(const char *nptr, char **endptr, int base) {
+  return strtol_tase( nptr, endptr, base);
+}
+
+long long strtoll_tase(const char *nptr, char **endptr, int base) {
+  return 0LL;
+}
+
+long long strtoll_tase_shim(const char *nptr, char **endptr, int base) {
+  return strtoll_tase(nptr, endptr,  base);
+}
+
+unsigned long strtoul_tase(const char *nptr, char **endptr, int base) {
+  return 0LL;
+}
+
+unsigned long strtoul_tase_shim(const char *nptr, char **endptr, int base) {
+  return strtoul_tase(nptr, endptr,  base);
+}
+
+unsigned long long strtoull_tase(const char *nptr, char **endptr, int base) {
+  return 0LL;
+}
+
+unsigned long long strtoull_tase_shim(const char *nptr, char **endptr, int base) {
+  return strtoull_tase(nptr, endptr, base);
+}
+
+intmax_t strtoimax_tase ( const char *restrict nptr, char **restrict endptr, int base ) {
+  return 0LL;
+}
+
+intmax_t strtoimax_tase_shim ( const char *restrict nptr, char **restrict endptr, int base ) {
+  return strtoimax_tase ( nptr,  endptr,  base );
+}
+
+uintmax_t strtoumax_tase (const char *restrict nptr, char **restrict endptr, int base ) {
+  return 0LL;
+}
+
+uintmax_t strtoumax_tase_shim (const char *restrict nptr, char **restrict endptr, int base ) {
+  return strtoumax_tase ( nptr,  endptr,  base );
+}
+
+
+float  wcstof_tase( const wchar_t* str, wchar_t** str_end ) {
+  return 0;
+}
+float  wcstof_tase_shim( const wchar_t* str, wchar_t** str_end ) {
+  return wcstof_tase( str, str_end );
+}
+
+double  wcstod_tase( const wchar_t* str, wchar_t** str_end ) {
+  return 0LL;
+}
+double  wcstod_tase_shim( const wchar_t* str, wchar_t** str_end ) {
+  return wcstod_tase( str,  str_end );
+}
+
+double  wcstold_tase( const wchar_t* str, wchar_t** str_end ) {
+  return 0LL;
+}
+double  wcstold_tase_shim( const wchar_t* str, wchar_t** str_end ) {
+  return wcstold_tase( str, str_end );
+}
+
+long wcstol_tase ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return 0LL;
+}
+long wcstol_tase_shim ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return wcstol_tase (  str,  str_end,  base );
+}
+long long wcstoll_tase ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return 0LL;
+}
+long long wcstoll_tase_shim ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return wcstoll_tase (  str, str_end,  base );
+}
+
+unsigned long wcstoul_tase ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return 0LL;
+}
+unsigned long wcstoul_tase_shim ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return wcstoul_tase (  str,  str_end,  base );
+}
+unsigned long long wcstoull_tase ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return 0LL;
+}
+unsigned long long wcstoull_tase_shim ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return wcstoull_tase (  str, str_end, base );
+}
+
+intmax_t wcstoimax_tase ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return 0LL;
+}
+intmax_t wcstoimax_tase_shim ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return wcstoimax_tase (  str,  str_end,  base );
+}
+uintmax_t wcstoumax_tase ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return 0LL;
+}
+uintmax_t wcstoumax_tase_shim ( const wchar_t * restrict str, wchar_t ** restrict str_end, int base ) {
+  return wcstoumax_tase (  str,  str_end,  base );
+}
+
+void * __pthread_self_tase() {
+  return 0LL;
+}
+
+void * __pthread_self_tase_shim() {
+  return __pthread_self_tase();
 }

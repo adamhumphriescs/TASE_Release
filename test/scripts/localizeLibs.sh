@@ -1,11 +1,9 @@
 set -e
 
+source ~/.bashrc
+
 BUILD_DIR=$1
 LIBTASEC_PATH=$2
-
-#TASE_DIR=/playpen/humphries/TASE/TASE/test/tase
-#TASE_CLANG=/playpen/humphries/TASE/TASE/install_root/bin/clang
-#MODELED_FN_ARG="-mllvm -x86-tase-modeled-functions=$TASE_DIR/include/tase/core_modeled.h"
 
 pushd $LIBTASEC_PATH
 ./getclibs.sh
@@ -16,29 +14,34 @@ pushd $BUILD_DIR
 ar -x libtasec.a
 popd
 
-#$TASE_CLANG -c -O1 $MODELED_FN_ARG /playpen/humphries/TASE/TASE/test/libtasessl/misc/qsort.c -o $BUILD_DIR/qsort.o
-
 ld -r $BUILD_DIR/*.o -o $BUILD_DIR/everything.o
 #nm everything.o | grep  "[0-9a-f] [tTdDgGrRsSvVwWC] " | cut -f3 -d ' ' > targetsyms
 
-STRLIBS="memchr memcmp memcpy memmove memset strcasecmp strcat strchr strcmp strcpy strdup strlen strncasecmp strncmp strncpy\
- strrchr strstr strtok stpcpy stpncpy \
-strspn strcspn memrchr strchrnul"
-CTLIBS=" isalnum isxdigit tolower "
-#qsort from musl has a bsf instruction unfortunately
-STDLIBS=" atoi qsort qsort_r "
-NETLIBS=" htonl htons ntohl ntohs "
-
-WEAKS_AND_STATICS=" __isspace __bswap_32 __bswap_16 __isalnum_l isalnum_l __isxdigit_l isdigit_l a_ctz_64  a_ctz_l  cycle  pn\
-tz  shl  shr  sift  trinkle __strcasec\
-mp_l strcasecmp_l  __strncasecmp_l  strncasecmp_l threebyte_strstr  twobyte_strstr twoway_strstr __tolower_l  tolower_l "
-
-cat $LIBTASEC_PATH/math.syms | while read LIB
-do
-objcopy --localize-symbol=$LIB $BUILD_DIR/everything.o
-done
-
-for LIB in $STRLIBS $CTLIBS $STDLIBS $NETLIBS $WEAKS_AND_STATICS $MATHSYMS
+cat $LIBTASEC_PATH/all.syms | while read LIB
 do
     objcopy --localize-symbol=$LIB $BUILD_DIR/everything.o
 done
+
+
+#These are some symbol redefinition hacks that help us link in much of
+#libc from musl.  Specifically, the a_ctz_64 and a_clz_64 functions have
+#bsr instructions when they're compiled in TASE, so we just trap on those for now
+#and use a model in KLEE.
+objcopy --redefine-syms=$TASE_ROOT_DIR/test/scripts/redefinedSF $BUILD_DIR/everything.o
+objcopy --redefine-syms=$TASE_ROOT_DIR/test/scripts/redefinedStrConv $BUILD_DIR/everything.o
+
+objcopy --redefine-sym sprintf=sprintf_tase $BUILD_DIR/everything.o
+objcopy --redefine-sym printf=printf_tase $BUILD_DIR/everything.o
+objcopy --redefine-sym puts=puts_tase_shim $BUILD_DIR/everything.o
+objcopy --globalize-symbol=a_ctz_64 $BUILD_DIR/everything.o
+objcopy --globalize-symbol=a_clz_64 $BUILD_DIR/everything.o
+objcopy --redefine-sym a_ctz_64=a_ctz_64_tase $BUILD_DIR/everything.o
+objcopy --redefine-sym a_clz_64=a_clz_64_tase $BUILD_DIR/everything.o
+
+objcopy --redefine-sym calloc=calloc_tase_shim $BUILD_DIR/everything.o
+objcopy --redefine-sym realloc=realloc_tase_shim $BUILD_DIR/everything.o
+objcopy --redefine-sym malloc=malloc_tase_shim $BUILD_DIR/everything.o
+objcopy --redefine-sym free=free_tase_shim $BUILD_DIR/everything.o
+objcopy --redefine-sym getc_unlocked=getc_unlocked_tase_shim $BUILD_DIR/everything.o
+objcopy --redefine-sym memcpy=memcpy_tase_shim $BUILD_DIR/everything.o
+

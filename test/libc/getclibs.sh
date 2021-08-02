@@ -1,3 +1,6 @@
+#We grab a subset of the libc functions in this script, including everything in string, ctype,
+#errno, math.  We also get most of stdlib, with the remaining functions covered via traps in the interpreter.
+
 set -e
 
 rm -f ./build/*
@@ -8,46 +11,39 @@ cp ./TASEConfig/config.mak_no_simd ./config.mak
 ./getTASELibcSubset.sh
 popd
 
-#String 
-#Has external deps on tase_springboard, tolower, malloc_tase
-STRLIBS="memchr memcmp memcpy memmove memset strcasecmp strcat strchr strcmp strcpy strdup strlen strncasecmp strncmp strncpy strrchr strstr strtok stpcpy stpncpy strspn strcspn memrchr strchrnul"
+#STRING (plus locale dependency) ---------
+cp $MUSL_PATH/obj/src/string/*.o ./build/
+cp $MUSL_PATH/obj/src/locale/__lctrans.o ./build/ #external dependency
 
-CTLIBS=" isalnum isxdigit tolower "
+#CTYPE------------------------------------
+cp $MUSL_PATH/obj/src/ctype/*.o ./build/
 
-STDLIBS=" atoi "
-
-NETLIBS=" htonl htons ntohl ntohs "
-
-for STRLIB in $STRLIBS
-do
-    cp $MUSL_PATH/obj/src/string/$STRLIB.o ./build/
-done
-
-#Ctype
-for CTLIB in $CTLIBS
-do
-    cp $MUSL_PATH/obj/src/ctype/$CTLIB.o ./build/
-done
-
-#Stdlib
-
+#STDLIB-----------------------------------
+#Grab all the STDLIB files except for strtod/l and wcstod/l.  We have traps for those for now in TASE,
+# so all of stdlib should be supported.
+STDLIBS="abs atof atoi atol atoll bsearch div ecvt fcvt gcvt imaxabs imaxdiv labs ldiv llabs lldiv qsort"
 for STDLIB in $STDLIBS 
 do
     cp $MUSL_PATH/obj/src/stdlib/$STDLIB.o ./build/
 done
+cp $MUSL_PATH/obj/src/string/*.o ./build/
+cp $MUSL_PATH/obj/src/locale/__lctrans.o ./build/ #external dependency
 
-#Network
+#ERRNO------------------------------------
+cp $MUSL_PATH/obj/src/errno/*.o ./build/
+
+#NETWORK (subset)-------------------------
 #These are all pure
-
+NETLIBS=" htonl htons ntohl ntohs "
 for NETLIB in $NETLIBS
 do
     cp $MUSL_PATH/obj/src/network/$NETLIB.o ./build/
 done
 
-#MATH
+#MATH-------------------------------------
 cp $MUSL_PATH/obj/src/math/*.o ./build/
-cp $MUSL_PATH/obj/src/fenv/fenv.o ./build/
-cp $MUSL_PATH/obj/src/fenv/fesetround.o ./build/
+cp $MUSL_PATH/obj/src/fenv/fenv.o ./build/  #external dependency
+cp $MUSL_PATH/obj/src/fenv/fesetround.o ./build/ #external dependency
 
 rm -f libtasec.a
 

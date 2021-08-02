@@ -9,14 +9,14 @@ def main():
   logging.basicConfig(level=logging.INFO)
   assert(len(sys.argv) > 3)
 
-  # Required argument 1 - path to binary to analyze
+  # Required argument 1 - path to binary to analyze (e.g., "TASE")
   target_binary = sys.argv[1]
   # Argument 2 - path to file that contains the names of functions
-  # for which parseltongue will gen IR.
+  # for which parseltongue will gen IR (e.g., "SomeProject.tase")
   functions_file = sys.argv[2] 
 
   #Arg for root tase dir for use in "include" statement later
-  #e.g., /TASE/
+  #(e.g., "/TASE/")
   tase_root_dir = sys.argv[3]
   
   #tase_root_dir = os.environ.get('TASE_ROOT_DIR')

@@ -1,7 +1,7 @@
 set -e
 
 function errmessage {
-    echo "Something went wrong when running Microbenchmarks.  Consult error logs ConcreteOverheadBuildLog.txt and SlidingScaleBuildLog.txt for more info."
+    echo "Something went wrong when running Microbenchmarks.  Consult error logs ConcOverheadBuildLog.txt and SlidingScaleBuildLog.txt for more info."
 }
 trap errmessage ERR
 echo ""
