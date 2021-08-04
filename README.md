@@ -56,6 +56,70 @@ $ cd /Sample/Path/TASE_Release/test
 $ ./provision.sh
 ```
 
-# Using TASE
+# Performing Symbolic Execution in TASE
+Instructions are provided below for perfoming symbolic execution in TASE.  
+The code paths in the commands below assume TASE is running in a container built with our dockerfile.
 
-More to come here later this week.
+### Step 1: Setup the project directory and build files
+
+After TASE has been built, switch to the "projects" directory and run the setupProj.sh script.  You'll need to pick a name 
+for the project (e.g., "PROJ_NAME" as below).
+
+```$ cd /TASE/projects ```
+
+```$ ./setupProj.sh PROJ_NAME       ```
+
+```$ cd ./PROJ_NAME ```
+
+### Step 2.  Drop in source and configure the harness
+
+Next, you'll want to grab the source code you'd like to run in TASE, and drop it in the "src" directory in your project directory.
+
+```$ cp /MY/SOURCE/DIR/* ./src/ ``` 
+
+The setupProj.sh script from step 1 should also have dropped a file called "harness.c" into the "src" directory.  "harness.c" controls how the program
+in ./src/ initially launches.  You will need to edit "harness.c" to provide the signature of your desired entry function, and setup the initial call it it 
+makes in a wrapper function called "begin_target_inner" that we use to launch symbolic execution.  The function you replace is initially stubbed 
+out as "your_entry_fn."  (If your entry function is "main", you can refer to it as such; we automatically rename any function in ./src/ called "main"
+to "target_main.")
+
+Here's an example of what harness.c would look like if your entry function had signature "void func1 (int x, int y);" :
+
+```
+#include "tase_make_symbolic.h"
+
+//This file is a testing harness used for TASE.  
+
+//This harness should be updated to make the signature for "your_entry_fn" and input
+//args match the entry function you chose.
+
+void func1 (int x, int y);
+
+void begin_target_inner () {
+
+  func1(123,456);
+
+}
+```
+Note that you can use a helper function "tase_make_symbolic" to make data symbolic from within the harness or elsewhere within your code.
+For example:
+
+```
+int x;
+tase_make_symbolic(&x, 4, "Making X Symbolic"); 
+```
+
+### Step 3.  Build the project for TASE
+Run the build script.  If an external function from libc or elsewhere is needed but we can't find a definition for it, the build script will print an error.
+
+Definitions for libc functions from stdlib.h, ctype.h, and string.h as well as functions from libm (e.g., sin/cos/etc) should be automatically by TASE's limited musl-based libc implementation.  You do not need to provide definitions for them in ./src/ .
+
+```$ ./build.sh```
+
+### Step 4.  Run the project in TASE
+Launch TASE.
+  
+```$ ./TASE ```
+
+Basic output information will be in the file named "Monitor", including the number of paths traversed.
+
