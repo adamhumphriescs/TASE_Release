@@ -43,5 +43,8 @@ objcopy --redefine-sym realloc=realloc_tase_shim $BUILD_DIR/everything.o
 objcopy --redefine-sym malloc=malloc_tase_shim $BUILD_DIR/everything.o
 objcopy --redefine-sym free=free_tase_shim $BUILD_DIR/everything.o
 objcopy --redefine-sym getc_unlocked=getc_unlocked_tase_shim $BUILD_DIR/everything.o
-objcopy --redefine-sym memcpy=memcpy_tase_shim $BUILD_DIR/everything.o
 
+#Changed because we now link in the definition of memcpy from musl, but still
+#want to trap for efficiency.
+objcopy --redefine-sym memcpy=memcpy_tase $BUILD_DIR/everything.o
+objcopy --globalize-symbol=memcpy_tase $BUILD_DIR/everything.o

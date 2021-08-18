@@ -255,6 +255,7 @@ setup_openssl () {
 
 
     make depend
+    make build_taseall
     #make -j ${NCPU}
   )
 }
