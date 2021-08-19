@@ -13,7 +13,7 @@ if it could have been produced by a known client implementation by symbolically 
 unknown client-side inputs as symbolic; see the TASE paper for more details.  TASE is not specifically tooled for bugfinding,
 but its core symbolic execution engine should be capable of the task.
 
-TASE requires several other code bases to build, including the llvm toolchain, klee, musl's libc implementation, 
+TASE requires several other code bases to build, including the LLVM toolchain, KLEE, musl's libc implementation, 
 and others.  Because of this, we provide TASE with and dockerfile and recommend that it be used within a container.
 
 # Requirements
@@ -46,6 +46,20 @@ From within the container, you can test the build and run some of the microbench
 ```
 $ cd /TASE/test
 $ ./doMicrobenchmarks.sh
+```
+You can also test the build by running a simplified behavioral verification test with TASE.  In this test a trace of messages, one of 
+which contains the heartbleed exploit, is determined with symbolic execution to be consistent or inconsistent with a build of OpenSSL.  (The OpenSSL build is slightly
+modified for simplicity to send a single heartbeat message after the handshake and then exit.)
+
+If the build completed correctly, you should see that two "rounds" (i.e., client-to-server messages) of verification were completed before the
+entire verification as a whole failed on the third client-to-server message with the heartbeat exploit.  Specifically,  in the test the verifier 
+should print that a contradiction was found among the constraints accumulated during verification based on the contents of the 15th byte in the 
+message, which, given our choice of cipher suite, is one of the bytes that represents the claimed length of the message to be replied back.
+
+The behavioral verification test can be run in the container with the following commands.
+```
+$ cd /TASE/projects/SSLCliver
+$ ./heartbleedEval.sh
 ```
 
 As an alternative to Docker, if you'd like to try and build TASE outside a container, you can do so by cloning the repo and initializing the submodules as
