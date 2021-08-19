@@ -1,0 +1,41 @@
+This file contains a summary of the record types, sequence, and sizes in the ktest log.
+Client-to-server and server-to-client messages ('c2s', 's2c') are included below, as is
+the master secret ('master_secret').
+Also, for debugging purposes, the prng/rng numbers generated and select call results are
+logged, although during verification we skip and ignore them (making them symbolic) to simulate
+remote server-side verification which would only have access to the master secret and c2s/s2c
+messages.
+
+
+ktest-tool version: 4
+       0          b'prng'       16 0.000000
+       1           b'rng'       16 0.000009
+       2           b'rng'       16 0.000018
+       3        b'select'       60 0.001016
+       4          b'prng'       32 0.001069
+       5           b'c2s'      319 0.001114
+       6           b's2c'        7 0.015060
+       7           b's2c'       64 0.015112
+       8           b's2c'        5 0.015592
+       9           b's2c'     2901 0.015594
+      10           b's2c'        5 0.030274
+      11           b's2c'      148 0.030275
+      12           b's2c'        5 0.036574
+      13           b's2c'        4 0.036577
+      14           b'rng'       32 0.036781
+      15 b'master_secret'       48 0.045816
+      16           b'rng'        8 0.046504
+      17           b'c2s'      126 0.046669
+      18           b's2c'        5 0.052554
+      19           b's2c'      170 0.052556
+      20           b's2c'        5 0.053129
+      21           b's2c'        1 0.053130
+      22           b's2c'        5 0.053267
+      23           b's2c'       40 0.053269
+      24          b'prng'       16 0.054840
+      25          b'prng'       16 0.054849
+      26           b'c2s'       66 0.054872
+      27        b'select'       60 0.055159
+      28           b's2c'        5 0.055169
+      29           b's2c'      298 0.055172
+      30           b'c2s'       31 0.055600

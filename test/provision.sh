@@ -254,7 +254,7 @@ setup_openssl () {
       #-mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 \
 
 
-    make depend
+    #make depend
     make build_taseall
     #make -j ${NCPU}
   )
@@ -267,7 +267,7 @@ setup_klee () {
   ./buildDummyProject.sh
   
   cd ${ROOTDIR}/build_klee
-  CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T${ROOTDIR}/test/tase/tase_link.ld" cmake \
+  CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T${ROOTDIR}/test/tase/tase_link.ld -I${TASE_ROOT_DIR}/openssl/include" cmake \
     -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} \
     -DLLVM_CONFIG_BINARY="${KLEE_LLVM_DIR}/bin/llvm-config" \
     -DLLVMCC="${KLEE_LLVM_DIR}/bin/clang" \
@@ -282,7 +282,7 @@ setup_klee () {
     -DENABLE_SYSTEM_TESTS=FALSE \
     -DENABLE_DOCS=FALSE \
     -DPOSITION_INDEPENDENT_CODE=FALSE \
-    -DINCLUDE_DIRECTORIES="/playpen/humphries/TASE/TASE/openssl/include" \
+    -DINCLUDE_DIRECTORIES="${TASE_ROOT_DIR}/openssl/include" \
     ../klee
   make -j ${NCPU}
 }
@@ -337,5 +337,5 @@ setup_klee_prereqs
 setup_klee_solver
 setup_tsx_llvm
 setup_musl
-#setup_openssl
+setup_openssl
 setup_klee
