@@ -12,8 +12,8 @@ OBJ_DIR=./build/obj
 
 rm -rf ./src/*
 cp ../utils/make_byte_symbolic.c ./src/
-cp ./util/sslharness_heartbeat.c ./src/
-cp ./util/TA.crt .
+cp ./utils/sslharness_heartbeat.c ./src/
+cp ./utils/TA.crt .
 
 rm -rf  $OBJ_DIR/*
 cp $INPUTS $OBJ_DIR/
