@@ -104,6 +104,17 @@ OPS_SIZED = list(chain(OPS_XCHG[2:], OPS_MATH, OPS_SHIFT, OPS_BIT[1:],
                        OPS_FLOW[:-4], OPS_STR, OPS_FLAG[:2], OPS_DATA))
 OPS_IMM32 = ['test', 'mov', OPS_MATH[:8]]
 
+dblookup64 = '0, 1, 48,  2, 57, 49, 28,  3,\n \
+61, 58, 50, 42, 38, 29, 17,  4,\n \
+62, 55, 59, 36, 53, 51, 43, 22,\n \
+45, 39, 33, 30, 24, 18, 12,  5,\n \
+63, 47, 56, 27, 60, 41, 37, 16,\n \
+54, 35, 52, 21, 44, 32, 23, 11,\n \
+46, 26, 40, 15, 34, 20, 31, 10,\n \
+25, 14, 19,  9, 13,  8,  7,  6'
+db64 = '0x03f79d71b4cb0a89'
+
+
 
 class Instruction:
   """
@@ -1018,6 +1029,57 @@ class Instruction:
         dest=o.Operand(self, '%rbp'),
         size=8)
 
+  def _emit_bsf(self):
+    src = self.operands[0]
+    dest = o.reg_operand(self, 'rax', 8)
+    v_efl = self._emit_flag_decl()
+    v = src.emit_fetch('v', 8)
+
+    self.out.write('static const int DeBruijnPos[64] = {' + f'{dblookup64}' + '};\n')
+
+    # if src == 0
+    # clear ZF, return
+    self.out.write(f'if ({v} == 0) {{\n')
+    self.out.write(f'{v_efl} &= ~(1<<{o.FLAG_ZF});\n')
+    self._emit_store_cozps(v_efl)
+    self.out.write('} else { \n')
+
+    # else
+    final = self.emit_var_decl('final', 8, f'DeBruijnPos[(uint64_t)(({v}&-{v}) * {db64})>>58]', signed=True)
+    dest.emit_store(final, 8)
+
+    # set ZF
+    self.out.write(f'{v_efl} &= 1<<{o.FLAG_ZF};\n')
+    self._emit_store_cozps(v_efl)
+    self.out.write('}\n')
+    
+  def _emit_bsr(self):
+    src = self.operands[0]
+    dest = o.reg_operand(self, 'rax', 8)
+    v_efl = self._emit_flag_decl()
+    v = src.emit_fetch('v', 8)
+
+    # src == 0 -> clear ZF, return
+    self.out.write(f'if(!{v}) {{\n')
+    self.out.write(f'{v_efl} &= ~(1<<{o.FLAG_ZF});\n')
+    self._emit_store_cozps(v_efl)
+    self.out.write(f'return;\n')
+    self.out.write('}\n')
+
+    # count leading zeroes, subtract from size, store in register. Set ZF
+    y=self.emit_var_decl('y', 4, '0', signed=False)
+    r=self.emit_var_decl('r', 4, '0', signed=True)
+    self.out.write(f'if({v}>>32) {y}={v}>>32, {r}=0; else {y}={v}, {r}=32;\n')
+    self.out.write(f'if({y}>>16) {y}={y}>>16; else {r} |= 16;\n')
+    self.out.write(f'if({y}>>8) {y}={y}>>8; else {r} |= 8;\n')
+    self.out.write(f'if({y}>>4) {y}={y}>>4; else {r} |= 4;\n')
+    self.out.write(f'if({y}>>2) {y}={y}>>2; else {r} |= 2;\n')
+    final = self.emit_var_decl('final', 8, f'63 - ({r} | !({y}>>1))', signed=False)    
+    self.out.write(f'{v_efl} |= (1<<{o.FLAG_ZF});\n')
+    dest.emit_store(final, 8)
+    self._emit_store_cozps(v_efl)
+
+    
   #Check operands and opcodes to determine if instr should be skipped
   #in IR generation
   def _is_instrumentation(self):
