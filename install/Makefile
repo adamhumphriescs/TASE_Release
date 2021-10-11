@@ -141,7 +141,7 @@ setup: klee main.cpp.o bitcode_files parseltongue resources
 # copy cwd into install directory
 .PHONY: resources
 resources:
-	cp -r $$(PWD) $(RUN_DIR)/
+	cp -r $$(pwd) $(RUN_DIR)/
 
 
 # copy parseltongue over to install dir
