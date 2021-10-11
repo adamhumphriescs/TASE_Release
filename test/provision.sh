@@ -2,34 +2,45 @@
 
 # Use this to provision the Vagrant test VM you instantiate or run this script as a super
 # user manually on your machine in order to prepare it for development locally.
+# VAGRANT=1 for vagrant vbox, NCPU=X for X CPUs
+
 
 set -e
 umask 022
-source ~/.bashrc
+#source ~/.bashrc
 
 
-ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
-NCPU=7
-KLEE_LLVM_DIR=$ROOTDIR/install_root/llvm-3.4.2
+#ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
+ROOTDIR=/TASE
+BUILD_DIR=/TASE_BUILD/
 
-aptcmd="sudo apt-get --yes"
-if [[ $1 == "vagrant" ]]; then
+NCPU="${NCPU:-7}"
+KLEE_LLVM_DIR="$ROOTDIR/llvm-3.4.2"
+
+mkdir -p "${ROOTDIR}/include/"
+mkdir -p "${ROOTDIR}/scripts/"
+cp -r "${BUILD_DIR}/test/tase/include/tase/" "${ROOTDIR}/include/tase/"
+cp -r "${BUILD_DIR}/test/other/" "${ROOTDIR}/include/traps/"
+cp -r "${BUILD_DIR}/openssl/include/" "${ROOTDIR}/include/openssl/"
+cp "${BUILD_DIR}/test/tase/tase_link.ld" "${ROOTDIR}/"
+cp -r "${BUILD_DIR}/test/scripts/" "${ROOTDIR}/scripts/"
+
+aptcmd="apt-get --yes"
+if [[ $${VAGRANT:-0} == 1 ]]; then
   usermod -a -G vboxsf vagrant
   aptcmd="apt-get --yes"
   ROOTDIR="/TASE"
-
-  # Old permissions issues with the mount points.
-  #if [ -d /vagrant ]; then rmdir /vagrant; fi
-  #ln -s /media/sf_vagrant /vagrant
-  #${aptcmd} install virtualbox-guest-dkms virtualbox-guest-utils virtualbox-guest-x11
 fi
 
-INSTALLDIR="${ROOTDIR}/install_root"
-TASE_DIR="${ROOTDIR}/test/tase"
-TASE_CFLAGS="-mllvm -x86-tase-modeled-functions=${TASE_DIR}/include/tase/core_modeled.h -I${TASE_DIR}/include/tase -T${TASE_DIR}/tase_link.ld -msse -msse2 -msse3 -msse4.2 -mno-80387 -mllvm -verify-regalloc -mllvm -verify-machineinstrs"
+INSTALLDIR="${ROOTDIR}/"
+INC_DIR="${ROOTDIR}/include"
 
-TASE_CFLAGS_NO_SSE="-mllvm -x86-tase-modeled-functions=${TASE_DIR}/include/tase/core_modeled.h -I${TASE_DIR}/include/tase -T${TASE_DIR}/tase_link.ld -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 -mno-80387 -mno-avx -mllvm -verify-regalloc -mllvm -verify-machineinstrs -mllvm -x86-tase-paranoid-control-flow=true"
+# Now expecting tase_link.ld in ROOTDIR
+
+TASE_CFLAGS="-mllvm -x86-tase-modeled-functions=${INC_DIR}/tase/core_modeled.h -I${INC_DIR}/tase -T${ROOTDIR}/tase_link.ld -msse -msse2 -msse3 -msse4.2 -mno-80387 -mllvm -verify-regalloc -mllvm -verify-machineinstrs"
+
+TASE_CFLAGS_NO_SSE="-mllvm -x86-tase-modeled-functions=${INC_DIR}/tase/core_modeled.h -I${INC_DIR}/tase -T${ROOTDIR}/tase_link.ld -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 -mno-80387 -mno-avx -mllvm -verify-regalloc -mllvm -verify-machineinstrs -mllvm -x86-tase-paranoid-control-flow=true"
 
 
 #-mllvm -print-before=x86-tase-capture-taint
@@ -42,49 +53,42 @@ TASE_CFLAGS_NO_SSE="-mllvm -x86-tase-modeled-functions=${TASE_DIR}/include/tase/
 setup_basic_tools () {
   echo "Installing basic tools"
   ${aptcmd} update
-  #${aptcmd} upgrade
 
   # Basic development environment. Add editors, debuggers and other useful tools here.
   ${aptcmd} install \
     bash-completion \
     curl \
-    diffutils \
-    dos2unix \
-    emacs \
-    vim \
     wget \
     unzip \
     zip \
     build-essential \
     git \
-    subversion \
     cmake \
     python3-dev \
     python3-pip \
     linux-tools-common \
     linux-tools-generic \
-    libncurses5        \
-
+    libncurses5
+#    diffutils \
+#    dos2unix \
+#    emacs \
+#    vim \
+#    subversion \
+      
   echo "Adding LLVM apt sources/PPAs"
-  wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-  sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial main"
-  sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-5.0 main"
-  sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main"
-  sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
+  wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+  apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial main"
+  apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-5.0 main"
+  apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-7 main"
+  apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
   ${aptcmd} update
 
-  #echo "Installing Clang/LLVM 4, 5, 6, 7, 8"
-  #${aptcmd} install clang-4.0 llvm-4.0 llvm-4.0-dev llvm-4.0-tools
-  #${aptcmd} install clang-5.0 llvm-5.0 llvm-5.0-dev llvm-5.0-tools
-  #${aptcmd} install clang-7 llvm-7 llvm-7-dev llvm-7-tools
-  #${aptcmd} install clang-8 llvm-8 llvm-8-dev llvm-8-tools
-
   echo "Dropping LLVM 3.4 in " $KLEE_LLVM_DIR
-  sudo mkdir -p ${KLEE_LLVM_DIR}
+  mkdir -p ${KLEE_LLVM_DIR}
   #Also appears to have dependency on libncurses5
   #Ran "sudo apt install libncurses5" to remove error when attempting to link in libtinfo
   #Maybe we should ideally pull in the source and build from scratch because of the old ubuntu 14 version?
-  curl -s https://releases.llvm.org/3.4.2/clang+llvm-3.4.2-x86_64-linux-gnu-ubuntu-14.04.xz | sudo tar xJvf - -C ${KLEE_LLVM_DIR} --strip 1
+  curl -s https://releases.llvm.org/3.4.2/clang+llvm-3.4.2-x86_64-linux-gnu-ubuntu-14.04.xz | tar xJvf - -C ${KLEE_LLVM_DIR} --strip 1
 }
 
 gcc_alternatives () {
@@ -92,7 +96,7 @@ gcc_alternatives () {
   priority="${2:-40}"
   prefix="${3:-/usr/bin}"
   if [[ -f "${prefix}/gcc${version}" ]]; then
-    sudo update-alternatives --install /usr/bin/gcc gcc ${prefix}/gcc${version} ${priority} \
+    update-alternatives --install /usr/bin/gcc gcc ${prefix}/gcc${version} ${priority} \
       --slave /usr/bin/cpp gcc-cpp ${prefix}/cpp${version} \
       --slave /usr/bin/g++ g++ ${prefix}/g++${version} \
       --slave /usr/bin/gcc-ar gcc-ar ${prefix}/gcc-ar${version} \
@@ -108,7 +112,7 @@ clang_alternatives () {
   priority="${2:-40}"
   prefix="${3:-/usr/bin}"
   if [[ -f "${prefix}/clang${version}" ]]; then
-    sudo update-alternatives --install /usr/bin/clang clang ${prefix}/clang${version} ${priority} \
+    update-alternatives --install /usr/bin/clang clang ${prefix}/clang${version} ${priority} \
       --slave /usr/bin/bugpoint bugpoint ${prefix}/bugpoint${version} \
       --slave /usr/bin/c-index-test c-index-test ${prefix}/c-index-test${version} \
       --slave /usr/bin/clang++ clang++ ${prefix}/clang++${version} \
@@ -165,25 +169,12 @@ setup_alternatives () {
   set -e
 }
 
-setup_klee_prereqs () {
-  # See http://klee.github.io/build-llvm34
-  echo "Installing KLEE dependencies"
-  ${aptcmd} install \
-    bison \
-    flex \
-    libboost-program-options-dev \
-    perl \
-    zlib1g-dev \
-    libcap-dev \
-    libncurses-dev
-}
-
 #Possible to use cryptominisat IF it's installed
 # and option is toggled on below.
 setup_klee_solver () {
   echo "CC is $CC"
   echo "Building Minisat"
-  cd ${ROOTDIR}/build_minisat
+  cd ${BUILD_DIR}/build_minisat
   cmake \
     -DSTATIC_BINARIES=ON \
     -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} \
@@ -193,25 +184,24 @@ setup_klee_solver () {
 
   
   echo "Building STP"
-  cd ${ROOTDIR}/build_stp
+  cd "${BUILD_DIR}/build_stp"
   cmake \
     -DBUILD_SHARED_LIBS:BOOL=OFF \
     -DENABLE_PYTHON_INTERFACE:BOOL=OFF \
-    -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} \
+    -DCMAKE_INSTALL_PREFIX="${INSTALLDIR}" \
     -DUSE_CRYPTOMINISAT4:BOOL=OFF  \
     -DNO_BOOST:BOOL=ON \
     ../stp
-  make -j ${NCPU}
+  make -j "${NCPU}"
   make install
 }
 
 setup_openssl () {
   echo "Building openssl"
-  cd ${ROOTDIR}/openssl
+  cd "${BUILD_DIR}/openssl"
 
   (
     export CC="${INSTALLDIR}/bin/clang"
-    #export LD="${INSTALLDIR}/bin/ld.musl-clang"
     export PATH="${INSTALLDIR}/bin:${PATH}"
 
     # Info from Marie:
@@ -251,48 +241,41 @@ setup_openssl () {
       no-srtp \
       no-ssl2 \
       no-weak-ssl-ciphers
-      #-mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 \
 
-
-    #make depend
     make build_taseall
-    #make -j ${NCPU}
   )
 }
 
 setup_klee () {
   echo "Building klee"
   #Make a dummy "project" file so that klee will build the first time
-  cd ${ROOTDIR}/test
+  cd ${BUILD_DIR}/test
   ./buildDummyProject.sh
   
-  cd ${ROOTDIR}/build_klee
-  CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T${ROOTDIR}/test/tase/tase_link.ld -I${TASE_ROOT_DIR}/openssl/include" cmake \
-    -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} \
+  cd ${BUILD_DIR}/build_klee
+  CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T${ROOTDIR}/tase_link.ld -I${INC_DIR}/openssl/" cmake \
+    -DCMAKE_INSTALL_PREFIX="${INSTALLDIR}" \
     -DLLVM_CONFIG_BINARY="${KLEE_LLVM_DIR}/bin/llvm-config" \
     -DLLVMCC="${KLEE_LLVM_DIR}/bin/clang" \
     -DLLVMCXX="${KLEE_LLVM_DIR}/bin/clang++" \
     -DENABLE_KLEE_UCLIBC=FALSE \
     -DENABLE_POSIX_RUNTIME=FALSE \
     -DENABLE_SOLVER_STP=TRUE \
-    -DSTP_DIR="${ROOTDIR}/build_stp" \
+    -DSTP_DIR="${BUILD_DIR}/build_stp" \
     -DCMAKE_BUILD_TYPE=Release \
     -DENABLE_KLEE_ASSERTS=FALSE \
     -DENABLE_UNIT_TESTS=FALSE \
     -DENABLE_SYSTEM_TESTS=FALSE \
     -DENABLE_DOCS=FALSE \
     -DPOSITION_INDEPENDENT_CODE=FALSE \
-    -DINCLUDE_DIRECTORIES="${TASE_ROOT_DIR}/openssl/include" \
+    -DINCLUDE_DIRECTORIES="${INC_DIR}/openssl/" \
     ../klee
   make -j ${NCPU}
 }
 
 setup_tsx_llvm () {
   echo "Building TSX inserting LLVM"
-  # ln -sfn ../../clang ${ROOTDIR}/llvm/tools/clang
-  cd ${ROOTDIR}/build_llvm
-    #-DLLVM_ENABLE_PROJECTS="clang" \
-    #-DLLVM_BUILD_TOOLS=FALSE \
+  cd "${BUILD_DIR}/build_llvm"
   cmake \
     -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} \
     -DCMAKE_BUILD_TYPE="Debug" \
@@ -304,14 +287,13 @@ setup_tsx_llvm () {
     -DBUILD_SHARED_LIBS=TRUE \
     -DLLVM_OPTIMIZED_TABLEGEN=TRUE \
     ../llvm
-  #make -j ${NCPU} llvm-tblgen
-  make -j ${NCPU}
+  make -j "${NCPU}"
   make install
 }
 
 setup_musl () {
   echo "Building musl for target"
-  cd ${ROOTDIR}/musl
+  cd "${BUILD_DIR}/musl"
 
   (
     export CC="${INSTALLDIR}/bin/clang"
@@ -326,16 +308,13 @@ setup_musl () {
     #./configure \
     #  --prefix=${INSTALLDIR} \
     #  --disable-shared
-    make -j ${NCPU}
+    make -j "${NCPU}"
     make install
   )
 }
 
 setup_basic_tools
-#setup_alternatives
-setup_klee_prereqs
 setup_klee_solver
 setup_tsx_llvm
 setup_musl
 setup_openssl
-setup_klee
