@@ -46,11 +46,11 @@ KLEE_ENV=CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(RUN_DIR)/tase
 
 KLEE_OPTS=-DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DLLVM_CONFIG_BINARY="$(RUN_DIR)/llvm-3.4.2/bin/llvm-config" -DLLVMCC="$(CLANG)" -DLLVMCXX="$(CLANG)++" -DENABLE_KLEE_UCLIBC=FALSE -DENABLE_POSIX_RUNTIME=FALSE -DENABLE_SOLVER_STP=TRUE -DSTP_DIR="$(BUILD_DIR)/build_stp" -DCMAKE_BUILD_TYPE=Release -DENABLE_KLEE_ASSERTS=FALSE -DENABLE_UNIT_TESTS=FALSE -DENABLE_SYSTEM_TESTS=FALSE -DENABLE_DOCS=FALSE -DLLVM_INCLUDE_DIRS="$(RUN_DIR)/include/llvm-3.4.2/include/" -DLLVM_LIBRARY_DIRS="$(RUN_DIR)/include/llvm-3.4.2/lib/" -DKLEE_RUNTIME_BUILD_TYPE=$(KLEE_BUILD_TYPE)
 
-
 # @runtime items:
 #
 # user project Object targets
-OBJS=$(addsuffix .o,$(basename $(wildcard project/src/*.c) $(wildcard project/src/*.s)))
+OBJS=$(addsuffix .o,$(basename $(wildcard project/src/*.c)))
+SOBJS=$(addsuffix .o,$(basename $(wildcard project/src/*.s)))
 #
 # user project binary name
 TARGET?=
@@ -69,19 +69,23 @@ all: target project/$(TARGET) preprocess project/build/bitcode/$(TARGET).interp.
 
 # build project Object files
 .PHONY: target
-target: $(OBJS)
-
-project/src/%.o: project/src/%.c
-	$(TASE_CLANG) -I$(INCLUDE_DIR)/tase -I$(INCLUDE_DIR)/traps/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
+target: $(SOBJS) $(OBJS)
 
 
 project/src/%.o: project/src/%.s
 	$(TASE_CLANG) -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
 
 
+project/src/%.o: project/src/%.c
+	$(TASE_CLANG) -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
+
+
+
+
 # compile project
 project/$(TARGET): project/build/$(TARGET).tase project/build/$(TARGET).vars
-	/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(TASE_LINK) -I$(INCLUDE_DIR)/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -o project/$(TARGET) -rdynamic main.cpp.o project/build/proj.a prereqs.a -L$(RUN_DIR)/install_root/llvm-3.4.2/lib -lz -lpthread -ltinfo -ldl -lm -lz -lpthread -ltinfo -ldl -lm
+	/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(TASE_LINK) -I$(INCLUDE_DIR)/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -o $$(pwd)/project/$(TARGET) $$(pwd)/project/build/proj.a -rdynamic $$(pwd)/main.cpp.o -lz -lpthread -ltinfo -ldl -lm -lpthread -Wl
+#	-L$(RUN_DIR)/install_root/llvm-3.4.2/lib
 
 
 # cartridge.log -> cartridgeInfo.txt for klee
@@ -90,17 +94,19 @@ preprocess:
 	cd project/ && ./$(TARGET) -tasePreProcess=TRUE
 
 
-# create proj.a from libtase.a, libtasec.a, project Objects
-
 project/build/$(TARGET).vars: project/build/proj.a
 	python3 $(RUN_DIR)/parseltongue86/rosettastone.py project/$(TARGET) project/build/proj.a | sort -u > project/$(TARGET).vars
 
 
+# combine libtase.a and project Objects
 project/build/proj.a:
-	./combine_libs.sh $(BUILD_DIR)/build_klee/lib/proj.a $$(pwd)/libtase.a project/src/*.o
+	mkdir -p project/tmp/
+	cd project/tmp/ && $(RUN_DIR)/install/combine_libs.sh proj.a $(RUN_DIR)/install/libtase.a $(addprefix ../src/,$(notdir $(wildcard project/src/*.o)))
+	mv project/tmp/proj.a project/build/
+	rm -rf project/tmp/
 
 
-# used to use project/build/everything.o
+# previously made project/build/everything.o
 project/build/$(TARGET).tase: project/build/proj.a
 	nm --defined-only project/build/proj.a | grep -i " t " | cut -d' ' -f 3 > project/build/$(TARGET).tase
 
@@ -147,9 +153,9 @@ resources:
 # copy parseltongue over to install dir
 .PHONY: parseltongue
 parseltongue:
-	mkdir -p  /TASE/parseltongue86/translator
+	mkdir -p  /TASE/parseltongue86/
 	cp /TASE_BUILD/parseltongue86/parseltongue86.py /TASE_BUILD/parseltongue86/rosettastone.py /TASE/parseltongue86/
-	cp -r /TASE_BUILD/parseltongue86/translator/ /TASE/parseltongue86/translator/
+	cp -r /TASE_BUILD/parseltongue86/translator /TASE/parseltongue86/
 
 
 # compile tase Objects
@@ -201,13 +207,15 @@ bitcode_files:
 
 
 libtase.a: $(TASE_OBJS) musl.o
-	./combine_libs.sh $$(pwd)/libtase.a $(TASE_OBJS) $(BUILD_DIR)/build_stp/lib/*.a $(RUN_DIR)/lib/libminisat.a $(RUN_DIR)/llvm-3.4.2/lib/*.a $$(pwd)/musl.o
+	./combine_libs.sh $$(pwd)/libtase.a $(TASE_OBJS) $(wildcard $(BUILD_DIR)/build_stp/lib/*.a) $(RUN_DIR)/lib/libminisat.a $(wildcard $(RUN_DIR)/llvm-3.4.2/lib/*.a) $$(pwd)/musl.o
 	rm musl.o
 
 
-# create dummy project for compiling klee
+# create dummy project for compiling klee, add klee libs to libtase
 klee: $(BUILD_DIR)/build_klee/lib/proj.a
 	cd $(BUILD_DIR)/build_klee/ && $(KLEE_ENV) cmake $(KLEE_OPTS) ../klee && make -j 8
+	./combine_libs.sh libtase-full.a $(wildcard /TASE_BUILD/build_klee/lib/*.a)
+	mv libtase-full.a libtase.a
 
 
 $(BUILD_DIR)/build_klee/lib/proj.a: $(CKSUM_OBJS) libtase.a

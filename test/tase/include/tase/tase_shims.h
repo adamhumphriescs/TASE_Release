@@ -38,8 +38,8 @@ extern "C" {
   intmax_t wcstoimax_tase ( const wchar_t *  str, wchar_t **  str_end, int base );
   uintmax_t wcstoumax_tase ( const wchar_t *  str, wchar_t **  str_end, int base );
 
-  int a_ctz_64_tase(uint64_t x);
-  int a_clz_64_tase(uint64_t x);
+  //  int a_ctz_64_tase(uint64_t x);
+  //  int a_clz_64_tase(uint64_t x);
   void * __pthread_self_tase();
   
 #ifdef __cplusplus
