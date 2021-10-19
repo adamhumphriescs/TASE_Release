@@ -24,20 +24,41 @@ NETLIBS=htonl htons ntohl ntohs
 
 MUSL_OBJS=$(MUSL_PATH)/obj/src/string/*.o $(MUSL_PATH)/obj/src/locale/__lctrans.o $(MUSL_PATH)/obj/src/ctype/*.o $(MUSL_PATH)/obj/src/errno/*.o $(addsuffix .o,$(addprefix $(MUSL_PATH)/obj/src/stdlib/,$(STDLIBS))) $(MUSL_PATH)/obj/src/errno/*.o $(addsuffix .o,$(addprefix $(MUSL_PATH)/obj/src/network/,$(NETLIB))) $(MUSL_PATH)/obj/src/math/*.o $(MUSL_PATH)/obj/src/fenv/fenv.o $(MUSL_PATH)/obj/src/fenv/fesetround.o
 
+
 # soft float
 SFLOAT_DIR=$(BUILD_DIR)/compiler-rt_soft_float
 SFLOAT_OBJS=$(addsuffix .o,$(basename $(wildcard $(SFLOAT_DIR)/*.c)))
 
 # tase Objects
 TASE_OBJSA=$(addprefix $(TASE_DIR)/,modeled/exit_tase.o)
-TASE_OBJSB=$(addprefix $(TASE_DIR)/,log.o common.o)
+TASE_OBJSB=$(addprefix $(TASE_DIR)/,log.o common.o make_byte_symbolic.o)
 TASE_OBJSC=$(addprefix $(TASE_DIR)/,springboard.o)
-TASE_SHIMOBJS=$(TASE_DIR)/traps/tase_shims.o
+TASE_SHIMOBJS=$(addprefix $(TASE_DIR)/traps/,tase_shims.o mem_traps.o)
 TASE_OBJS=$(TASE_OBJSA) $(TASE_OBJSC) $(TASE_OBJSB) $(TASE_SHIMOBJS) $(SFLOAT_OBJS)
 
 
 # dummy project vars
 CKSUM_OBJS=$(addsuffix .o,$(basename $(wildcard $(BUILD_DIR)/test/microbenchmarks/concrete/cksum/*.c)))
+
+
+# minisat cmake
+MINISAT_OPTS=-DSTATIC_BINARIES=ON -DCMAKE_INSTALL_PREFIX="$(RUN_DIR)"
+
+# STP cmake
+STP_OPTS=-DBUILD_SHARED_LIBS:BOOL=OFF -DENABLE_PYTHON_INTERFACE:BOOL=OFF -DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DUSE_CRYPTOMINISAT4:BOOL=OFF -DNO_BOOST:BOOL=ON
+
+
+# tsx_llvm cmake
+TSX_LLVM_OPTS=-DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DCMAKE_BUILD_TYPE="Debug" -DCMAKE_C_FLAGS="-fdiagnostics-color=always -fmax-errors=3" -DCMAKE_CXX_FLAGS="-fdiagnostics-color=always -fmax-errors=3" -DLLVM_USE_LINKER="gold" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_PROJECTS="clang" -DBUILD_SHARED_LIBS=FALSE -DLLVM_OPTIMIZED_TABLEGEN=TRUE -DLLVM_INCLUDE_EXAMPLES=FALSE -DLLVM_INCLUDE_TESTS=FALSE -DLLVM_INCLUDE_GO_TESTS=FALSE -DLLVM_INCLUDE_BENCHMARKS=FALSE -DLLVM_INCLUDE_DOCS=FALSE -DLLVM_ENABLE_OCAMLDOC=FALSE #-DLLVM_ENABLE_BINDINGS=FALSE -DLLVM_INCLUDE_UTILS=FALSE -DLLVM_BUILD_STATIC=TRUE
+
+#  -DLLVM_INCLUDE_TOOLS=FALSE <- do individual tool disable later
+#later add -DLLVM_DYLIB_COMPONENTS -> list of components to include
+
+
+# openssl cmake
+SSL_OPTS=--prefix="$(RUN_DIR)" --openssldir="$(RUN_DIR)" -DPURIFY -DCLIVER -DTASE_TSX -mllvm -x86-tase-modeled-functions=$(INC_DIR)/tase/core_modeled.h -I$(INC_DIR)/tase/ -T$(RUN_DIR)/tase_link.ld -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 -mno-80387 -mno-avx -mllvm -verify-regalloc -mllvm -verify-machineinstrs -mllvm -x86-tase-paranoid-control-flow=true -O1 -Qunused-arguments no-asm no-engine no-err no-gmp no-hw no-hardware no-locking no-shared no-threads no-zlib no-cast no-comp no-dso no-dtls no-dtls1 no-md4 no-mdc2 no-nextprotoneg no-npn no-psk no-ripemd no-srtp no-ssl2 no-weak-ssl-ciphers
+
+
 
 # Klee CMAKE variables
 KLEE_BUILD_TYPE=Release+Debug+Asserts
@@ -45,6 +66,14 @@ KLEE_BUILD_TYPE=Release+Debug+Asserts
 KLEE_ENV=CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(RUN_DIR)/tase_link.ld -I$(INCLUDE_DIR)/openssl/"
 
 KLEE_OPTS=-DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DLLVM_CONFIG_BINARY="$(RUN_DIR)/llvm-3.4.2/bin/llvm-config" -DLLVMCC="$(CLANG)" -DLLVMCXX="$(CLANG)++" -DENABLE_KLEE_UCLIBC=FALSE -DENABLE_POSIX_RUNTIME=FALSE -DENABLE_SOLVER_STP=TRUE -DSTP_DIR="$(BUILD_DIR)/build_stp" -DCMAKE_BUILD_TYPE=Release -DENABLE_KLEE_ASSERTS=FALSE -DENABLE_UNIT_TESTS=FALSE -DENABLE_SYSTEM_TESTS=FALSE -DENABLE_DOCS=FALSE -DLLVM_INCLUDE_DIRS="$(RUN_DIR)/include/llvm-3.4.2/include/" -DLLVM_LIBRARY_DIRS="$(RUN_DIR)/include/llvm-3.4.2/lib/" -DKLEE_RUNTIME_BUILD_TYPE=$(KLEE_BUILD_TYPE)
+
+KLEE_LIBS=kleeTase kleeSupport kleeModule kleeCore kleeBasic kleaverSolver kleaverExpr
+
+LLVM_LIBS=clangTooling clangStaticAnalyzerFrontend clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangSerialization clangSema clangRewriteFrontend clangRewriteCore clangParse clangLex clangIndex clangFrontendTool clangFrontend clangFormat clangEdit clangDynamicASTMatchers clangDriver clangCodeGen clangBasic clangAnalysis clangASTMatchers clangAST clangARCMigrate clang LTO LLVMipo LLVMipa LLVMXCoreInfo LLVMXCoreDisassembler LLVMXCoreDesc LLVMXCoreCodeGen LLVMXCoreAsmPrinter LLVMX86Utils LLVMX86Info LLVMX86Disassembler LLVMX86Desc LLVMX86CodeGen LLVMX86AsmPrinter LLVMX86AsmParser LLVMVectorize LLVMTransformUtils LLVMTarget LLVMTableGen LLVMSystemZInfo LLVMSystemZDisassembler LLVMSystemZDesc LLVMSystemZCodeGen LLVMSystemZAsmPrinter LLVMSystemZAsmParser LLVMSupport LLVMSparcInfo LLVMSparcDesc LLVMSparcCodeGen LLVMSelectionDAG LLVMScalarOpts LLVMRuntimeDyld LLVMR600Info LLVMR600Desc LLVMR600CodeGen LLVMR600AsmPrinter LLVMPowerPCInfo LLVMPowerPCDesc LLVMPowerPCCodeGen LLVMPowerPCAsmPrinter LLVMPowerPCAsmParser LLVMOption LLVMObject LLVMObjCARCOpts LLVMNVPTXInfo LLVMNVPTXDesc LLVMNVPTXCodeGen LLVMNVPTXAsmPrinter LLVMMipsInfo LLVMMipsDisassembler LLVMMipsDesc LLVMMipsCodeGen LLVMMipsAsmPrinter LLVMMipsAsmParser LLVMMSP430Info LLVMMSP430Desc LLVMMSP430CodeGen LLVMMSP430AsmPrinter LLVMMCParser LLVMMCJIT LLVMMCDisassembler LLVMMC LLVMLinker LLVMLTO LLVMJIT LLVMInterpreter LLVMInstrumentation LLVMInstCombine LLVMIRReader LLVMHexagonInfo LLVMHexagonDesc LLVMHexagonCodeGen LLVMHexagonAsmPrinter LLVMExecutionEngine LLVMDebugInfo LLVMCppBackendInfo LLVMCppBackendCodeGen LLVMCore LLVMCodeGen LLVMBitWriter LLVMBitReader LLVMAsmPrinter LLVMAsmParser LLVMAnalysis LLVMARMInfo LLVMARMDisassembler LLVMARMDesc LLVMARMCodeGen LLVMARMAsmPrinter LLVMARMAsmParser LLVMAArch64Utils LLVMAArch64Info LLVMAArch64Disassembler LLVMAArch64Desc LLVMAArch64CodeGen LLVMAArch64AsmPrinter LLVMAArch64AsmParser
+
+KLEE_LIB_INC=$(addprefix $(RUN_DIR)/install/lib/klee/lib,$(KLEE_LIBS))
+LLVM_LIB_INC=$(addprefix $(RUN_DIR)/install/lib/llvm/lib,$(LLVM_LIBS))
+
 
 # @runtime items:
 #
@@ -80,34 +109,28 @@ project/src/%.o: project/src/%.c
 	$(TASE_CLANG) -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
 
 
-
-
 # compile project
-project/$(TARGET): project/build/$(TARGET).tase project/build/$(TARGET).vars
-	/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(TASE_LINK) -I$(INCLUDE_DIR)/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -o $$(pwd)/project/$(TARGET) $$(pwd)/project/build/proj.a -rdynamic $$(pwd)/main.cpp.o -lz -lpthread -ltinfo -ldl -lm -lpthread -Wl
-#	-L$(RUN_DIR)/install_root/llvm-3.4.2/lib
+project/$(TARGET): project/build/proj.a
+	/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(TASE_LINK) -I$(INCLUDE_DIR)/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -o $$(pwd)/project/$(TARGET) -L$(RUN_DIR)/lib/ $$(pwd)/project/build/proj.a -rdynamic $$(pwd)/main.cpp.o -lz -lpthread -ltinfo -ldl -lm
 
 
 # cartridge.log -> cartridgeInfo.txt for klee
 .PHONY: preprocess
-preprocess:
+preprocess: project/build/$(TARGET).vars project/build/$(TARGET).tase
 	cd project/ && ./$(TARGET) -tasePreProcess=TRUE
 
 
-project/build/$(TARGET).vars: project/build/proj.a
+project/build/$(TARGET).vars: project/$(TARGET)
 	python3 $(RUN_DIR)/parseltongue86/rosettastone.py project/$(TARGET) project/build/proj.a | sort -u > project/$(TARGET).vars
 
 
 # combine libtase.a and project Objects
 project/build/proj.a:
-	mkdir -p project/tmp/
-	cd project/tmp/ && $(RUN_DIR)/install/combine_libs.sh proj.a $(RUN_DIR)/install/libtase.a $(addprefix ../src/,$(notdir $(wildcard project/src/*.o)))
-	mv project/tmp/proj.a project/build/
-	rm -rf project/tmp/
+	ar crs project/build/proj.a $$(pwd)/project/src/*.o
 
 
 # previously made project/build/everything.o
-project/build/$(TARGET).tase: project/build/proj.a
+project/build/$(TARGET).tase: project/$(TARGET)
 	nm --defined-only project/build/proj.a | grep -i " t " | cut -d' ' -f 3 > project/build/$(TARGET).tase
 
 
@@ -146,8 +169,8 @@ setup: klee main.cpp.o bitcode_files parseltongue resources
 
 # copy cwd into install directory
 .PHONY: resources
-resources:
-	cp -r $$(pwd) $(RUN_DIR)/
+resources: main.cpp.o
+	mv $$(pwd) $(RUN_DIR)/
 
 
 # copy parseltongue over to install dir
@@ -159,10 +182,10 @@ parseltongue:
 
 
 # compile tase Objects
-$(TASE_OBJSA): %.o: %.c
+$(TASE_OBJSA): %.o: %.c $(TASE_CLANG)
 	$(TASE_CLANG) -c -O1 -DTASE_TSX -DTASE_ENABLE=1 -I$(BUILD_DIR)/test/tase/include/  $(MODELED_FN_ARG) $< -o $@
 
-$(TASE_OBJSC): %.o: %.S
+$(TASE_OBJSC): %.o: %.S $(TASE_CLANG)
 	$(TASE_CLANG) -c -O1 -DTASE_TSX -DTASE_ENABLE=1 -I$(BUILD_DIR)/test/tase/include/  $(MODELED_FN_ARG) $< -o $@
 
 
@@ -170,21 +193,21 @@ $(TASE_OBJSB): %.o: %.c
 	$(CLANG) -c -O1 -I$(BUILD_DIR)/test/tase/include/ $< -o $@
 
 
-$(TASE_SHIMOBJS): $(TASE_DIR)/traps/tase_shims.c
+$(TASE_SHIMOBJS): %.o: %.c $(TASE_CLANG)
 	$(TASE_CLANG) -c -O0 $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
 
 
 # compile musl objects, redefine symbols
 # ar -> ld because otherwise get multiple definition errors from errno
-musl.o:
+lib/musl.o: $(TASE_CLANG)
 	cp $(MUSL_PATH)/TASEConfig/config.mak_no_simd $(MUSL_PATH)/config.mak
-	make -C $(MUSL_PATH) -j 8
+	PATH="$(RUN_DIR)/bin:$${PATH}" $(MAKE) -C $(MUSL_PATH)
 	cp $(BUILD_DIR)/test/libc/all.syms ./libtasec.syms
-	ar -r libtasec.a $(MUSL_OBJS)
-	mkdir -p ltbuild
-	cd ltbuild && ar -x ../libtasec.a && ld -o ../musl.o -r *.o
+	ar crs libtasec.a $(MUSL_OBJS)
+	mkdir -p ltbuild lib
+	cd ltbuild && ar -x ../libtasec.a && ld -o ../lib/musl.o -r *.o
 	rm -rf ltbuild
-	./localize.sh
+	./localize.sh lib/musl.o
 	rm libtasec.syms
 	rm libtasec.a
 
@@ -196,32 +219,61 @@ $(BUILD_DIR)/compiler-rt_soft_float/%.o: $(BUILD_DIR)/compiler-rt_soft_float/%.c
 
 # copy klee main, needed for project compilation
 main.cpp.o: klee
-	cp $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/main.cpp.o .
+	mv $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/main.cpp.o $$(pwd)/main.cpp.o
 
 
 # copy klee bitcode files to install dir
 .PHONY: bitcode_files
-bitcode_files:
-	mkdir -p klee_bitcode 
-	cp $(BUILD_DIR)/build_klee/$(KLEE_BUILD_TYPE)/lib/klee*.bc klee_bitcode/
+bitcode_files: klee
+	mkdir -p klee_bitcode
+	mv $(BUILD_DIR)/build_klee/$(KLEE_BUILD_TYPE)/lib/klee*.bc klee_bitcode/
 
 
-libtase.a: $(TASE_OBJS) musl.o
-	./combine_libs.sh $$(pwd)/libtase.a $(TASE_OBJS) $(wildcard $(BUILD_DIR)/build_stp/lib/*.a) $(RUN_DIR)/lib/libminisat.a $(wildcard $(RUN_DIR)/llvm-3.4.2/lib/*.a) $$(pwd)/musl.o
-	rm musl.o
+lib/libtase.a: $(TASE_OBJS) lib/musl.o
+	ar crs lib/libtase.a $(TASE_OBJS)
 
 
-# create dummy project for compiling klee, add klee libs to libtase
-klee: $(BUILD_DIR)/build_klee/lib/proj.a
-	cd $(BUILD_DIR)/build_klee/ && $(KLEE_ENV) cmake $(KLEE_OPTS) ../klee && make -j 8
-	./combine_libs.sh libtase-full.a $(wildcard /TASE_BUILD/build_klee/lib/*.a)
-	mv libtase-full.a libtase.a
-
-
-$(BUILD_DIR)/build_klee/lib/proj.a: $(CKSUM_OBJS) libtase.a
+# create dummy project for compiling klee
+klee: lib/libtase.a $(BUILD_DIR)/build_klee/lib/checksum.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a $(TASE_CLANG)
 	mkdir -p $(BUILD_DIR)/build_klee/lib/
-	./combine_libs.sh $(BUILD_DIR)/build_klee/lib/proj.a $$(pwd)/libtase.a $(CHECKSUM_OBJS)
+	cp lib/libtase.a $(BUILD_DIR)/build_klee/lib/
+	cd $(BUILD_DIR)/build_klee/ && $(KLEE_ENV) cmake $(KLEE_OPTS) ../klee
+	cp $(BUILD_DIR)/install/link.txt $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/
+	$(MAKE) -C $(BUILD_DIR)/build_klee/
+#	mkdir -p lib/klee/
+#	mv /TASE_BUILD/build_klee/lib/libk*.a lib/klee/
 
 
-$(BUILD_DIR)/test/microbenchmarks/concrete/cksum/%.o: $(BUILD_DIR)/test/microbenchmarks/concrete/cksum/%.c
+$(BUILD_DIR)/build_klee/lib/checksum.a: $(CKSUM_OBJS)
+	mkdir -p $(BUILD_DIR)/build_klee/lib/
+	ar crs $(BUILD_DIR)/build_klee/lib/checksum.a $(CKSUM_OBJS)
+
+
+$(BUILD_DIR)/test/microbenchmarks/concrete/cksum/%.o: $(BUILD_DIR)/test/microbenchmarks/concrete/cksum/%.c $(TASE_CLANG)
 	$(TASE_CLANG) -I$(BUILD_DIR)/test/microbenchmarks/concrete/cksum/ -I$(INCLUDE_DIR)/tase/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
+
+
+$(RUN_DIR)/lib/libstp.a: $(RUN_DIR)/lib/libminisat.a
+	cd $(BUILD_DIR)/build_stp && cmake $(STP_OPTS) ../stp
+	$(MAKE) -C $(BUILD_DIR)/build_stp/
+	$(MAKE) -C $(BUILD_DIR)/build_stp/ install
+	cp $(BUILD_DIR)/build_stp/lib/libstp.a $(RUN_DIR)/lib/
+
+
+$(RUN_DIR)/lib/libminisat.a:
+	cd $(BUILD_DIR)/build_minisat/ && cmake $(MINISAT_OPTS) ../minisat
+	$(MAKE) -C $(BUILD_DIR)/build_minisat/
+	$(MAKE) -C $(BUILD_DIR)/build_minisat/ install
+	cp $(BUILD_DIR)/build_minisat/lib/libminisat.a $(RUN_DIR)/lib/
+
+
+$(TASE_CLANG):
+	cd $(BUILD_DIR)/build_llvm/ && cmake $(TSX_LLVM_OPTS) ../llvm
+	$(MAKE) -C $(BUILD_DIR)/build_llvm/
+	$(MAKE) -C $(BUILD_DIR)/build_llvm/ install
+
+
+.PHONY: openssl
+openssl:
+	cd openssl && ./config $(SSL_OPTS)
+	$(MAKE) -C $(BUILD_DIR)/openssl/ build_taseall
