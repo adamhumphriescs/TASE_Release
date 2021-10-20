@@ -69,10 +69,8 @@ KLEE_OPTS=-DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DLLVM_CONFIG_BINARY="$(RUN_DIR)/l
 
 KLEE_LIBS=kleeTase kleeSupport kleeModule kleeCore kleeBasic kleaverSolver kleaverExpr
 
-LLVM_LIBS=clangTooling clangStaticAnalyzerFrontend clangStaticAnalyzerCore clangStaticAnalyzerCheckers clangSerialization clangSema clangRewriteFrontend clangRewriteCore clangParse clangLex clangIndex clangFrontendTool clangFrontend clangFormat clangEdit clangDynamicASTMatchers clangDriver clangCodeGen clangBasic clangAnalysis clangASTMatchers clangAST clangARCMigrate clang LTO LLVMipo LLVMipa LLVMXCoreInfo LLVMXCoreDisassembler LLVMXCoreDesc LLVMXCoreCodeGen LLVMXCoreAsmPrinter LLVMX86Utils LLVMX86Info LLVMX86Disassembler LLVMX86Desc LLVMX86CodeGen LLVMX86AsmPrinter LLVMX86AsmParser LLVMVectorize LLVMTransformUtils LLVMTarget LLVMTableGen LLVMSystemZInfo LLVMSystemZDisassembler LLVMSystemZDesc LLVMSystemZCodeGen LLVMSystemZAsmPrinter LLVMSystemZAsmParser LLVMSupport LLVMSparcInfo LLVMSparcDesc LLVMSparcCodeGen LLVMSelectionDAG LLVMScalarOpts LLVMRuntimeDyld LLVMR600Info LLVMR600Desc LLVMR600CodeGen LLVMR600AsmPrinter LLVMPowerPCInfo LLVMPowerPCDesc LLVMPowerPCCodeGen LLVMPowerPCAsmPrinter LLVMPowerPCAsmParser LLVMOption LLVMObject LLVMObjCARCOpts LLVMNVPTXInfo LLVMNVPTXDesc LLVMNVPTXCodeGen LLVMNVPTXAsmPrinter LLVMMipsInfo LLVMMipsDisassembler LLVMMipsDesc LLVMMipsCodeGen LLVMMipsAsmPrinter LLVMMipsAsmParser LLVMMSP430Info LLVMMSP430Desc LLVMMSP430CodeGen LLVMMSP430AsmPrinter LLVMMCParser LLVMMCJIT LLVMMCDisassembler LLVMMC LLVMLinker LLVMLTO LLVMJIT LLVMInterpreter LLVMInstrumentation LLVMInstCombine LLVMIRReader LLVMHexagonInfo LLVMHexagonDesc LLVMHexagonCodeGen LLVMHexagonAsmPrinter LLVMExecutionEngine LLVMDebugInfo LLVMCppBackendInfo LLVMCppBackendCodeGen LLVMCore LLVMCodeGen LLVMBitWriter LLVMBitReader LLVMAsmPrinter LLVMAsmParser LLVMAnalysis LLVMARMInfo LLVMARMDisassembler LLVMARMDesc LLVMARMCodeGen LLVMARMAsmPrinter LLVMARMAsmParser LLVMAArch64Utils LLVMAArch64Info LLVMAArch64Disassembler LLVMAArch64Desc LLVMAArch64CodeGen LLVMAArch64AsmPrinter LLVMAArch64AsmParser
-
-KLEE_LIB_INC=$(addprefix $(RUN_DIR)/install/lib/klee/lib,$(KLEE_LIBS))
-LLVM_LIB_INC=$(addprefix $(RUN_DIR)/install/lib/llvm/lib,$(LLVM_LIBS))
+#KLEE_LINK_PRE=/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T/TASE/tase_link.ld -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -rdynamic CMakeFiles/klee.dir/main.cpp.o -o ../../bin/klee  /TASE_BUILD/klee/../build_klee/lib/checksum.a /TASE_BUILD/install/lib/musl.o ../../lib/libkleeCore.a ../../lib/libkleeModule.a ../../lib/libkleeTase.a ../../lib/libkleeCore.a ../../lib/libkleeModule.a ../../lib/libkleeTase.a ../../lib/libkleeBasic.a ../../lib/libkleaverSolver.a ../../lib/libkleeBasic.a ../../lib/libkleaverSolver.a ../../lib/libkleeSupport.a
+#KLEE_LINK_POST=/TASE_BUILD/install/lib/libtase.a -lz -lpthread -ltinfo -ldl -lm -lpthread -ltinfo -ldl
 
 
 # @runtime items:
@@ -238,10 +236,9 @@ klee: lib/libtase.a $(BUILD_DIR)/build_klee/lib/checksum.a $(RUN_DIR)/lib/libstp
 	mkdir -p $(BUILD_DIR)/build_klee/lib/
 	cp lib/libtase.a $(BUILD_DIR)/build_klee/lib/
 	cd $(BUILD_DIR)/build_klee/ && $(KLEE_ENV) cmake $(KLEE_OPTS) ../klee
-	cp $(BUILD_DIR)/install/link.txt $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/
+	echo 'echo "Do not link!"' > $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/link.txt
 	$(MAKE) -C $(BUILD_DIR)/build_klee/
-#	mkdir -p lib/klee/
-#	mv /TASE_BUILD/build_klee/lib/libk*.a lib/klee/
+	mv /TASE_BUILD/build_klee/lib/libk*.a $(RUN_DIR)/lib/
 
 
 $(BUILD_DIR)/build_klee/lib/checksum.a: $(CKSUM_OBJS)
@@ -257,14 +254,12 @@ $(RUN_DIR)/lib/libstp.a: $(RUN_DIR)/lib/libminisat.a
 	cd $(BUILD_DIR)/build_stp && cmake $(STP_OPTS) ../stp
 	$(MAKE) -C $(BUILD_DIR)/build_stp/
 	$(MAKE) -C $(BUILD_DIR)/build_stp/ install
-	cp $(BUILD_DIR)/build_stp/lib/libstp.a $(RUN_DIR)/lib/
 
 
 $(RUN_DIR)/lib/libminisat.a:
 	cd $(BUILD_DIR)/build_minisat/ && cmake $(MINISAT_OPTS) ../minisat
 	$(MAKE) -C $(BUILD_DIR)/build_minisat/
 	$(MAKE) -C $(BUILD_DIR)/build_minisat/ install
-	cp $(BUILD_DIR)/build_minisat/lib/libminisat.a $(RUN_DIR)/lib/
 
 
 $(TASE_CLANG):
