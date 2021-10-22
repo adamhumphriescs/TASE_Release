@@ -109,8 +109,8 @@ project/src/%.o: project/src/%.c
 
 # compile project
 project/$(TARGET): project/build/proj.a
-#	/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(TASE_LINK) -I$(INCLUDE_DIR)/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -o $$(pwd)/project/$(TARGET) -L$(RUN_DIR)/lib/ $$(pwd)/project/build/proj.a -rdynamic $$(pwd)/main.cpp.o -lz -lpthread -ltinfo -ldl -lm
-	./link2.sh $$(pwd)/project/$(TARGET) $$(pwd)/project/build/proj.a
+	./link.sh $$(pwd)/project/$(TARGET) $$(pwd)/project/build/proj.a
+
 
 # cartridge.log -> cartridgeInfo.txt for klee
 .PHONY: preprocess
