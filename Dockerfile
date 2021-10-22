@@ -13,5 +13,6 @@ cp -r /TASE_BUILD/test/other/ /TASE/include/traps/ && \
 cp -r /TASE_BUILD/openssl/include/ /TASE/include/openssl/ && \
 cp /TASE_BUILD/test/tase/tase_link.ld /TASE/ && \
 cp -r /TASE_BUILD/test/scripts/ /TASE/scripts/ && \
-cd /TASE_BUILD/install/ &&  make -j 12 setup && \
+cd /TASE_BUILD/install/ &&  make -j 32 setup && \
+cd / && mv /TASE_BUILD/install/ /TASE/ && \
 rm -rf /TASE_BUILD/ /var/lib/apt/lists/* && apt-get autoremove

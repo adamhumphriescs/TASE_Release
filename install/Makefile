@@ -33,7 +33,7 @@ SFLOAT_OBJS=$(addsuffix .o,$(basename $(wildcard $(SFLOAT_DIR)/*.c)))
 TASE_OBJSA=$(addprefix $(TASE_DIR)/,modeled/exit_tase.o)
 TASE_OBJSB=$(addprefix $(TASE_DIR)/,log.o common.o make_byte_symbolic.o)
 TASE_OBJSC=$(addprefix $(TASE_DIR)/,springboard.o)
-TASE_SHIMOBJS=$(addprefix $(TASE_DIR)/traps/,tase_shims.o mem_traps.o)
+TASE_SHIMOBJS=$(addprefix $(TASE_DIR)/traps/,tase_shims.o)
 TASE_OBJS=$(TASE_OBJSA) $(TASE_OBJSC) $(TASE_OBJSB) $(TASE_SHIMOBJS) $(SFLOAT_OBJS)
 
 
@@ -109,8 +109,8 @@ project/src/%.o: project/src/%.c
 
 # compile project
 project/$(TARGET): project/build/proj.a
-	/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(TASE_LINK) -I$(INCLUDE_DIR)/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -o $$(pwd)/project/$(TARGET) -L$(RUN_DIR)/lib/ $$(pwd)/project/build/proj.a -rdynamic $$(pwd)/main.cpp.o -lz -lpthread -ltinfo -ldl -lm
-
+#	/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(TASE_LINK) -I$(INCLUDE_DIR)/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -o $$(pwd)/project/$(TARGET) -L$(RUN_DIR)/lib/ $$(pwd)/project/build/proj.a -rdynamic $$(pwd)/main.cpp.o -lz -lpthread -ltinfo -ldl -lm
+	./link2.sh $$(pwd)/project/$(TARGET) $$(pwd)/project/build/proj.a
 
 # cartridge.log -> cartridgeInfo.txt for klee
 .PHONY: preprocess
@@ -162,13 +162,13 @@ project/run_$(TARGET).sh:
 
 
 .PHONY: setup
-setup: klee main.cpp.o bitcode_files parseltongue resources
+setup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue resources
 
 
 # copy cwd into install directory
 .PHONY: resources
-resources: main.cpp.o
-	mv $$(pwd) $(RUN_DIR)/
+resources: $(RUN_DIR)/lib/musl.o $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue klee
+	cd / && mv $(BUILD_DIR)/install $(RUN_DIR)/
 
 
 # copy parseltongue over to install dir
@@ -197,15 +197,15 @@ $(TASE_SHIMOBJS): %.o: %.c $(TASE_CLANG)
 
 # compile musl objects, redefine symbols
 # ar -> ld because otherwise get multiple definition errors from errno
-lib/musl.o: $(TASE_CLANG)
+$(RUN_DIR)/lib/musl.o: $(TASE_CLANG)
 	cp $(MUSL_PATH)/TASEConfig/config.mak_no_simd $(MUSL_PATH)/config.mak
 	PATH="$(RUN_DIR)/bin:$${PATH}" $(MAKE) -C $(MUSL_PATH)
-	cp $(BUILD_DIR)/test/libc/all.syms ./libtasec.syms
+	mv $(BUILD_DIR)/test/libc/all.syms $(BUILD_DIR)/install/libtasec.syms
 	ar crs libtasec.a $(MUSL_OBJS)
 	mkdir -p ltbuild lib
-	cd ltbuild && ar -x ../libtasec.a && ld -o ../lib/musl.o -r *.o
+	cd ltbuild && ar -x ../libtasec.a && ld -o $(RUN_DIR)/lib/musl.o -r *.o
 	rm -rf ltbuild
-	./localize.sh lib/musl.o
+	./localize.sh $(RUN_DIR)/lib/musl.o
 	rm libtasec.syms
 	rm libtasec.a
 
@@ -216,8 +216,8 @@ $(BUILD_DIR)/compiler-rt_soft_float/%.o: $(BUILD_DIR)/compiler-rt_soft_float/%.c
 
 
 # copy klee main, needed for project compilation
-main.cpp.o: klee
-	mv $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/main.cpp.o $$(pwd)/main.cpp.o
+$(RUN_DIR)/lib/main.cpp.o: klee
+	mv $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/main.cpp.o $(RUN_DIR)/lib/main.cpp.o
 
 
 # copy klee bitcode files to install dir
@@ -227,14 +227,14 @@ bitcode_files: klee
 	mv $(BUILD_DIR)/build_klee/$(KLEE_BUILD_TYPE)/lib/klee*.bc klee_bitcode/
 
 
-lib/libtase.a: $(TASE_OBJS) lib/musl.o
-	ar crs lib/libtase.a $(TASE_OBJS)
+$(RUN_DIR)/lib/libtase.a: $(TASE_OBJS)
+	ar crs $(RUN_DIR)/lib/libtase.a $(TASE_OBJS)
 
 
 # create dummy project for compiling klee
-klee: lib/libtase.a $(BUILD_DIR)/build_klee/lib/checksum.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a $(TASE_CLANG)
+klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build_klee/lib/checksum.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a $(TASE_CLANG)
 	mkdir -p $(BUILD_DIR)/build_klee/lib/
-	cp lib/libtase.a $(BUILD_DIR)/build_klee/lib/
+	cp $(RUN_DIR)/lib/libtase.a $(BUILD_DIR)/build_klee/lib/
 	cd $(BUILD_DIR)/build_klee/ && $(KLEE_ENV) cmake $(KLEE_OPTS) ../klee
 	echo 'echo "Do not link!"' > $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/link.txt
 	$(MAKE) -C $(BUILD_DIR)/build_klee/
