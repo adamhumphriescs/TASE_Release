@@ -49,10 +49,7 @@ STP_OPTS=-DBUILD_SHARED_LIBS:BOOL=OFF -DENABLE_PYTHON_INTERFACE:BOOL=OFF -DCMAKE
 
 
 # tsx_llvm cmake
-TSX_LLVM_OPTS=-DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DCMAKE_BUILD_TYPE="Debug" -DCMAKE_C_FLAGS="-fdiagnostics-color=always -fmax-errors=3" -DCMAKE_CXX_FLAGS="-fdiagnostics-color=always -fmax-errors=3" -DLLVM_USE_LINKER="gold" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_PROJECTS="clang" -DBUILD_SHARED_LIBS=FALSE -DLLVM_OPTIMIZED_TABLEGEN=TRUE -DLLVM_INCLUDE_EXAMPLES=FALSE -DLLVM_INCLUDE_TESTS=FALSE -DLLVM_INCLUDE_GO_TESTS=FALSE -DLLVM_INCLUDE_BENCHMARKS=FALSE -DLLVM_INCLUDE_DOCS=FALSE -DLLVM_ENABLE_OCAMLDOC=FALSE #-DLLVM_ENABLE_BINDINGS=FALSE -DLLVM_INCLUDE_UTILS=FALSE -DLLVM_BUILD_STATIC=TRUE
-
-#  -DLLVM_INCLUDE_TOOLS=FALSE <- do individual tool disable later
-#later add -DLLVM_DYLIB_COMPONENTS -> list of components to include
+TSX_LLVM_OPTS=-DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DCMAKE_BUILD_TYPE="Debug" -DCMAKE_C_FLAGS="-fdiagnostics-color=always -fmax-errors=3" -DCMAKE_CXX_FLAGS="-fdiagnostics-color=always -fmax-errors=3" -DLLVM_USE_LINKER="gold" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_PROJECTS="clang" -DBUILD_SHARED_LIBS=FALSE -DLLVM_OPTIMIZED_TABLEGEN=TRUE -DLLVM_INCLUDE_EXAMPLES=FALSE -DLLVM_INCLUDE_TESTS=FALSE -DLLVM_INCLUDE_GO_TESTS=FALSE -DLLVM_INCLUDE_BENCHMARKS=FALSE -DLLVM_INCLUDE_DOCS=FALSE -DLLVM_ENABLE_OCAMLDOC=FALSE -DLLVM_ENABLE_BINDINGS=FALSE -DLLVM_INCLUDE_UTILS=FALSE -DLLVM_INCLUDE_RUNTIMES=FALSE -DLLVM_BUILD_STATIC=FALSE
 
 
 # openssl cmake
@@ -71,6 +68,9 @@ KLEE_LIBS=kleeTase kleeSupport kleeModule kleeCore kleeBasic kleaverSolver kleav
 
 #KLEE_LINK_PRE=/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T/TASE/tase_link.ld -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -rdynamic CMakeFiles/klee.dir/main.cpp.o -o ../../bin/klee  /TASE_BUILD/klee/../build_klee/lib/checksum.a /TASE_BUILD/install/lib/musl.o ../../lib/libkleeCore.a ../../lib/libkleeModule.a ../../lib/libkleeTase.a ../../lib/libkleeCore.a ../../lib/libkleeModule.a ../../lib/libkleeTase.a ../../lib/libkleeBasic.a ../../lib/libkleaverSolver.a ../../lib/libkleeBasic.a ../../lib/libkleaverSolver.a ../../lib/libkleeSupport.a
 #KLEE_LINK_POST=/TASE_BUILD/install/lib/libtase.a -lz -lpthread -ltinfo -ldl -lm -lpthread -ltinfo -ldl
+
+
+BIN_RM=bugpoint c-index-test clang-check clang-extdef-mapping clang-format clang-import-test clang-offload-bundler clang-refactor clang-rename diagtool dsymutil git-clang-format hmaptool llc lli llvm-ar llvm-as llvm-bcanalyzer llvm-c-test llvm-cat llvm-cfi-verify llvm-config llvm-cov llvm-cvtres llvm-cxxdump llvm-cxxfilt llvm-cxxmap llvm-diff llvm-dis llvm-dlltool llvm-dwarfdump llvm-dwp llvm-elfabi llvm-exegesis llvm-extract llvm-lib llvm-link llvm-lto llvm-lto2 llvm-mc llvm-mca llvm-modextract llvm-mt llvm-nm llvm-objcopy llvm-objdump llvm-opt-report llvm-pdbutil llvm-profdata llvm-ranlib llvm-rc llvm-readelf llvm-readobj llvm-rtdyld llvm-size llvm-split llvm-stress llvm-strings llvm-strip llvm-symbolizer llvm-tblgen llvm-undname llvm-xray minisat minisat_core obj2yaml opt sancov sanstats scan-build scan-view stp_simple verify-uselistorder yaml2obj
 
 
 # @runtime items:
@@ -124,6 +124,7 @@ project/build/$(TARGET).vars: project/$(TARGET)
 
 # combine libtase.a and project Objects
 project/build/proj.a:
+	mkdir -p project/build
 	ar crs project/build/proj.a $$(pwd)/project/src/*.o
 
 
@@ -162,13 +163,12 @@ project/run_$(TARGET).sh:
 
 
 .PHONY: setup
-setup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue resources
+setup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue cleanup
 
 
-# copy cwd into install directory
-.PHONY: resources
-resources: $(RUN_DIR)/lib/musl.o $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue klee
-	cd / && mv $(BUILD_DIR)/install $(RUN_DIR)/
+.PHONY: cleanup
+cleanup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue $(TASE_CLANG)
+	rm -f /TASE/lib/libLL*.a /TASE/lib/libclang* /TASE/lib/*.so* /TASE/bin/ll* /TASE/bin/minisat* /TASE/bin/s* $(addprefix /TASE/bin/,$(BIN_RM))
 
 
 # copy parseltongue over to install dir
@@ -227,12 +227,12 @@ bitcode_files: klee
 	mv $(BUILD_DIR)/build_klee/$(KLEE_BUILD_TYPE)/lib/klee*.bc klee_bitcode/
 
 
-$(RUN_DIR)/lib/libtase.a: $(TASE_OBJS)
+$(RUN_DIR)/lib/libtase.a: $(TASE_OBJS) $(TASE_CLANG)
 	ar crs $(RUN_DIR)/lib/libtase.a $(TASE_OBJS)
 
 
 # create dummy project for compiling klee
-klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build_klee/lib/checksum.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a $(TASE_CLANG)
+klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build_klee/lib/checksum.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
 	mkdir -p $(BUILD_DIR)/build_klee/lib/
 	cp $(RUN_DIR)/lib/libtase.a $(BUILD_DIR)/build_klee/lib/
 	cd $(BUILD_DIR)/build_klee/ && $(KLEE_ENV) cmake $(KLEE_OPTS) ../klee

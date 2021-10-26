@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif 
 
 #ifdef S2E_TEST
