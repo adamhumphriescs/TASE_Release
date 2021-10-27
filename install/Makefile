@@ -1,5 +1,5 @@
-BUILD_DIR=/TASE_BUILD
-RUN_DIR=/TASE
+BUILD_DIR?=/TASE_BUILD
+RUN_DIR?=/TASE
 
 # all headers
 INCLUDE_DIR=$(RUN_DIR)/include
@@ -66,10 +66,8 @@ KLEE_OPTS=-DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DLLVM_CONFIG_BINARY="$(RUN_DIR)/l
 
 KLEE_LIBS=kleeTase kleeSupport kleeModule kleeCore kleeBasic kleaverSolver kleaverExpr
 
-#KLEE_LINK_PRE=/usr/bin/c++ -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T/TASE/tase_link.ld -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O3 -rdynamic CMakeFiles/klee.dir/main.cpp.o -o ../../bin/klee  /TASE_BUILD/klee/../build_klee/lib/checksum.a /TASE_BUILD/install/lib/musl.o ../../lib/libkleeCore.a ../../lib/libkleeModule.a ../../lib/libkleeTase.a ../../lib/libkleeCore.a ../../lib/libkleeModule.a ../../lib/libkleeTase.a ../../lib/libkleeBasic.a ../../lib/libkleaverSolver.a ../../lib/libkleeBasic.a ../../lib/libkleaverSolver.a ../../lib/libkleeSupport.a
-#KLEE_LINK_POST=/TASE_BUILD/install/lib/libtase.a -lz -lpthread -ltinfo -ldl -lm -lpthread -ltinfo -ldl
 
-
+# for cleanup - we don't need these tools in the container but they are built with TASE_CLANG
 BIN_RM=bugpoint c-index-test clang-check clang-extdef-mapping clang-format clang-import-test clang-offload-bundler clang-refactor clang-rename diagtool dsymutil git-clang-format hmaptool llc lli llvm-ar llvm-as llvm-bcanalyzer llvm-c-test llvm-cat llvm-cfi-verify llvm-config llvm-cov llvm-cvtres llvm-cxxdump llvm-cxxfilt llvm-cxxmap llvm-diff llvm-dis llvm-dlltool llvm-dwarfdump llvm-dwp llvm-elfabi llvm-exegesis llvm-extract llvm-lib llvm-link llvm-lto llvm-lto2 llvm-mc llvm-mca llvm-modextract llvm-mt llvm-nm llvm-objcopy llvm-objdump llvm-opt-report llvm-pdbutil llvm-profdata llvm-ranlib llvm-rc llvm-readelf llvm-readobj llvm-rtdyld llvm-size llvm-split llvm-stress llvm-strings llvm-strip llvm-symbolizer llvm-tblgen llvm-undname llvm-xray minisat minisat_core obj2yaml opt sancov sanstats scan-build scan-view stp_simple verify-uselistorder yaml2obj
 
 
@@ -85,6 +83,7 @@ TARGET?=
 
 ### Usage
 ## project/ dir: create project, drop in source, edit harness.c, run docker container, mount project dir to test_build/project/ compile compile to *.o files in tmp/, link *.o tmp/, and then run this makefile with `make`
+## alternatively (out-of-docker build): symlink your project dir to ./project
 
 
 ########################################
@@ -109,7 +108,7 @@ project/src/%.o: project/src/%.c
 
 # compile project
 project/$(TARGET): project/build/proj.a
-	./link.sh $$(pwd)/project/$(TARGET) $$(pwd)/project/build/proj.a
+	/usr/bin/c++  -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(RUN_DIR)/tase_link.ld -I$(RUN_DIR)/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O3  -rdynamic $(RUN_DIR)/lib/main.cpp.o  -o project/$(TARGET) -Wl,--start-group $$(pwd)/project/build/proj.a $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/libkleeCore.a $(RUN_DIR)/lib/libkleeModule.a $(RUN_DIR)/lib/libkleeTase.a $(RUN_DIR)/lib/libkleeCore.a $(RUN_DIR)/lib/libkleeModule.a $(RUN_DIR)/lib/libkleeTase.a $(RUN_DIR)/lib/libkleeBasic.a $(RUN_DIR)/lib/libkleaverSolver.a $(RUN_DIR)/lib/libkleeBasic.a $(RUN_DIR)/lib/libkleaverSolver.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a $(RUN_DIR)/lib/libkleaverExpr.a $(RUN_DIR)/lib/libkleeSupport.a -lz $(RUN_DIR)/llvm-3.4.2/lib/libLLVMInstrumentation.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMIRReader.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMAsmParser.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMOption.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMLTO.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMLinker.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMipo.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMVectorize.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMTableGen.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Disassembler.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86AsmParser.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86CodeGen.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMSelectionDAG.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMAsmPrinter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMCDisassembler.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMCParser.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Desc.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Info.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86AsmPrinter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Utils.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMInterpreter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMCJIT.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMRuntimeDyld.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMExecutionEngine.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMCodeGen.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMObjCARCOpts.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMScalarOpts.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMInstCombine.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMTransformUtils.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMAnalysis.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMTarget.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMC.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMObject.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMBitWriter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMBitReader.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMCore.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMSupport.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMJIT.a $(RUN_DIR)/llvm-3.4.2/lib/libLTO.so $(RUN_DIR)/llvm-3.4.2/lib/libLLVMipa.a -lz -lpthread -ltinfo -ldl -lm -lz -lpthread -ltinfo -ldl -lm  -Wl,--end-group
 
 
 # cartridge.log -> cartridgeInfo.txt for klee
@@ -168,15 +167,15 @@ setup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue cleanup
 
 .PHONY: cleanup
 cleanup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue $(TASE_CLANG)
-	rm -f /TASE/lib/libLL*.a /TASE/lib/libclang* /TASE/lib/*.so* /TASE/bin/ll* /TASE/bin/minisat* /TASE/bin/s* $(addprefix /TASE/bin/,$(BIN_RM))
+	rm -f $(RUN_DIR)/lib/libLL*.a $(RUN_DIR)/lib/libclang* $(RUN_DIR)/lib/*.so* $(RUN_DIR)/bin/ll* $(RUN_DIR)/bin/minisat* $(RUN_DIR)/bin/s* $(addprefix $(RUN_DIR)/bin/,$(BIN_RM))
 
 
 # copy parseltongue over to install dir
 .PHONY: parseltongue
 parseltongue:
-	mkdir -p  /TASE/parseltongue86/
-	cp /TASE_BUILD/parseltongue86/parseltongue86.py /TASE_BUILD/parseltongue86/rosettastone.py /TASE/parseltongue86/
-	cp -r /TASE_BUILD/parseltongue86/translator /TASE/parseltongue86/
+	mkdir -p  $(RUN_DIR)/parseltongue86/
+	cp $(BUILD_DIR)/parseltongue86/parseltongue86.py $(BUILD_DIR)/parseltongue86/rosettastone.py $(RUN_DIR)/parseltongue86/
+	cp -r $(BUILD_DIR)/parseltongue86/translator $(RUN_DIR)/parseltongue86/
 
 
 # compile tase Objects
@@ -199,13 +198,13 @@ $(TASE_SHIMOBJS): %.o: %.c $(TASE_CLANG)
 # ar -> ld because otherwise get multiple definition errors from errno
 $(RUN_DIR)/lib/musl.o: $(TASE_CLANG)
 	cp $(MUSL_PATH)/TASEConfig/config.mak_no_simd $(MUSL_PATH)/config.mak
-	PATH="$(RUN_DIR)/bin:$${PATH}" $(MAKE) -C $(MUSL_PATH)
-	mv $(BUILD_DIR)/test/libc/all.syms $(BUILD_DIR)/install/libtasec.syms
+	env PATH="$(RUN_DIR)/bin:$${PATH}" TASE_BASE_DIR=$(RUN_DIR) $(MAKE) -C $(MUSL_PATH)
+	cp $(BUILD_DIR)/test/libc/all.syms $(BUILD_DIR)/install/libtasec.syms
 	ar crs libtasec.a $(MUSL_OBJS)
 	mkdir -p ltbuild lib
 	cd ltbuild && ar -x ../libtasec.a && ld -o $(RUN_DIR)/lib/musl.o -r *.o
 	rm -rf ltbuild
-	./localize.sh $(RUN_DIR)/lib/musl.o
+	./localize.sh $(RUN_DIR)/lib/musl.o $(BUILD_DIR)
 	rm libtasec.syms
 	rm libtasec.a
 
@@ -238,7 +237,7 @@ klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build_klee/lib
 	cd $(BUILD_DIR)/build_klee/ && $(KLEE_ENV) cmake $(KLEE_OPTS) ../klee
 	echo 'echo "Do not link!"' > $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/link.txt
 	$(MAKE) -C $(BUILD_DIR)/build_klee/
-	mv /TASE_BUILD/build_klee/lib/libk*.a $(RUN_DIR)/lib/
+	mv $(BUILD_DIR)/build_klee/lib/libk*.a $(RUN_DIR)/lib/
 
 
 $(BUILD_DIR)/build_klee/lib/checksum.a: $(CKSUM_OBJS)
@@ -272,3 +271,5 @@ $(TASE_CLANG):
 openssl:
 	cd openssl && ./config $(SSL_OPTS)
 	$(MAKE) -C $(BUILD_DIR)/openssl/ build_taseall
+
+
