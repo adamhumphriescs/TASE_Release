@@ -6,7 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && apt-get install --no-install-recommends -y build-essential binutils bison flex make cmake git wget curl bash-completion software-properties-common linux-tools-generic linux-tools-common python3-dev python3-pip zip unzip emacs libboost-program-options-dev perl zlib1g-dev libcap-dev libncurses5 libncurses-dev && \
 git clone --remote-submodules -b docker https://github.com/adamhumphriescs/TASE_Release.git /TASE_BUILD && \
-cd /TASE_BUILD/ && git submodule update --init &&  cd / && \
+cd /TASE_BUILD/ && git submodule update --init && git checkout docker && cd / && \
 mkdir -p /TASE/llvm-3.4.2 && \
 curl -s https://releases.llvm.org/3.4.2/clang+llvm-3.4.2-x86_64-linux-gnu-ubuntu-14.04.xz | tar xJvf - -C /TASE/llvm-3.4.2 --strip 1 && \
 mkdir -p /TASE/include/ /TASE/scripts/ && \
