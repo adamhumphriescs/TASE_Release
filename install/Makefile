@@ -108,7 +108,7 @@ project/src/%.o: project/src/%.c
 
 # compile project
 project/$(TARGET): project/build/proj.a
-	/usr/bin/c++  -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(RUN_DIR)/tase_link.ld -I$(RUN_DIR)/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O3  -rdynamic $(RUN_DIR)/lib/main.cpp.o  -o project/$(TARGET) -Wl,--start-group $$(pwd)/project/build/proj.a $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/libkleeCore.a $(RUN_DIR)/lib/libkleeModule.a $(RUN_DIR)/lib/libkleeTase.a $(RUN_DIR)/lib/libkleeCore.a $(RUN_DIR)/lib/libkleeModule.a $(RUN_DIR)/lib/libkleeTase.a $(RUN_DIR)/lib/libkleeBasic.a $(RUN_DIR)/lib/libkleaverSolver.a $(RUN_DIR)/lib/libkleeBasic.a $(RUN_DIR)/lib/libkleaverSolver.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a $(RUN_DIR)/lib/libkleaverExpr.a $(RUN_DIR)/lib/libkleeSupport.a -lz $(RUN_DIR)/llvm-3.4.2/lib/libLLVMInstrumentation.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMIRReader.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMAsmParser.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMOption.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMLTO.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMLinker.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMipo.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMVectorize.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMTableGen.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Disassembler.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86AsmParser.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86CodeGen.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMSelectionDAG.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMAsmPrinter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMCDisassembler.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMCParser.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Desc.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Info.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86AsmPrinter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Utils.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMInterpreter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMCJIT.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMRuntimeDyld.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMExecutionEngine.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMCodeGen.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMObjCARCOpts.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMScalarOpts.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMInstCombine.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMTransformUtils.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMAnalysis.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMTarget.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMC.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMObject.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMBitWriter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMBitReader.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMCore.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMSupport.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMJIT.a $(RUN_DIR)/llvm-3.4.2/lib/libLTO.so $(RUN_DIR)/llvm-3.4.2/lib/libLLVMipa.a -lz -lpthread -ltinfo -ldl -lm -lz -lpthread -ltinfo -ldl -lm  -Wl,--end-group
+	/usr/bin/c++  -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(RUN_DIR)/tase_link.ld -I$(RUN_DIR)/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O3  -rdynamic $(RUN_DIR)/lib/main.cpp.o  -o project/$(TARGET) -Wl,--start-group $$(pwd)/project/build/proj.a $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/libkleeCore.a $(RUN_DIR)/lib/libkleeModule.a $(RUN_DIR)/lib/libkleeTase.a $(RUN_DIR)/lib/libkleeCore.a $(RUN_DIR)/lib/libkleeModule.a $(RUN_DIR)/lib/libkleeTase.a $(RUN_DIR)/lib/libkleeBasic.a $(RUN_DIR)/lib/libkleaverSolver.a $(RUN_DIR)/lib/libkleeBasic.a $(RUN_DIR)/lib/libkleaverSolver.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a $(RUN_DIR)/lib/libkleaverExpr.a $(RUN_DIR)/lib/libkleeSupport.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMInstrumentation.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMIRReader.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMAsmParser.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMOption.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMLTO.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMLinker.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMipo.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMVectorize.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMTableGen.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Disassembler.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86AsmParser.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86CodeGen.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMSelectionDAG.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMAsmPrinter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMCDisassembler.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMCParser.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Desc.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Info.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86AsmPrinter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMX86Utils.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMInterpreter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMCJIT.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMRuntimeDyld.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMExecutionEngine.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMCodeGen.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMObjCARCOpts.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMScalarOpts.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMInstCombine.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMTransformUtils.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMAnalysis.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMTarget.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMMC.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMObject.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMBitWriter.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMBitReader.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMCore.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMSupport.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMJIT.a $(RUN_DIR)/llvm-3.4.2/lib/libLTO.a $(RUN_DIR)/llvm-3.4.2/lib/libLLVMipa.a -lz -lpthread -ltinfo -ldl -lm -Wl,--end-group
 
 
 # cartridge.log -> cartridgeInfo.txt for klee
@@ -180,18 +180,18 @@ parseltongue:
 
 # compile tase Objects
 $(TASE_OBJSA): %.o: %.c $(TASE_CLANG)
-	$(TASE_CLANG) -c -O1 -DTASE_TSX -DTASE_ENABLE=1 -I$(BUILD_DIR)/test/tase/include/  $(MODELED_FN_ARG) $< -o $@
+	$(TASE_CLANG) -fPIC -c -O1 -DTASE_TSX -DTASE_ENABLE=1 -I$(BUILD_DIR)/test/tase/include/  $(MODELED_FN_ARG) $< -o $@
 
 $(TASE_OBJSC): %.o: %.S $(TASE_CLANG)
-	$(TASE_CLANG) -c -O1 -DTASE_TSX -DTASE_ENABLE=1 -I$(BUILD_DIR)/test/tase/include/  $(MODELED_FN_ARG) $< -o $@
+	$(TASE_CLANG) -fPIC -c -O1 -DTASE_TSX -DTASE_ENABLE=1 -I$(BUILD_DIR)/test/tase/include/  $(MODELED_FN_ARG) $< -o $@
 
 
 $(TASE_OBJSB): %.o: %.c
-	$(CLANG) -c -O1 -I$(BUILD_DIR)/test/tase/include/ $< -o $@
+	$(CLANG) -fPIC -c -O1 -I$(BUILD_DIR)/test/tase/include/ $< -o $@
 
 
 $(TASE_SHIMOBJS): %.o: %.c $(TASE_CLANG)
-	$(TASE_CLANG) -c -O0 $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
+	$(TASE_CLANG) -fPIC -c -O0 $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
 
 
 # compile musl objects, redefine symbols
@@ -246,7 +246,7 @@ $(BUILD_DIR)/build_klee/lib/checksum.a: $(CKSUM_OBJS)
 
 
 $(BUILD_DIR)/test/microbenchmarks/concrete/cksum/%.o: $(BUILD_DIR)/test/microbenchmarks/concrete/cksum/%.c $(TASE_CLANG)
-	$(TASE_CLANG) -I$(BUILD_DIR)/test/microbenchmarks/concrete/cksum/ -I$(INCLUDE_DIR)/tase/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
+	$(TASE_CLANG) -fPIC -I$(BUILD_DIR)/test/microbenchmarks/concrete/cksum/ -I$(INCLUDE_DIR)/tase/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
 
 
 $(RUN_DIR)/lib/libstp.a: $(RUN_DIR)/lib/libminisat.a
