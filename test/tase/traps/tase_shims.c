@@ -43,9 +43,9 @@ void free_tase_shim(void * ptr) {
   return;
 }
 
-void * memcpy_tase(void * dest, const void * src, unsigned long n) {
+/*void * memcpy_tase(void * dest, const void * src, unsigned long n) {
   return 0LL;
-}
+}*/
 void * memcpy_tase_shim(void * dest, const void * src, unsigned long n) {
   return memcpy_tase(dest,src,n);
 }
