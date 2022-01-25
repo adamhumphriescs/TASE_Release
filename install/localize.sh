@@ -11,8 +11,8 @@ done
 #libc from musl.  Specifically, the a_ctz_64 and a_clz_64 functions have
 #bsr instructions when they're compiled in TASE, so we just trap on those for now
 #and use a model in KLEE.
-objcopy --redefine-syms="$2/test/scripts/redefinedSF" $OBJ
-objcopy --redefine-syms="$2/test/scripts/redefinedStrConv" $OBJ
+objcopy --redefine-syms=redefinedSF $OBJ
+objcopy --redefine-syms=redefinedStrConv $OBJ
 
 objcopy --redefine-sym sprintf=sprintf_tase $OBJ
 objcopy --redefine-sym printf=printf_tase $OBJ

@@ -204,7 +204,9 @@ $(RUN_DIR)/lib/musl.o: $(TASE_CLANG)
 	mkdir -p ltbuild lib
 	cd ltbuild && ar -x ../libtasec.a && ld -o $(RUN_DIR)/lib/musl.o -r *.o
 	rm -rf ltbuild
-	./localize.sh $(RUN_DIR)/lib/musl.o $(BUILD_DIR)
+	cp $(BUILD_DIR)/test/scripts/redefinedSF .
+	cp $(BUILD_DIR)/test/scripts/redefinedStrConv .
+	./localize.sh $(RUN_DIR)/lib/musl.o
 	rm libtasec.a
 
 
