@@ -97,13 +97,13 @@ all: target project/$(TARGET) preprocess project/build/bitcode/$(TARGET).interp.
 .PHONY: target
 target: $(SOBJS) $(OBJS)
 
-
 project/src/%.o: project/src/%.s
 	$(TASE_CLANG) -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
-
+	./localize.sh $<
 
 project/src/%.o: project/src/%.c
 	$(TASE_CLANG) -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
+	./localize.sh $<
 
 
 # compile project
@@ -205,7 +205,6 @@ $(RUN_DIR)/lib/musl.o: $(TASE_CLANG)
 	cd ltbuild && ar -x ../libtasec.a && ld -o $(RUN_DIR)/lib/musl.o -r *.o
 	rm -rf ltbuild
 	./localize.sh $(RUN_DIR)/lib/musl.o $(BUILD_DIR)
-	rm libtasec.syms
 	rm libtasec.a
 
 
