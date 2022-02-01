@@ -1,0 +1,12 @@
+sprintf sprintf_tase
+printf printf_tase
+puts puts_tase_shim
+a_ctz_64 a_ctz_64_tase
+a_clz_64 a_clz_64_tase
+calloc calloc_tase_shim
+realloc realloc_tase_shim
+malloc malloc_tase_shim
+free free_tase_shim
+getc_unlocked getc_unlocked_tase_shim
+memcpy memcpy_tase
+main tase_project_entry
