@@ -160,6 +160,9 @@ project/run_$(TARGET).sh:
 ############ @build section ############
 ########################################
 
+.PHONY: tase_clang
+tase_clang: $(TASE_CLANG) $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
+
 
 .PHONY: setup
 setup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue cleanup
