@@ -6,15 +6,21 @@ extern "C" {
 #endif
 
   void * malloc_tase(long int size);
+  void * malloc_tase_shim(long int size);
   void * realloc_tase(void * ptr, long int size);
+  void * realloc_tase_shim(void * ptr, long int size);
   void * calloc_tase (long int num, long int size);
+  void * calloc_tase_shim (long int num, long int size);
   void free_tase (void * ptr);
+  void free_tase_shim(void * ptr);
   void * memcpy_tase(void * dest, const void * src, unsigned long n);
 
   void * tase_make_symbolic(void * addr, unsigned long size, const char * name);
   
   int * getc_unlocked_tase (FILE * f);
+  int * getc_unlocked_tase_shim (FILE * f);
   int puts_tase(const char * str);
+  int puts_tase_shim(const char * str);
   int printf_tase(const char * format, ...);
   int sprintf_tase(char * str, const char * format, ...);
   
