@@ -180,9 +180,9 @@ def reg_operand(instr, base_reg, size):
   reg = '%' + REG_SIZE_MAP[size][idx]
   return Operand(instr, reg)
 
-def print_reg_writes():
+def print_reg_writes(out):
   for r in BB_ASSIGNED_REGS:
-    print('gregs[GREG_%s] = %s;\n' % (r.upper(), tmp_reg_name(r)))
+    out.write('gregs[GREG_%s] = %s;\n' % (r.upper(), tmp_reg_name(r)))
 
 class Operand:
 

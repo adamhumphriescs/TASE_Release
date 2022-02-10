@@ -46,24 +46,29 @@ class ELFFile(collections.abc.Mapping):
     self._out = out
     self._file_path = file_path
     self._filter_functions = filter_functions
+    self._fasm = {}
+    self._vloc = {}
     # self._function_asm = dict() # name -> parsed assembly
     # self._vars_loc = dict() # name -> [(start address, length)] non-empty
 
   def __getattr__(self, name):
     if name == '_function_asm':
-      text = self._objdump()
-      return self._parse_objdump(text)
+      if self._fasm:
+        return self._fasm
+      return self._parse_objdump(self._objdump())
     elif name == '_vars_loc':
-      text = self._nm()
-      return self._parse_nm_vars(text)
+      if self._vloc:
+        return self._vloc
+      return self._parse_nm_vars(self._nm())
     else:
       raise AttributeError
 
   def __iter__(self):
-    return iter(self._function_asm)
+    if self._function_asm:
+      return iter(self._function_asm)
+    return self._parse_objdump(self._objdump())
 
   def __getitem__(self, function_name):
-    assert isinstance(function_name, str)
     return self._function_asm[function_name]
 
   def __len__(self):
@@ -76,51 +81,47 @@ class ELFFile(collections.abc.Mapping):
     """
     text: [str]
     """
-    setattr(self, '_vars_loc', dict())
     for line in text:
-      result = self._regex_var_symbol.match(line)
-      if result:
+      if result := self._regex_var_symbol.match(line):
         # We may have multiple symbols corresponding to the same object
         # name if they are local and static. Collect all of them in
         # a list.
         addr = int(result.group('addr'), 16)
         size = int(result.group('size'), 16)
-        self._vars_loc.setdefault(result.group('name'), []).append((addr, size))
-
-    return self._vars_loc
+        self._vloc.setdefault(result.group('name'), []).append((addr, size))
+    return self._vloc
 
   def _parse_objdump(self, text):
     """
     text: [str]
     """
-    setattr(self, '_function_asm', dict())
-    current_function = None
     dupname_ctr = 0
+    fname = None
+    last = None
     for line in text:
-      if current_function is None:
-        result = self._regex_function_header.match(line)
-        if result:
-          fname = result.group(1)
-          if self._filter_functions is None or any(fname == f for f in self._filter_functions):
-            if fname in self._function_asm:
-              fname = '%s duplicate %d' % (fname, dupname_ctr)
-              dupname_ctr += 1
-            current_function = []
-            self._function_asm[fname] = current_function
-      else:
-        result = self._regex_instr.match(line)
-        if result:
-          instr = instruction.Instruction(
-              line,
-              result.group('vaddr'), result.group('encoded'),
-              result.group('prefix'), result.group('mnemonic'),
-              result.group('operands'),
-              self._out)
-          assert instr is not None
-          current_function.append(instr)
+      if fname and (result := self._regex_instr.match(line)):
+        instr = instruction.Instruction(
+          line,
+          result.group('vaddr'), result.group('encoded'),
+          result.group('prefix'), result.group('mnemonic'),
+          result.group('operands'),
+          self._out)
+        self._fasm[fname].append(instr)
+      elif not fname and (result := self._regex_function_header.match(line)):
+        if not self._filter_functions or (fname := result.group(1)) in self._filter_functions:
+          if fname in self._fasm:
+            fname = f'{fname} duplicate {dupname_ctr}'
+            dupname_ctr += 1
+          if last:
+            yield last, self._fasm[last]
+          last = fname
+          self._fasm[fname] = []
         else:
-          current_function = None
-    return self._function_asm
+          fname = None
+      else:
+        fname = None
+    if last:
+      yield last, self._fasm[last]
 
   def _objdump(self):
     status = subprocess.run([

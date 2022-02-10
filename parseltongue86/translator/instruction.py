@@ -104,6 +104,9 @@ OPS_SIZED = list(chain(OPS_XCHG[2:], OPS_MATH, OPS_SHIFT, OPS_BIT[1:],
                        OPS_FLOW[:-4], OPS_STR, OPS_FLAG[:2], OPS_DATA))
 OPS_IMM32 = ['test', 'mov', OPS_MATH[:8]]
 
+# OPS_STR needs to come early - to match cmps before cmp
+# OPS_IGNORE comes fires to catch 'movaps' etc. before they get matched.
+all_ops = [*OPS_IGNORE, *OPS_TRAN, *OPS_XCHG, *OPS_STR, *OPS_MATH, *OPS_BIT, *OPS_FLOW, *OPS_CONV, *OPS_FLAG, *OPS_SHIFT, *OPS_DATA]
 
 dblookup64 = '0, 1, 48,  2, 57, 49, 28,  3,\n \
 61, 58, 50, 42, 38, 29, 17,  4,\n \
@@ -197,13 +200,11 @@ class Instruction:
         self._parse_operands(operands)
         self._fixup_instructions()
 
-      self._parsed_result_message = '<%s> : <%s> : <%s> : <%s> : <%s>' % (
-          vaddr, encoded, prefix, mnemonic, operands)
+      self._parsed_result_message = f'<{vaddr}> : <{encoded}> : <{prefix}> : <{mnemonic}> : <{operands}>'
 
     except AssertionError as err:
-      logging.error('Failed parsing assertion with:  %s', self.original)
-      logging.error('<%s> : <%s> : <%s> : <%s> : <%s>',
-                    vaddr, encoded, prefix, mnemonic, operands)
+      logging.error(f'Failed parsing assertion with:  {self.original}')
+      logging.error(f'<{vaddr}> : <{encoded}> : <{prefix}> : <{mnemonic}> : <{operands}>')
       raise err from None
 
   # Functions to parse out objdump instruction output.
@@ -213,17 +214,10 @@ class Instruction:
     returns (str, str):
       (matched operation, remaining suffix) or (unmatched full mnemonic, None)
     """
-    m = self.mnemonic
-
-    def _match_op(ops):
-      op = next((op for op in ops if m.startswith(op)), None)
-      return (op, m[len(op):]) if op else None
-
-    # OPS_STR needs to come early - to match cmps before cmp
-    # OPS_IGNORE comes fires to catch 'movaps' etc. before they get matched.
-    groups = [OPS_IGNORE, OPS_TRAN, OPS_XCHG, OPS_STR, OPS_MATH, OPS_BIT,
-              OPS_FLOW, OPS_CONV, OPS_FLAG, OPS_SHIFT, OPS_DATA]
-    return next((res for res in map(_match_op, groups) if res), (m, None))
+    for op in all_ops:
+      if self.mnemonic.startswith(op):
+        return (op, self.mnemonic[len(op):])
+    return (self.mnemonic, None)
 
   def _parse_shift(self, suffix):
     assert suffix and suffix[0] in ['l', 'r'], 'Shift direction required'
@@ -348,7 +342,7 @@ class Instruction:
 
     if self.op in OPS_SIZED:
       suffix = self._parse_size(suffix)
-    assert suffix == '', 'Unable to use all of the suffix: %s' % suffix
+    assert suffix == '', f'Unable to use all of the suffix: {suffix}'
 
   def _parse_operands(self, operand_str):
     operand_str = operand_str.strip() if operand_str else ''
@@ -433,7 +427,7 @@ class Instruction:
     """
     self._emit_function_prolog(suffix)
     self.out.write('  // This function should never be executed.\n')
-    self.out.write('  throw "Unreachable code for %s";\n' % suffix)
+    self.out.write(f'  throw "Unreachable code for {suffix}";\n')
     self._emit_function_epilog()
 
   def emit_function(self, Type):
@@ -451,7 +445,7 @@ class Instruction:
     if (Type == 0 or Type == 1):
       self._emit_function_prolog('')
     #self.out.write('  gregs[GREG_RIP].u64 = gregs[GREG_RIP].u64 + %d;\n' % self.length)
-    self.out.write('  rip_tmp = rip_tmp + %d;\n' % self.length) 
+    self.out.write(f'  rip_tmp = rip_tmp + {self.length};\n')
     
     if self.ignored or self.op == 'nop' or isInstrumentation :
       self.out.write('  // Nothing to do\n')
@@ -532,15 +526,15 @@ class Instruction:
     elif self.op == 'bsf':
       self._emit_bsf()
     else:
-      raise ValueError("Encountered an instruction that we do not handle : %s" % self.original)
+      raise ValueError(f"Encountered an instruction that we do not handle : {self.original}")
       # self.out.write('  // Unimplemented\n')
     if (Type == 0 or Type == 3):
       self._emit_function_epilog()
 
   def _emit_function_prolog(self, suffix):
-    self.out.write('// %s\n' % self.original)
-    self.out.write('// %s\n' % self._parsed_result_message)
-    self.out.write('extern "C" void interp_fn_%x%s(tase_greg_t* __restrict__ gregs) {\n' % (self.vaddr, suffix))
+    self.out.write(f'// {self.original}\n')
+    self.out.write(f'// {self._parsed_result_message}\n')
+    self.out.write(f'extern "C" void interp_fn_{self.vaddr:x}{suffix}(tase_greg_t* __restrict__ gregs) {{\n')
 
     #Grab all possible register values as local variables.
     #If we don't use the register while interpreting through
@@ -565,21 +559,21 @@ class Instruction:
     self.out.write('uint64_t r13_tmp = gregs[GREG_R13]; \n' )
     self.out.write('uint64_t r14_tmp = gregs[GREG_R14]; \n' )
     self.out.write('uint64_t r15_tmp = gregs[GREG_R15]; \n' )
+
   def _emit_function_epilog(self):
-    o.print_reg_writes()
+    o.print_reg_writes(self.out)
     o.clear_bb_reg_refs()
     self.out.write('}\n\n')
 
   def _make_var(self, prefix):
     global var_count
-    var = '%s%d' % (prefix, var_count)
+    var = f'{prefix}{var_count}'
     var_count += 1
     return var
 
   def emit_var_decl(self, prefix, size, exp, signed=False):
     v = self._make_var(prefix)
-    self.out.write('  %s%sint%d_t %s = %s;\n' %
-                   ('__' if size == 16 else '', '' if signed else 'u', size * 8, v, exp))
+    self.out.write(f'  {"__" if size == 16 else ""}{"" if signed else "u"}int{size*8}_t {v} = {exp};\n')
     return v
 
   def _emit_flag_decl(self):
@@ -607,14 +601,11 @@ class Instruction:
     # Capture parity flag.
     # See https://graphics.stanford.edu/~seander/bithacks.html
     self.out.write(
-        '  %s |= ((0x6996 >> (((%s >> 4) ^ %s) & 0xf)) & 1) << %s;\n' %
-        (v_efl, v_res, v_res, o.FLAG_PF))
+        f'  {v_efl} |= ((0x6996 >> ((({v_res} >> 4) ^ {v_res}) & 0xf)) & 1) << {o.FLAG_PF};\n')
     # Capture zero flag.
-    self.out.write('  %s |= (%s == 0) << %s;\n' %
-                   (v_efl, v_res, o.FLAG_ZF))
+    self.out.write(f'  {v_efl} |= ({v_res} == 0) << {o.FLAG_ZF};\n')
     # Capture sign flag.
-    self.out.write('  %s |= (%s >> %s) & %s;\n' %
-                   (v_efl, v_res, size * 8 - o.FLAG_SF - 1, hex(2 ** o.FLAG_SF)))
+    self.out.write(f'  {v_efl} |= ({v_res} >> {size*8 - o.FLAG_SF - 1}) & {hex(2**o.FLAG_SF)};\n')
 
   def _emit_store_cozps(self, v_efl, clean_clobber_flags=False):
     mask = functools.reduce(lambda acc, x: acc | 2 ** x,
@@ -643,9 +634,9 @@ class Instruction:
       o.emit_get_flag(self.out, 2 ** o.FLAG_CF, v_cf)
       # We know CF is bit 0 - so no need to explicitly shift it.
       # self.out.write('  %s >>= %s;\n' % (v_cf, o.FLAG_CF))
-      v_res = self.emit_var_decl('sum', size, '%s %s %s %s %s' % (v_aug, op, v_add, op, v_cf))
+      v_res = self.emit_var_decl('sum', size, f'{v_aug} {op} {v_add} {op} {v_cf}')
     else:
-      v_res = self.emit_var_decl('sum', size, '%s %s %s' % (v_aug, op, v_add))
+      v_res = self.emit_var_decl('sum', size, f'{v_aug} {op} {v_add}')
 
     v_efl = self._emit_flag_decl()
     if (target_l):
@@ -662,19 +653,15 @@ class Instruction:
     # to perform the right-shift (see C99 6.3.1.1).
     # x + y + c   =>  ((x + y + c) ^ x) & ((x + y + c) ^ y))
     # x - y - c   =>  ((x - y - c) ^ x) & (x ^ y)
-    self.out.write('  %s |= (((%s ^ %s) & (%s ^ %s)) >> %s) << %s;\n' %
-                   (v_efl,
-                    v_res, v_aug,
-                    v_aug if sub else v_res, v_add,
-                    size * 8 - 1, o.FLAG_OF))
+    self.out.write(f'  {v_efl} |= ((({v_res} ^ {v_aug}) & ({v_aug if sub else v_res} ^ {v_add})) >> {size*8-1}) << {o.FLAG_OF};\n')
     # Capture carry/borrow.
     # Use C++ integer promotion from boolean to 0/1 to simplify the expression.
     if set_carry:
       if carry:
-        carry_str = '%s ? %s %s %s : ' % (v_cf, v_res, '>=' if sub else '<=', v_aug)
+        carry_str = f'{v_cf} ? {v_res} {">=" if sub else "<="} {v_aug} : '
       else:
         carry_str = ''
-      self.out.write('  %s |= %s%s %s %s;\n' % (v_efl, carry_str, v_res, '>' if sub else '<', v_aug))
+      self.out.write(f'  {v_efl} |= {carry_str}{v_res} {">" if sub else "<"} {v_aug};\n')
 
     # Compute Z/P/S as usual.
     self._emit_zps(v_efl, v_res)
@@ -704,24 +691,24 @@ class Instruction:
 
     v_multiplicand = multiplicand.emit_fetch('multiplicand', self.size1)
     v_multiplier = multiplier.emit_fetch('multiplier', self.size1)
-    v_product = self.emit_var_decl('product', self.size1 * 2, '%s * %s' %
-                                   (o.icast(v_multiplicand, self.size1 * 2, signed),
-                                    o.icast(v_multiplier, self.size1 * 2, signed)),
+    v_product = self.emit_var_decl('product', self.size1 * 2,
+                                   f'{o.icast(v_multiplicand,self.size1*2,signed)} * {o.icast(v_multiplier,self.size1*2,signed)}',
                                    signed=signed)
     # Integral demotion should preserve the bitpattern we need here.
     v_lo = self.emit_var_decl('product_lo', self.size1, o.ucast(v_product, self.size1))
     dest_lo.emit_store(v_lo, self.size1)
     v_hi = self.emit_var_decl('product_hi', self.size1,
-                              o.ucast('%s >> %d' % (v_product, self.size1 * 8), self.size1))
+                              o.ucast(f'{v_product} >> {self.size1*8}', self.size1))
     if dest_hi:
       dest_hi.emit_store(v_hi, self.size1)
 
     mask = 2 ** o.FLAG_OF | 2 ** o.FLAG_CF
     if signed:
-      o.emit_set_flag(self.out, mask, '%s >> %d == %s ? 0 : %s' %
-                      (o.scast(v_lo, self.size1), self.size1 * 8 - 1, o.scast(v_hi, self.size1), hex(mask)))
+      o.emit_set_flag(self.out, mask,
+                      f'{o.scast(v_lo, self.size1)} >> {self.size1*8-1} == {o.scast(v_hi, self.size1)} ? 0 : {hex(mask)}')
     else:
-      o.emit_set_flag(self.out, mask, '%s == 0 ? 0 : %s' % (v_hi, hex(mask)))
+      o.emit_set_flag(self.out, mask, f'{v_hi} == 0 ? 0 : {hex(mask)}')
+
 
   def _emit_div(self):
     signed = self.sign_ext
@@ -737,15 +724,14 @@ class Instruction:
 
     v_hi = dividend_hi.emit_fetch('div_hi', self.size1)
     v_lo = dividend_lo.emit_fetch('div_lo', self.size1)
-    v_dividend = self.emit_var_decl('dividend', self.size1 * 2, '%s | (%s << %s)' %
-                                    (v_lo, o.icast(v_hi, self.size1 * 2, signed),
-                                     self.size1 * 8),
+    v_dividend = self.emit_var_decl('dividend', self.size1 * 2,
+                                    f'{v_lo} | ({o.icast(v_hi,self.size1*2,signed)} << {self.size1*8})',
                                     signed=signed)
     v_divisor = divisor.emit_fetch('divisor', self.size1, signed=signed)
     # My understanding is that C++ and C99 defined their division standard to
     # basically conform to the behavior of idiv to make it easier for compilers.
-    v_quotient = self.emit_var_decl('quotient', self.size1, '%s / %s' % (v_dividend, v_divisor), signed=signed)
-    v_remainder = self.emit_var_decl('remainder', self.size1, '%s %% %s' % (v_dividend, v_divisor), signed=signed)
+    v_quotient = self.emit_var_decl('quotient', self.size1, f'{v_dividend} / {v_divisor}', signed=signed)
+    v_remainder = self.emit_var_decl('remainder', self.size1, f'{v_dividend} % {v_divisor}', signed=signed)
     quotient.emit_store(v_quotient, self.size1)
     remainder.emit_store(v_remainder, self.size1)
 
@@ -754,7 +740,7 @@ class Instruction:
     dest = self.operands[1]
     v_src = src.emit_fetch('src', self.size1)
     v_dest = dest.emit_fetch('dest', self.size1)
-    v_res = self.emit_var_decl('result', self.size1, '%s %s %s' % (v_dest, operator, v_src))
+    v_res = self.emit_var_decl('result', self.size1, f'{v_dest} {operator} {v_src}')
     if write_target:
       dest.emit_store(v_res, self.size1)
     v_efl = self._emit_flag_decl()
@@ -765,7 +751,7 @@ class Instruction:
   def _emit_not(self):
     dest = self.operands[0]
     v_src = dest.emit_fetch('src', self.size1)
-    dest.emit_store('~ %s' % v_src, self.size1)
+    dest.emit_store(f'~ {v_src}', self.size1)
 
   # Flag bit tests
 
@@ -786,14 +772,14 @@ class Instruction:
     # Assume that the compiler doesn't emit offsets that are out of range.
     assert dest.mode == o.MODE_REG
     v_offset1 = src.emit_fetch('offset_raw', self.size1)
-    v_offset = self.emit_var_decl('offset', self.size1, '%s & %s' % (v_offset1, hex(self.size1 * 8 - 1)))
+    v_offset = self.emit_var_decl('offset', self.size1, f'{v_offset1} & {hex(self.size1*8-1)}')
     v_orig = dest.emit_fetch('orig', self.size1)
 
-    v_bit = self.emit_var_decl('bit', self.size1, '%s & (0x1ull << %s)' % (v_orig, v_offset))
-    o.emit_set_flag(self.out, 2 ** o.FLAG_CF, '(%s >> %s) << %d' % (v_bit, v_offset, o.FLAG_CF))
+    v_bit = self.emit_var_decl('bit', self.size1, f'{v_orig} & (0x1ull << {v_offset})')
+    o.emit_set_flag(self.out, 2 ** o.FLAG_CF, f'({v_bit} >> {v_offset}) << {o.FLAG_CF}')
     if self.test_bit:
       modify_exp = {'c': '^', 'r': '& ~', 's': '|'}[self.test_bit]
-      v_dest = self.emit_var_decl('final', self.size1, '%s %s (0x1ull << %s)' % (v_orig, modify_exp, v_offset))
+      v_dest = self.emit_var_decl('final', self.size1, f'{v_orig} {modify_exp} (0x1ull << {v_offset})')
       dest.emit_store(v_dest, self.size1)
 
   def _emit_flag(self, clear):
@@ -804,7 +790,7 @@ class Instruction:
     v_efl = self._emit_flag_decl()
     flag_mask = 2 ** o.FLAG_CF
     o.emit_get_flag(self.out, flag_mask, v_efl)
-    o.emit_set_flag(self.out, flag_mask, '%s ^ %s' % (v_efl, hex(flag_mask)))
+    o.emit_set_flag(self.out, flag_mask, f'{v_efl} ^ {hex(flag_mask)}')
 
   # Shift instructions
 
@@ -824,9 +810,9 @@ class Instruction:
       src = self.operands[1]
 
     v_amt1 = self.operands[0].emit_fetch('amt_raw', self.size1)
-    v_amt = self.emit_var_decl('amt', self.size1, '%s & %s' % (v_amt1, hex(63) if self.size2 == 8 else hex(31)))
+    v_amt = self.emit_var_decl('amt', self.size1, f'{v_amt1} & {hex(63) if self.size2==8 else hex(31)}')
     v_src = src.emit_fetch('src', self.size2, signed=signed)
-    v_shift = self.emit_var_decl('shift', self.size2, '%s %s %s' % (v_src, op, v_amt), signed=signed)
+    v_shift = self.emit_var_decl('shift', self.size2, f'{v_src} {op} {v_amt}', signed=signed)
 
     if self.op in ['rc', 'ro', 'sh_d']:
       # Do not used signed fetched for v_bit_exp because we depend on
@@ -840,9 +826,8 @@ class Instruction:
           # Inject the carry bit into the shift bit source field.
           v_cf = self._make_var('cf')
           o.emit_get_flag(self.out, 2 ** o.FLAG_CF, v_cf)
-          self.out.write('  %s = (%s %s 1) | ((%s >> %d) << %d);\n' %
-                         (v_bit_exp, v_bit_exp, anti_op, v_cf, o.FLAG_CF, self.size2 * 8 - 1 if self.c_left else 0))
-      self.out.write('  %s |= %s %s (%d - %s);\n' % (v_shift, v_bit_exp, anti_op, self.size2 * 8, v_amt))
+          self.out.write(f'  {v_bit_exp} = ({v_bit_exp} {anti_op} 1) | (({v_cf} >> {o.FLAG_CF}) << {self.size2*8-1 if self.c_left else 0});\n')
+      self.out.write(f'  {v_shift} |= {v_bit_exp} {anti_op} ({self.size2*8} - {v_amt});\n')
 
     dest.emit_store(v_shift, self.size2)
     # Only compute flags when a shift occurs.
@@ -851,18 +836,16 @@ class Instruction:
     # uniformly to all the shift instruction *in every situation where the
     # OF and CF bits are defined*.
     if not self.c_noflag:
-      self.out.write(' if (%s == 0) {}\n' % v_amt)
+      self.out.write(f' if ({v_amt} == 0) {{}}\n')
       self.out.write(' else { \n')
       v_efl = self._emit_flag_decl()
       self._emit_zps(v_efl, v_shift)
-      self.out.write('  %s |= (((%s ^ %s) >> %d) & 0x1) << %d;\n' %
-                     (v_efl, v_shift, v_src, self.size2 * 8 - 1, o.FLAG_OF))
+      self.out.write(f'  {v_efl} |= ((({v_shift} ^ {v_src}) >> {self.size2*8-1}) & 0x1) << {o.FLAG_OF};\n')
       if self.c_left:
-        shift_amt = '(%s - %s)' % (self.size2 * 8, v_amt)
+        shift_amt = f'({self.size2*8} - {v_amt})'
       else:
-        shift_amt = '(%s - 1)' % v_amt
-      self.out.write('  %s |= ((%s >> %s) & 0x1) << %d;\n' %
-                     (v_efl, v_src, shift_amt, o.FLAG_CF))
+        shift_amt = f'({v_amt} - 1)'
+      self.out.write(f'  {v_efl} |= (({v_src} >> {shift_amt}) & 0x1) << {o.FLAG_CF};\n')
       self._emit_store_cozps(v_efl)
       self.out.write(' } \n')
 
@@ -876,18 +859,18 @@ class Instruction:
     v_efl = self._make_var('efl')
     o.emit_get_flag(self.out, 0xffff, v_efl)
     if self.cond == 'l':
-      j_exp = '((%s >> %d) ^ (%s >> %d)) & 0x1' % (v_efl, o.FLAG_SF, v_efl, o.FLAG_OF)
+      j_exp = f'(({v_efl} >> {o.FLAG_SF}) ^ ({v_efl} >> {o.FLAG_OF})) & 0x1'
     else:
-      j_exp = '%s & %s' % (v_efl, hex(2 ** COND_FLAG[self.cond]))
+      j_exp = f'{v_efl} & {hex(2**COND_FLAG[self.cond])}'
     if self.c_eq and self.cond != 'z':
-      j_exp = '(%s & %s) || (%s)' % (v_efl, hex(2 ** o.FLAG_ZF), j_exp)
+      j_exp = f'({v_efl} & {hex(2**o.FLAG_ZF)}) || ({j_exp})'
     if not self.c_neg:
       # Yes this looks upside down.  But we use the condition to return early and
       # skip the branching logic.  So this expression is the 'failure condition'
       # for the branch.
-      j_exp = '!(%s)' % j_exp
+      j_exp = f'!({j_exp})'
     #self.out.write('  if (%s) return;\n' % j_exp)
-    self.out.write('  if (%s) {}\n' % j_exp)
+    self.out.write(f'  if ({j_exp}) {{}}\n')
     return v_efl
 
   def _emit_call(self):
@@ -910,10 +893,10 @@ class Instruction:
     size = self.size1 or 8
     ctr = o.reg_operand(self, 'rcx', size)
     v_ctr = ctr.emit_fetch('ctr', size)
-    self.out.write('  %s--;\n' % v_ctr)
+    self.out.write(f'  {v_ctr}--;\n')
     ctr.emit_store(v_ctr, size)
 
-    self.out.write('  if (%s == 0) return;\n' % v_ctr)
+    self.out.write(f'  if ({v_ctr} == 0) return;\n')
     self._emit_jump()
 
   def _emit_jump(self):
@@ -949,7 +932,7 @@ class Instruction:
 
   def _emit_ctd(self):
     v_src = self.operands[0].emit_fetch('in', self.size1, signed=True)
-    v_shift = self.emit_var_decl('shift', self.size2, '%s >> %s' % (v_src, self.size1 * 8 - 1), signed=True)
+    v_shift = self.emit_var_decl('shift', self.size2, f'{v_src} >> {self.size1*8-1}', signed=True)
     self.operands[1].emit_store(v_shift, self.size2)
 
   def _emit_bswap(self):
@@ -963,8 +946,8 @@ class Instruction:
       # Think of a qword byte swap.
       # The bytes need to shift by 7, 5, 3, 1 byte each symmetrically.
       shift_amt = (self.size1 - 2 * i - 1) * 8
-      exprs.append('((%s >> %d) & %s)' % (v_reg, shift_amt, byte_masks[i]))
-      exprs.append('((%s & %s) << %d)' % (v_reg, byte_masks[i], shift_amt))
+      exprs.append(f'(({v_reg} >> {shift_amt}) & {byte_masks[i]})')
+      exprs.append(f'(({v_reg} & {byte_masks[i]}) << {shift_amt})')
 
     v_swapped = self.emit_var_decl('swapped', self.size1, str.join(' | ', exprs))
     reg.emit_store(v_swapped, self.size1)
@@ -984,7 +967,7 @@ class Instruction:
     src = src or self.operands[0]
     size = size or self.size1
     self._emit_lea(
-        src=o.Operand(self, '-%s(%%rsp)' % hex(size)),
+        src=o.Operand(self, f'-{hex(size)}(%rsp)'),
         dest=o.Operand(self, '%rsp'),
         size=8)
     self._emit_mov(
@@ -1000,7 +983,7 @@ class Instruction:
         dest=dest,
         size1=size)
     self._emit_lea(
-        src=o.Operand(self, '%s(%%rsp)' % hex(size)),
+        src=o.Operand(self, f'{hex(size)}(%rsp)'),
         dest=o.Operand(self, '%rsp'),
         size=8)
 
@@ -1018,7 +1001,7 @@ class Instruction:
         dest=o.Operand(self, '%rbp'),
         size1=8)
     self._emit_lea(
-        src=o.Operand(self, '-%s(%%rsp)' % hex(alloc)),
+        src=o.Operand(self, f'-{hex(alloc)}(%rsp)'),
         dest=o.Operand(self, '%rsp'),
         size=8)
 
@@ -1038,7 +1021,7 @@ class Instruction:
     v_efl = self._emit_flag_decl()
     v = src.emit_fetch('v', 8)
 
-    self.out.write('static const int DeBruijnPos[64] = {' + f'{dblookup64}' + '};\n')
+    self.out.write(f'static const int DeBruijnPos[64] = {{{dblookup64}}};\n')
 
     # if src == 0
     # clear ZF, return
@@ -1066,7 +1049,7 @@ class Instruction:
     self.out.write(f'if(!{v}) {{\n')
     self.out.write(f'{v_efl} &= ~(1<<{o.FLAG_ZF});\n')
     self._emit_store_cozps(v_efl)
-    self.out.write(f'return;\n')
+    self.out.write('return;\n')
     self.out.write('}\n')
 
     # count leading zeroes, subtract from size, store in register. Set ZF
