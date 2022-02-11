@@ -56,7 +56,7 @@ def batched(data):
           instr._var_count = var_count
           instr.emit_tase_springboard('_' + name.rpartition('sb_')[2])
           var_count = instr._var_count
-          print(instr)
+          print(instr, file=fh)
 
     for instrs in funcs:
       for instr in instrs:
@@ -88,7 +88,7 @@ def batched(data):
               print("//Skipping lea to r15 or jmp to sb_reopen", file=fh)
             else:
               instr.emit_function(0)
-        print(instr)
+        print(instr, file=fh)
         var_count = instr._var_count
 
 
