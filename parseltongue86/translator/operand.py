@@ -141,47 +141,10 @@ def _reg_exp(reg, size=None):
     return '*' + cast_str
 
 
-def emit_get_flag(out, flags_mask, var):
-  """
-  Emit a statement that gets flags at their bit positions.
-
-  out: io.*  File like object that supports write.
-  flags_mask: int  An "or" of all the flags being fetched.
-  var: str  Name of the variable that will hold the flag value.
-  """
-  out += f'  uint16_t {var} = {_reg_exp_r("efl", size=2)} & {hex(flags_mask)};\n'
-
-
-def emit_set_flag(out, flags_mask, value, clean_clobber_flags=False):
-  """
-  Sets the given flags in the RFLAGS register.
-
-  out: io.*  File like object that supports write.
-  flags_mask: int  An "or" of the mask of all the flags being set.
-  value: int  The values of the flags sepecified in flags_mask at their
-              correct bit position with all other bits set to 0.
-  pre_kill_flags: bool  Completely clobber flags. 
-              Can be used on cmp instructions. 
-              Assumes our compiler only uses/sets the 5 cozps flags
-              in eflags, which are clobbered by cmp.
-  """
-  efl = _reg_exp_l('efl', size=8)
-
-
-  if clean_clobber_flags:
-    out += f'   {efl} = {value}; \n'
-  else:  
-    out += f'  {efl} = ({efl} & ~({hex(flags_mask)})) | ({value});\n'
-
-
 def reg_operand(instr, base_reg, size):
   idx = REG_64.index(base_reg)
   reg = '%' + REG_SIZE_MAP[size][idx]
   return Operand(instr, reg)
-
-def print_reg_writes(out):
-  for r in BB_ASSIGNED_REGS:
-    out += f'gregs[GREG_{r.upper()}] = {tmp_reg_name(r)};\n'
 
 class Operand:
 
@@ -329,7 +292,7 @@ class Operand:
           self.instr.out += f'{whole_reg} = {whole_reg} & 0xFFFFFFFFFFFFFF00;\n'
           self.instr.out += f'{whole_reg} += {var_name}; \n'
           return
-      elif size == 2:
+      elif   size == 2:
         #drop bottom two bytes
         self.instr.out += f' {whole_reg} = {whole_reg} & 0xFFFFFFFFFFFF0000;\n'
         #add in two bytes.  Should we OR these in instead?
@@ -344,4 +307,4 @@ class Operand:
         exp = _reg_exp_l(self.reg)
     else:
       exp = self.deref(size)
-    self.instr.out += f'  {exp} = {var_name};\n'
+    self.instr.out += '  {exp} = {var_name};\n'

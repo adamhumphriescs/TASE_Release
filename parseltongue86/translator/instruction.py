@@ -209,7 +209,43 @@ class Instruction:
 
   def __str__(self):
     return self.out
+
   # Functions to parse out objdump instruction output.
+
+
+  def print_reg_writes():
+    for r in o.BB_ASSIGNED_REGS:
+      self.out += f'gregs[GREG_{r.upper()}] = {o.tmp_reg_name(r)};\n'
+
+  def emit_get_flag(self, flags_mask, var):
+    """
+    Emit a statement that gets flags at their bit positions.
+
+    flags_mask: int  An "or" of all the flags being fetched.
+    var: str  Name of the variable that will hold the flag value.
+    """
+    self.out += f'  uint16_t {var} = {o._reg_exp_r("efl", size=2)} & {hex(flags_mask)};\n'
+
+
+  def emit_set_flag(self, flags_mask, value, clean_clobber_flags=False):
+    """
+    Sets the given flags in the RFLAGS register.
+
+    flags_mask: int  An "or" of the mask of all the flags being set.
+    value: int  The values of the flags sepecified in flags_mask at their
+              correct bit position with all other bits set to 0.
+    pre_kill_flags: bool  Completely clobber flags.
+              Can be used on cmp instructions.
+              Assumes our compiler only uses/sets the 5 cozps flags
+              in eflags, which are clobbered by cmp.
+    """
+    efl = o._reg_exp_l('efl', size=8)
+
+
+    if clean_clobber_flags:
+      self.out += f'   {efl} = {value}; \n'
+    else:
+      self.out += f'  {efl} = ({efl} & ~({hex(flags_mask)})) | ({value});\n'
 
   def _parse_op(self):
     """
@@ -543,27 +579,27 @@ class Instruction:
     #the basic block, then we don't write it back at the end of the
     #basic block, and the compiler optimizes out the
     #initial load.
-    self.out += 'uint64_t rip_tmp = gregs[GREG_RIP]; \n'
-    self.out += 'uint64_t efl_tmp = gregs[GREG_EFL]; \n'
-    self.out += 'uint64_t rax_tmp = gregs[GREG_RAX]; \n'
-    self.out += 'uint64_t rbx_tmp = gregs[GREG_RBX]; \n'
-    self.out += 'uint64_t rcx_tmp = gregs[GREG_RCX]; \n'
-    self.out += 'uint64_t rdx_tmp = gregs[GREG_RDX]; \n'
-    self.out += 'uint64_t rsi_tmp = gregs[GREG_RSI]; \n'
-    self.out += 'uint64_t rdi_tmp = gregs[GREG_RDI]; \n'
-    self.out += 'uint64_t rsp_tmp = gregs[GREG_RSP]; \n'
-    self.out += 'uint64_t rbp_tmp = gregs[GREG_RBP]; \n'
-    self.out += 'uint64_t r8_tmp  = gregs[GREG_R8];  \n'
-    self.out += 'uint64_t r9_tmp  = gregs[GREG_R9];  \n'
-    self.out += 'uint64_t r10_tmp = gregs[GREG_R10]; \n'
-    self.out += 'uint64_t r11_tmp = gregs[GREG_R11]; \n'
-    self.out += 'uint64_t r12_tmp = gregs[GREG_R12]; \n'
-    self.out += 'uint64_t r13_tmp = gregs[GREG_R13]; \n'
-    self.out += 'uint64_t r14_tmp = gregs[GREG_R14]; \n'
-    self.out += 'uint64_t r15_tmp = gregs[GREG_R15]; \n'
+    self.out += '  uint64_t rip_tmp = gregs[GREG_RIP]; \n'
+    self.out += '  uint64_t efl_tmp = gregs[GREG_EFL]; \n'
+    self.out += '  uint64_t rax_tmp = gregs[GREG_RAX]; \n'
+    self.out += '  uint64_t rbx_tmp = gregs[GREG_RBX]; \n'
+    self.out += '  uint64_t rcx_tmp = gregs[GREG_RCX]; \n'
+    self.out += '  uint64_t rdx_tmp = gregs[GREG_RDX]; \n'
+    self.out += '  uint64_t rsi_tmp = gregs[GREG_RSI]; \n'
+    self.out += '  uint64_t rdi_tmp = gregs[GREG_RDI]; \n'
+    self.out += '  uint64_t rsp_tmp = gregs[GREG_RSP]; \n'
+    self.out += '  uint64_t rbp_tmp = gregs[GREG_RBP]; \n'
+    self.out += '  uint64_t r8_tmp  = gregs[GREG_R8];  \n'
+    self.out += '  uint64_t r9_tmp  = gregs[GREG_R9];  \n'
+    self.out += '  uint64_t r10_tmp = gregs[GREG_R10]; \n'
+    self.out += '  uint64_t r11_tmp = gregs[GREG_R11]; \n'
+    self.out += '  uint64_t r12_tmp = gregs[GREG_R12]; \n'
+    self.out += '  uint64_t r13_tmp = gregs[GREG_R13]; \n'
+    self.out += '  uint64_t r14_tmp = gregs[GREG_R14]; \n'
+    self.out += '  uint64_t r15_tmp = gregs[GREG_R15]; \n'
 
   def _emit_function_epilog(self):
-    o.print_reg_writes(self.out)
+    self.print_reg_writes(self.out)
     o.clear_bb_reg_refs()
     self.out += '}\n\n'
 
@@ -610,7 +646,7 @@ class Instruction:
   def _emit_store_cozps(self, v_efl, clean_clobber_flags=False):
     mask = functools.reduce(lambda acc, x: acc | 2 ** x,
                             [o.FLAG_CF, o.FLAG_PF, o.FLAG_ZF, o.FLAG_SF, o.FLAG_OF], 0)
-    o.emit_set_flag(self.out, mask, v_efl, clean_clobber_flags)
+    self.emit_set_flag(mask, v_efl, clean_clobber_flags)
 
   def _emit_add(self, arg_l=None, arg_r=None, carry=False, sub=False, target_l=True, set_carry=True, clean_clobber_flags=False):
     """
@@ -631,7 +667,7 @@ class Instruction:
     v_add = arg_r.emit_fetch('addend', size)
     if carry:
       v_cf = self._make_var('cf')
-      o.emit_get_flag(self.out, 2 ** o.FLAG_CF, v_cf)
+      self.emit_set_flag(2 ** o.FLAG_CF, v_cf)
       # We know CF is bit 0 - so no need to explicitly shift it.
       # self.out += '  %s >>= %s;\n' % (v_cf, o.FLAG_CF)
       v_res = self.emit_var_decl('sum', size, f'{v_aug} {op} {v_add} {op} {v_cf}')
@@ -704,10 +740,10 @@ class Instruction:
 
     mask = 2 ** o.FLAG_OF | 2 ** o.FLAG_CF
     if signed:
-      o.emit_set_flag(self.out, mask,
+      self.emit_set_flag(mask,
                       f'{o.scast(v_lo, self.size1)} >> {self.size1*8-1} == {o.scast(v_hi, self.size1)} ? 0 : {hex(mask)}')
     else:
-      o.emit_set_flag(self.out, mask, f'{v_hi} == 0 ? 0 : {hex(mask)}')
+      self.emit_set_flag(mask, f'{v_hi} == 0 ? 0 : {hex(mask)}')
 
 
   def _emit_div(self):
@@ -776,7 +812,7 @@ class Instruction:
     v_orig = dest.emit_fetch('orig', self.size1)
 
     v_bit = self.emit_var_decl('bit', self.size1, f'{v_orig} & (0x1ull << {v_offset})')
-    o.emit_set_flag(self.out, 2 ** o.FLAG_CF, f'({v_bit} >> {v_offset}) << {o.FLAG_CF}')
+    self.emit_set_flag(2 ** o.FLAG_CF, f'({v_bit} >> {v_offset}) << {o.FLAG_CF}')
     if self.test_bit:
       modify_exp = {'c': '^', 'r': '& ~', 's': '|'}[self.test_bit]
       v_dest = self.emit_var_decl('final', self.size1, f'{v_orig} {modify_exp} (0x1ull << {v_offset})')
@@ -784,13 +820,13 @@ class Instruction:
 
   def _emit_flag(self, clear):
     flag_mask = 2 ** COND_FLAG[self.flag_bit]
-    o.emit_set_flag(self.out, flag_mask, 0 if clear else hex(flag_mask))
+    self.emit_set_flag(flag_mask, 0 if clear else hex(flag_mask))
 
   def _emit_cmc(self):
     v_efl = self._emit_flag_decl()
     flag_mask = 2 ** o.FLAG_CF
-    o.emit_get_flag(self.out, flag_mask, v_efl)
-    o.emit_set_flag(self.out, flag_mask, f'{v_efl} ^ {hex(flag_mask)}')
+    self.emit_set_flag(flag_mask, v_efl)
+    self.emit_set_flag(flag_mask, f'{v_efl} ^ {hex(flag_mask)}')
 
   # Shift instructions
 
@@ -825,7 +861,7 @@ class Instruction:
         if self.op == 'rc':
           # Inject the carry bit into the shift bit source field.
           v_cf = self._make_var('cf')
-          o.emit_get_flag(self.out, 2 ** o.FLAG_CF, v_cf)
+          self.emit_set_flag(2 ** o.FLAG_CF, v_cf)
           self.out += f'  {v_bit_exp} = ({v_bit_exp} {anti_op} 1) | (({v_cf} >> {o.FLAG_CF}) << {self.size2*8-1 if self.c_left else 0});\n'
       self.out += f'  {v_shift} |= {v_bit_exp} {anti_op} ({self.size2*8} - {v_amt});\n'
 
@@ -857,7 +893,7 @@ class Instruction:
 
     assert self.cond == 'l' or self.cond in COND_FLAG
     v_efl = self._make_var('efl')
-    o.emit_get_flag(self.out, 0xffff, v_efl)
+    self.out += self.emit_set_flag(0xffff, v_efl)
     if self.cond == 'l':
       j_exp = f'(({v_efl} >> {o.FLAG_SF}) ^ ({v_efl} >> {o.FLAG_OF})) & 0x1'
     else:

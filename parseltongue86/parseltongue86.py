@@ -143,7 +143,7 @@ def main(args):
       if name in springboard_functions:
         if args['log']:
           logging.info('  ! recognized spring board function')
-          springboard_functions[name] = disasm[0]
+        springboard_functions[name] = disasm[0]
       else:
         if args['log']:
           for instr in disasm:
