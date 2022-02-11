@@ -36,7 +36,7 @@ FLAG_OF = 11
 
 def add_bb_reg_ref(reg):
   if reg not in REG_64:
-    assert False, 'Error: attempting to pass invalid register %s to add_bb_reg_ref' % reg 
+    assert False, f'Error: attempting to pass invalid register {reg} to add_bb_reg_ref'
   if reg in BB_ASSIGNED_REGS:
     return
   else:
@@ -50,7 +50,7 @@ def tmp_reg_name(reg):
   if reg in REG_64:
     return  reg + '_tmp'
   else:
-    assert False, 'Error: called tmp_reg_name on reg %s' % reg
+    assert False, f'Error: called tmp_reg_name on reg {reg}'
     
 def base_reg(reg):
   for rlist in [REG_64, REG_32, REG_16, REG_8L, REG_8H]:
@@ -75,7 +75,7 @@ def icast(exp, size, signed):
     itype = 'uint'
   if size == 16:
     itype = '__' + itype
-  return 'static_cast<%s%d_t>(%s)' % (itype, size * 8, exp)
+  return f'static_cast<{itype}{size*8}_t>({exp})'
 
 
 def reg_size(reg):
@@ -98,9 +98,9 @@ def _reg_exp_r(reg, size=None):
   if not size:
     size = reg_size(reg)
   if reg in REG_8H:
-    return '(uint8_t) (%s >> 8)' % tmp_reg_name(reg_name)
+    return f'(uint8_t) ({tmp_reg_name(reg_name)} >> 8)'
   else:
-    cast_str = '(uint%d_t) ' % (size * 8)
+    cast_str = f'(uint{size*8}_t) '
     return cast_str + tmp_reg_name(reg_name)
 
 def _reg_exp_l(reg, size=None):
@@ -115,7 +115,7 @@ def _reg_exp_l(reg, size=None):
   if not size:
     size = reg_size(reg)
   if not (size == 8):
-    assert False, 'Error: Invalid size %d passed to reg_exp_l' % size
+    assert False, f'Error: Invalid size {size} passed to reg_exp_l'
   return tmp_reg_name(reg_name)
   
 
@@ -133,10 +133,10 @@ def _reg_exp(reg, size=None):
   
   if not size:
     size = reg_size(reg)
-  cast_str = 'reinterpret_cast<uint%d_t*>(gregs + GREG_%s)' % (size * 8, reg_name)
+  cast_str = f'reinterpret_cast<uint{size*8}_t*>(gregs + GREG_{reg_name})'
   # Stupid unaligned access case.
   if reg in REG_8H:
-    return '(%s)[1]' % cast_str
+    return f'({cast_str})[1]'
   else:
     return '*' + cast_str
 
@@ -149,8 +149,7 @@ def emit_get_flag(out, flags_mask, var):
   flags_mask: int  An "or" of all the flags being fetched.
   var: str  Name of the variable that will hold the flag value.
   """
-  out.write('  uint16_t %s = %s & %s;\n' %
-            (var, _reg_exp_r('efl', size=2), hex(flags_mask)))
+  out += f'  uint16_t {var} = {_reg_exp_r("efl", size=2)} & {hex(flags_mask)};\n'
 
 
 def emit_set_flag(out, flags_mask, value, clean_clobber_flags=False):
@@ -170,9 +169,9 @@ def emit_set_flag(out, flags_mask, value, clean_clobber_flags=False):
 
 
   if clean_clobber_flags:
-    out.write('   %s = %s; \n' % (efl, value))
+    out += f'   {efl} = {value}; \n'
   else:  
-    out.write('  %s = (%s & ~(%s)) | (%s);\n' % (efl, efl, hex(flags_mask), value))
+    out += f'  {efl} = ({efl} & ~({hex(flags_mask)})) | ({value});\n'
 
 
 def reg_operand(instr, base_reg, size):
@@ -182,7 +181,7 @@ def reg_operand(instr, base_reg, size):
 
 def print_reg_writes(out):
   for r in BB_ASSIGNED_REGS:
-    out.write('gregs[GREG_%s] = %s;\n' % (r.upper(), tmp_reg_name(r)))
+    out += f'gregs[GREG_{r.upper()}] = {tmp_reg_name(r)};\n'
 
 class Operand:
 
@@ -223,7 +222,7 @@ class Operand:
       prefix = ''
 
     match = self._regex_operand.match(all_operands)
-    assert match, 'Unknown operand format %s' % all_operands
+    assert match, f'Unknown operand format {all_operands}'
     self.operand = prefix + match.group(0)
 
     if match.group('reg'):
@@ -250,7 +249,7 @@ class Operand:
       if match.group('scale'):
         self.scale = int(match.group('scale'))
     else:
-      assert False, 'Unknown operand format %s' % all_operands
+      assert False, f'Unknown operand format {all_operands}'
 
   def addr(self):
     if self.base and self.index:
@@ -295,8 +294,7 @@ class Operand:
   
   def deref(self, size):
     assert size in [1, 2, 4, 8, 16]
-    return "*reinterpret_cast<%suint%d_t*>(%s)" % (
-        '__' if size == 16 else '', size * 8, self.addr())
+    return f"*reinterpret_cast<{'__' if size==16 else ''}uint{size*8}_t*>({self.addr()})"
 
   def emit_fetch(self, prefix, size, signed=False):
     # TODO: handle segments
@@ -324,18 +322,18 @@ class Operand:
       if   size ==1:
         if self.reg in REG_8H:
           #High byte case
-          self.instr.out.write('%s = %s & 0xFFFFFFFFFFFF00FF;\n' % (whole_reg, whole_reg))
-          self.instr.out.write('%s += (uint16_t) (%s << 8); \n' % (whole_reg, var_name))
+          self.instr.out += f'{whole_reg} = {whole_reg} & 0xFFFFFFFFFFFF00FF;\n'
+          self.instr.out += f'{whole_reg} += (uint16_t) ({var_name} << 8); \n'
           return
         else:
-          self.instr.out.write('%s = %s & 0xFFFFFFFFFFFFFF00;\n' % (whole_reg, whole_reg))
-          self.instr.out.write('%s += %s; \n' % (whole_reg, var_name))
+          self.instr.out += f'{whole_reg} = {whole_reg} & 0xFFFFFFFFFFFFFF00;\n'
+          self.instr.out += f'{whole_reg} += {var_name}; \n'
           return
-      elif   size == 2:
+      elif size == 2:
         #drop bottom two bytes
-        self.instr.out.write(' %s = %s & 0xFFFFFFFFFFFF0000;\n' %  (whole_reg,whole_reg))
+        self.instr.out += f' {whole_reg} = {whole_reg} & 0xFFFFFFFFFFFF0000;\n'
         #add in two bytes.  Should we OR these in instead?
-        self.instr.out.write(' %s = %s + %s; \n' % (whole_reg, whole_reg, var_name))
+        self.instr.out += f' {whole_reg} = {whole_reg} + {var_name}; \n'
         return
       # Only for 32-bit register writes, the top 32-bits get cleared as well.
       elif size == 4:
@@ -346,4 +344,4 @@ class Operand:
         exp = _reg_exp_l(self.reg)
     else:
       exp = self.deref(size)
-    self.instr.out.write('  %s = %s;\n' % (exp, var_name))
+    self.instr.out += f'  {exp} = {var_name};\n'

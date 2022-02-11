@@ -3,7 +3,6 @@ from itertools import chain
 import logging
 from . import operand as o
 
-var_count = 0
 
 # b,c -> CF=1, z,e -> ZF=1, l -> SF!=OF, o -> OF, p -> PF, s -> SF
 COND_DEMORGAN = {'a': 'c', 'g': 'l'}
@@ -142,7 +141,8 @@ class Instruction:
   ignored:  bool      True if this needs no processing.
   """
 
-  def __init__(self, original, vaddr, encoded, prefix, mnemonic, operands, out):
+  def __init__(self, original, vaddr, encoded, prefix, mnemonic, operands):
+
     """
     Parses out an instruction from a format that elffile generates.
 
@@ -186,7 +186,7 @@ class Instruction:
     self.flag_bit = None
     self.test_bit = None
     self.operands = []
-    self.out = out
+    self.out = ""
     self.ignored = False
 
     self._var_count = 0
@@ -207,6 +207,8 @@ class Instruction:
       logging.error(f'<{vaddr}> : <{encoded}> : <{prefix}> : <{mnemonic}> : <{operands}>')
       raise err from None
 
+  def __str__(self):
+    return self.out
   # Functions to parse out objdump instruction output.
 
   def _parse_op(self):
@@ -426,8 +428,8 @@ class Instruction:
       Emits an empty instruction IR function at this vaddr.
     """
     self._emit_function_prolog(suffix)
-    self.out.write('  // This function should never be executed.\n')
-    self.out.write(f'  throw "Unreachable code for {suffix}";\n')
+    self.out += '  // This function should never be executed.\n'
+    self.out += f'  throw "Unreachable code for {suffix}";\n'
     self._emit_function_epilog()
 
   def emit_function(self, Type):
@@ -444,11 +446,11 @@ class Instruction:
         
     if (Type == 0 or Type == 1):
       self._emit_function_prolog('')
-    #self.out.write('  gregs[GREG_RIP].u64 = gregs[GREG_RIP].u64 + %d;\n' % self.length)
-    self.out.write(f'  rip_tmp = rip_tmp + {self.length};\n')
+    #self.out += '  gregs[GREG_RIP].u64 = gregs[GREG_RIP].u64 + %d;\n' % self.length
+    self.out += f'  rip_tmp = rip_tmp + {self.length};\n'
     
     if self.ignored or self.op == 'nop' or isInstrumentation :
-      self.out.write('  // Nothing to do\n')
+      self.out += '  // Nothing to do\n'
     elif self.op == 'xchg':
       self._emit_xchg()
     elif self.op == 'xadd':
@@ -527,53 +529,52 @@ class Instruction:
       self._emit_bsf()
     else:
       raise ValueError(f"Encountered an instruction that we do not handle : {self.original}")
-      # self.out.write('  // Unimplemented\n')
+      # self.out += '  // Unimplemented\n'
     if (Type == 0 or Type == 3):
       self._emit_function_epilog()
 
   def _emit_function_prolog(self, suffix):
-    self.out.write(f'// {self.original}\n')
-    self.out.write(f'// {self._parsed_result_message}\n')
-    self.out.write(f'extern "C" void interp_fn_{self.vaddr:x}{suffix}(tase_greg_t* __restrict__ gregs) {{\n')
+    self.out += f'// {self.original}\n'
+    self.out += f'// {self._parsed_result_message}\n'
+    self.out += f'extern "C" void interp_fn_{self.vaddr:x}{suffix}(tase_greg_t* __restrict__ gregs) {{\n'
 
     #Grab all possible register values as local variables.
     #If we don't use the register while interpreting through
     #the basic block, then we don't write it back at the end of the
     #basic block, and the compiler optimizes out the
     #initial load.
-    self.out.write('uint64_t rip_tmp = gregs[GREG_RIP]; \n' )
-    self.out.write('uint64_t efl_tmp = gregs[GREG_EFL]; \n' )
-    self.out.write('uint64_t rax_tmp = gregs[GREG_RAX]; \n' )
-    self.out.write('uint64_t rbx_tmp = gregs[GREG_RBX]; \n' )
-    self.out.write('uint64_t rcx_tmp = gregs[GREG_RCX]; \n' )
-    self.out.write('uint64_t rdx_tmp = gregs[GREG_RDX]; \n' )
-    self.out.write('uint64_t rsi_tmp = gregs[GREG_RSI]; \n' )
-    self.out.write('uint64_t rdi_tmp = gregs[GREG_RDI]; \n' )
-    self.out.write('uint64_t rsp_tmp = gregs[GREG_RSP]; \n' )
-    self.out.write('uint64_t rbp_tmp = gregs[GREG_RBP]; \n' )
-    self.out.write('uint64_t r8_tmp  = gregs[GREG_R8];  \n' )
-    self.out.write('uint64_t r9_tmp  = gregs[GREG_R9];  \n' )
-    self.out.write('uint64_t r10_tmp = gregs[GREG_R10]; \n' )
-    self.out.write('uint64_t r11_tmp = gregs[GREG_R11]; \n' )
-    self.out.write('uint64_t r12_tmp = gregs[GREG_R12]; \n' )
-    self.out.write('uint64_t r13_tmp = gregs[GREG_R13]; \n' )
-    self.out.write('uint64_t r14_tmp = gregs[GREG_R14]; \n' )
-    self.out.write('uint64_t r15_tmp = gregs[GREG_R15]; \n' )
+    self.out += 'uint64_t rip_tmp = gregs[GREG_RIP]; \n'
+    self.out += 'uint64_t efl_tmp = gregs[GREG_EFL]; \n'
+    self.out += 'uint64_t rax_tmp = gregs[GREG_RAX]; \n'
+    self.out += 'uint64_t rbx_tmp = gregs[GREG_RBX]; \n'
+    self.out += 'uint64_t rcx_tmp = gregs[GREG_RCX]; \n'
+    self.out += 'uint64_t rdx_tmp = gregs[GREG_RDX]; \n'
+    self.out += 'uint64_t rsi_tmp = gregs[GREG_RSI]; \n'
+    self.out += 'uint64_t rdi_tmp = gregs[GREG_RDI]; \n'
+    self.out += 'uint64_t rsp_tmp = gregs[GREG_RSP]; \n'
+    self.out += 'uint64_t rbp_tmp = gregs[GREG_RBP]; \n'
+    self.out += 'uint64_t r8_tmp  = gregs[GREG_R8];  \n'
+    self.out += 'uint64_t r9_tmp  = gregs[GREG_R9];  \n'
+    self.out += 'uint64_t r10_tmp = gregs[GREG_R10]; \n'
+    self.out += 'uint64_t r11_tmp = gregs[GREG_R11]; \n'
+    self.out += 'uint64_t r12_tmp = gregs[GREG_R12]; \n'
+    self.out += 'uint64_t r13_tmp = gregs[GREG_R13]; \n'
+    self.out += 'uint64_t r14_tmp = gregs[GREG_R14]; \n'
+    self.out += 'uint64_t r15_tmp = gregs[GREG_R15]; \n'
 
   def _emit_function_epilog(self):
     o.print_reg_writes(self.out)
     o.clear_bb_reg_refs()
-    self.out.write('}\n\n')
+    self.out += '}\n\n'
 
   def _make_var(self, prefix):
-    global var_count
-    var = f'{prefix}{var_count}'
-    var_count += 1
+    self._var_count += 1
+    var = f'{prefix}{self._var_count}'
     return var
 
   def emit_var_decl(self, prefix, size, exp, signed=False):
     v = self._make_var(prefix)
-    self.out.write(f'  {"__" if size == 16 else ""}{"" if signed else "u"}int{size*8}_t {v} = {exp};\n')
+    self.out += f'  {"__" if size == 16 else ""}{"" if signed else "u"}int{size*8}_t {v} = {exp};\n'
     return v
 
   def _emit_flag_decl(self):
@@ -600,12 +601,11 @@ class Instruction:
     size = self.size1
     # Capture parity flag.
     # See https://graphics.stanford.edu/~seander/bithacks.html
-    self.out.write(
-        f'  {v_efl} |= ((0x6996 >> ((({v_res} >> 4) ^ {v_res}) & 0xf)) & 1) << {o.FLAG_PF};\n')
+    self.out += f'  {v_efl} |= ((0x6996 >> ((({v_res} >> 4) ^ {v_res}) & 0xf)) & 1) << {o.FLAG_PF};\n'
     # Capture zero flag.
-    self.out.write(f'  {v_efl} |= ({v_res} == 0) << {o.FLAG_ZF};\n')
+    self.out += f'  {v_efl} |= ({v_res} == 0) << {o.FLAG_ZF};\n'
     # Capture sign flag.
-    self.out.write(f'  {v_efl} |= ({v_res} >> {size*8 - o.FLAG_SF - 1}) & {hex(2**o.FLAG_SF)};\n')
+    self.out += f'  {v_efl} |= ({v_res} >> {size*8 - o.FLAG_SF - 1}) & {hex(2**o.FLAG_SF)};\n'
 
   def _emit_store_cozps(self, v_efl, clean_clobber_flags=False):
     mask = functools.reduce(lambda acc, x: acc | 2 ** x,
@@ -633,7 +633,7 @@ class Instruction:
       v_cf = self._make_var('cf')
       o.emit_get_flag(self.out, 2 ** o.FLAG_CF, v_cf)
       # We know CF is bit 0 - so no need to explicitly shift it.
-      # self.out.write('  %s >>= %s;\n' % (v_cf, o.FLAG_CF))
+      # self.out += '  %s >>= %s;\n' % (v_cf, o.FLAG_CF)
       v_res = self.emit_var_decl('sum', size, f'{v_aug} {op} {v_add} {op} {v_cf}')
     else:
       v_res = self.emit_var_decl('sum', size, f'{v_aug} {op} {v_add}')
@@ -653,7 +653,7 @@ class Instruction:
     # to perform the right-shift (see C99 6.3.1.1).
     # x + y + c   =>  ((x + y + c) ^ x) & ((x + y + c) ^ y))
     # x - y - c   =>  ((x - y - c) ^ x) & (x ^ y)
-    self.out.write(f'  {v_efl} |= ((({v_res} ^ {v_aug}) & ({v_aug if sub else v_res} ^ {v_add})) >> {size*8-1}) << {o.FLAG_OF};\n')
+    self.out += f'  {v_efl} |= ((({v_res} ^ {v_aug}) & ({v_aug if sub else v_res} ^ {v_add})) >> {size*8-1}) << {o.FLAG_OF};\n'
     # Capture carry/borrow.
     # Use C++ integer promotion from boolean to 0/1 to simplify the expression.
     if set_carry:
@@ -661,7 +661,7 @@ class Instruction:
         carry_str = f'{v_cf} ? {v_res} {">=" if sub else "<="} {v_aug} : '
       else:
         carry_str = ''
-      self.out.write(f'  {v_efl} |= {carry_str}{v_res} {">" if sub else "<"} {v_aug};\n')
+      self.out += f'  {v_efl} |= {carry_str}{v_res} {">" if sub else "<"} {v_aug};\n'
 
     # Compute Z/P/S as usual.
     self._emit_zps(v_efl, v_res)
@@ -760,10 +760,10 @@ class Instruction:
     dest.emit_store('0', 1)
     self._emit_return_for_cond()
     if (self.cond):
-      self.out.write(' else { \n')
+      self.out += ' else { \n'
     dest.emit_store('1', 1)
     if (self.cond):
-      self.out.write(' } \n')
+      self.out += ' } \n'
 
   def _emit_bittest(self):
     src = self.operands[0]
@@ -826,8 +826,8 @@ class Instruction:
           # Inject the carry bit into the shift bit source field.
           v_cf = self._make_var('cf')
           o.emit_get_flag(self.out, 2 ** o.FLAG_CF, v_cf)
-          self.out.write(f'  {v_bit_exp} = ({v_bit_exp} {anti_op} 1) | (({v_cf} >> {o.FLAG_CF}) << {self.size2*8-1 if self.c_left else 0});\n')
-      self.out.write(f'  {v_shift} |= {v_bit_exp} {anti_op} ({self.size2*8} - {v_amt});\n')
+          self.out += f'  {v_bit_exp} = ({v_bit_exp} {anti_op} 1) | (({v_cf} >> {o.FLAG_CF}) << {self.size2*8-1 if self.c_left else 0});\n'
+      self.out += f'  {v_shift} |= {v_bit_exp} {anti_op} ({self.size2*8} - {v_amt});\n'
 
     dest.emit_store(v_shift, self.size2)
     # Only compute flags when a shift occurs.
@@ -836,18 +836,18 @@ class Instruction:
     # uniformly to all the shift instruction *in every situation where the
     # OF and CF bits are defined*.
     if not self.c_noflag:
-      self.out.write(f' if ({v_amt} == 0) {{}}\n')
-      self.out.write(' else { \n')
+      self.out += f' if ({v_amt} == 0) {{}}\n'
+      self.out += ' else { \n'
       v_efl = self._emit_flag_decl()
       self._emit_zps(v_efl, v_shift)
-      self.out.write(f'  {v_efl} |= ((({v_shift} ^ {v_src}) >> {self.size2*8-1}) & 0x1) << {o.FLAG_OF};\n')
+      self.out += f'  {v_efl} |= ((({v_shift} ^ {v_src}) >> {self.size2*8-1}) & 0x1) << {o.FLAG_OF};\n'
       if self.c_left:
         shift_amt = f'({self.size2*8} - {v_amt})'
       else:
         shift_amt = f'({v_amt} - 1)'
-      self.out.write(f'  {v_efl} |= (({v_src} >> {shift_amt}) & 0x1) << {o.FLAG_CF};\n')
+      self.out += f'  {v_efl} |= (({v_src} >> {shift_amt}) & 0x1) << {o.FLAG_CF};\n'
       self._emit_store_cozps(v_efl)
-      self.out.write(' } \n')
+      self.out += ' } \n'
 
   # Control Flow instructions
 
@@ -869,8 +869,8 @@ class Instruction:
       # skip the branching logic.  So this expression is the 'failure condition'
       # for the branch.
       j_exp = f'!({j_exp})'
-    #self.out.write('  if (%s) return;\n' % j_exp)
-    self.out.write(f'  if ({j_exp}) {{}}\n')
+    #self.out += '  if (%s) return;\n' % j_exp
+    self.out += f'  if ({j_exp}) {{}}\n'
     return v_efl
 
   def _emit_call(self):
@@ -893,19 +893,19 @@ class Instruction:
     size = self.size1 or 8
     ctr = o.reg_operand(self, 'rcx', size)
     v_ctr = ctr.emit_fetch('ctr', size)
-    self.out.write(f'  {v_ctr}--;\n')
+    self.out += f'  {v_ctr}--;\n'
     ctr.emit_store(v_ctr, size)
 
-    self.out.write(f'  if ({v_ctr} == 0) return;\n')
+    self.out += f'  if ({v_ctr} == 0) return;\n'
     self._emit_jump()
 
   def _emit_jump(self):
     self._emit_return_for_cond()
     if (self.cond):
-      self.out.write(' else { \n')
+      self.out += ' else { \n'
     self._emit_mov(dest=o.Operand(self, '%rip'))
     if (self.cond):
-      self.out.write(' } \n')
+      self.out += ' } \n'
   # Data instructions
 
   def _emit_mov(self, src=None, dest=None, size1=None, size2=None):
@@ -958,10 +958,10 @@ class Instruction:
     self._emit_mov(src=self.operands[1])
     self._emit_return_for_cond()
     if (self.cond):
-      self.out.write('else { \n')
+      self.out += 'else { \n'
     self._emit_mov()
     if (self.cond):
-      self.out.write(' } \n')
+      self.out += ' } \n'
 
   def _emit_push(self, src=None, size=None):
     src = src or self.operands[0]
@@ -1021,23 +1021,23 @@ class Instruction:
     v_efl = self._emit_flag_decl()
     v = src.emit_fetch('v', 8)
 
-    self.out.write(f'static const int DeBruijnPos[64] = {{{dblookup64}}};\n')
+    self.out += f'static const int DeBruijnPos[64] = {{{dblookup64}}};\n'
 
     # if src == 0
     # clear ZF, return
-    self.out.write(f'if ({v} == 0) {{\n')
-    self.out.write(f'{v_efl} &= ~(1<<{o.FLAG_ZF});\n')
+    self.out += f'if ({v} == 0) {{\n'
+    self.out += f'{v_efl} &= ~(1<<{o.FLAG_ZF});\n'
     self._emit_store_cozps(v_efl)
-    self.out.write('} else { \n')
+    self.out += '} else { \n'
 
     # else
     final = self.emit_var_decl('final', 8, f'DeBruijnPos[(uint64_t)(({v}&-{v}) * {db64})>>58]', signed=True)
     dest.emit_store(final, 8)
 
     # set ZF
-    self.out.write(f'{v_efl} &= 1<<{o.FLAG_ZF};\n')
+    self.out += f'{v_efl} &= 1<<{o.FLAG_ZF};\n'
     self._emit_store_cozps(v_efl)
-    self.out.write('}\n')
+    self.out += '}\n'
     
   def _emit_bsr(self):
     src = self.operands[0]
@@ -1046,22 +1046,22 @@ class Instruction:
     v = src.emit_fetch('v', 8)
 
     # src == 0 -> clear ZF, return
-    self.out.write(f'if(!{v}) {{\n')
-    self.out.write(f'{v_efl} &= ~(1<<{o.FLAG_ZF});\n')
+    self.out += f'if(!{v}) {{\n'
+    self.out += f'{v_efl} &= ~(1<<{o.FLAG_ZF});\n'
     self._emit_store_cozps(v_efl)
-    self.out.write('return;\n')
-    self.out.write('}\n')
+    self.out += 'return;\n'
+    self.out += '}\n'
 
     # count leading zeroes, subtract from size, store in register. Set ZF
     y=self.emit_var_decl('y', 4, '0', signed=False)
     r=self.emit_var_decl('r', 4, '0', signed=True)
-    self.out.write(f'if({v}>>32) {y}={v}>>32, {r}=0; else {y}={v}, {r}=32;\n')
-    self.out.write(f'if({y}>>16) {y}={y}>>16; else {r} |= 16;\n')
-    self.out.write(f'if({y}>>8) {y}={y}>>8; else {r} |= 8;\n')
-    self.out.write(f'if({y}>>4) {y}={y}>>4; else {r} |= 4;\n')
-    self.out.write(f'if({y}>>2) {y}={y}>>2; else {r} |= 2;\n')
+    self.out += f'if({v}>>32) {y}={v}>>32, {r}=0; else {y}={v}, {r}=32;\n'
+    self.out += f'if({y}>>16) {y}={y}>>16; else {r} |= 16;\n'
+    self.out += f'if({y}>>8) {y}={y}>>8; else {r} |= 8;\n'
+    self.out += f'if({y}>>4) {y}={y}>>4; else {r} |= 4;\n'
+    self.out += f'if({y}>>2) {y}={y}>>2; else {r} |= 2;\n'
     final = self.emit_var_decl('final', 8, f'63 - ({r} | !({y}>>1))', signed=False)    
-    self.out.write(f'{v_efl} |= (1<<{o.FLAG_ZF});\n')
+    self.out += f'{v_efl} |= (1<<{o.FLAG_ZF});\n'
     dest.emit_store(final, 8)
     self._emit_store_cozps(v_efl)
     
@@ -1074,7 +1074,7 @@ class Instruction:
         return True
     #Omit stack guarding instrs from instrumentation
     if "fs:0x28" in self.original:
-      self.out.write(' //Stackguard instruction with fs operand \n')
+      self.out += ' //Stackguard instruction with fs operand \n'
       return True
 
     #Otherwise, return false

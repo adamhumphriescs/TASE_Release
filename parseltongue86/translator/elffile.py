@@ -1,11 +1,10 @@
-import collections.abc
 # import logging
 import re
 import subprocess
 from . import instruction
+from itertools import chain
 
-
-class ELFFile(collections.abc.Mapping):
+class ELFFile():
   """
   Disassembles functions from a given ELF file.
   Acts as a dictionary mapping function names to their
@@ -36,14 +35,12 @@ class ELFFile(collections.abc.Mapping):
       r'^(?P<addr>[0-9a-f]+) (?P<size>[0-9a-f]+) '
       r'(?P<type>[^TtRrNp]) (?P<name>\S+)$')
 
-  def __init__(self, out, file_path, filter_functions=None):
+  def __init__(self, file_path, filter_functions=None):
     """
-    out: io.*  a file like object that can be written to.
     file_path: str  a path to ELF file to be objdumped and analyzed.
     filter_functions: [str]  a list of functions to disassemble.
         If this is None, all functions are disassembled.
     """
-    self._out = out
     self._file_path = file_path
     self._filter_functions = filter_functions
     self._fasm = {}
@@ -52,30 +49,32 @@ class ELFFile(collections.abc.Mapping):
     # self._vars_loc = dict() # name -> [(start address, length)] non-empty
 
   def __getattr__(self, name):
-    if name == '_function_asm':
-      if self._fasm:
-        return self._fasm
-      return self._parse_objdump(self._objdump())
-    elif name == '_vars_loc':
+    if name == '_vars_loc':
       if self._vloc:
         return self._vloc
       return self._parse_nm_vars(self._nm())
     else:
       raise AttributeError
 
-  def __iter__(self):
-    if self._function_asm:
-      return iter(self._function_asm)
-    return self._parse_objdump(self._objdump())
-
-  def __getitem__(self, function_name):
-    return self._function_asm[function_name]
-
   def __len__(self):
     return len(self._function_asm)
 
   def vars_loc(self):
     return self._vars_loc
+
+  def fasm(self, pool=None):
+    if not self._fasm:
+      if self._filter_functions:
+        res = None
+        if pool:
+          res = pool.map(self._parse_objdump, set(self._filter_functions))
+        else:
+          res = map(self._parse_objdump, set(self._filter_functions))
+        for x in res:
+          self._fasm.update(x)
+      else:
+        self._parse_objdump()
+    return self._fasm
 
   def _parse_nm_vars(self, text):
     """
@@ -91,42 +90,37 @@ class ELFFile(collections.abc.Mapping):
         self._vloc.setdefault(result.group('name'), []).append((addr, size))
     return self._vloc
 
-  def _parse_objdump(self, text):
+  def _parse_objdump(self, func):
     """
     text: [str]
     """
     dupname_ctr = 0
     fname = None
-    last = None
-    for line in text:
+    _fasm = {}
+    lines = self._objdump(sym=func) if func else self._objdump()
+    for line in lines:
       if fname and (result := self._regex_instr.match(line)):
         instr = instruction.Instruction(
           line,
           result.group('vaddr'), result.group('encoded'),
           result.group('prefix'), result.group('mnemonic'),
-          result.group('operands'),
-          self._out)
-        self._fasm[fname].append(instr)
+          result.group('operands'))
+        _fasm[fname].append(instr)
       elif not fname and (result := self._regex_function_header.match(line)):
-        if not self._filter_functions or (fname := result.group(1)) in self._filter_functions:
-          if fname in self._fasm:
-            fname = f'{fname} duplicate {dupname_ctr}'
-            dupname_ctr += 1
-          if last:
-            yield last, self._fasm[last]
-          last = fname
-          self._fasm[fname] = []
-        else:
-          fname = None
+        fname = result.group(1)
+        if fname in _fasm:
+          fname = f'{fname} duplicate {dupname_ctr}'
+          dupname_ctr += 1
+        _fasm[fname] = []
       else:
         fname = None
-    if last:
-      yield last, self._fasm[last]
+    return _fasm
 
-  def _objdump(self):
+
+  def _objdump(self, sym=None):
     status = subprocess.run([
         'objdump',
-        '-d',
+        f'--disassemble={sym}' if sym else '-d',
         '-w',
         '-M', 'suffix',
         '-j', '.text',
