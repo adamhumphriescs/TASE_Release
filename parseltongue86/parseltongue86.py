@@ -136,7 +136,6 @@ def main(args):
 #  fh = open(Path(f'{args["outname"]}.{file_counter}.cpp'), 'w')
 #  print_header(fh, include_path)
     for name, disasm in sorted(p.fasm(pool=pool).items(), key=lambda x: x[1][0].vaddr):
-      print(name, disasm)
       assert len(disasm) >= 1
       if args['log']:
         logging.info(f'{name} : {len(disasm)} instructions at {hex(disasm[0].vaddr)}')
