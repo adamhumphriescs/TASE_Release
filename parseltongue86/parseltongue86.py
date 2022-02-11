@@ -177,8 +177,6 @@ def main(args):
     groupsize = groupsize if groupsize else 1
     groups = numFuncs // groupsize
 
-    print("groups:",groups)
-
     if groups > 1:
       grouped = []
       for i in range(groups-1):
