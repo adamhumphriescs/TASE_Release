@@ -599,7 +599,7 @@ class Instruction:
     self.out += '  uint64_t r15_tmp = gregs[GREG_R15]; \n'
 
   def _emit_function_epilog(self):
-    self.print_reg_writes(self.out)
+    self.print_reg_writes()
     o.clear_bb_reg_refs()
     self.out += '}\n\n'
 
