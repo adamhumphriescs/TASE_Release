@@ -213,7 +213,7 @@ class Instruction:
   # Functions to parse out objdump instruction output.
 
 
-  def print_reg_writes():
+  def print_reg_writes(self):
     for r in o.BB_ASSIGNED_REGS:
       self.out += f'gregs[GREG_{r.upper()}] = {o.tmp_reg_name(r)};\n'
 
