@@ -307,4 +307,4 @@ class Operand:
         exp = _reg_exp_l(self.reg)
     else:
       exp = self.deref(size)
-    self.instr.out += '  {exp} = {var_name};\n'
+    self.instr.out += f'  {exp} = {var_name};\n'

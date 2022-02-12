@@ -667,7 +667,7 @@ class Instruction:
     v_add = arg_r.emit_fetch('addend', size)
     if carry:
       v_cf = self._make_var('cf')
-      self.emit_set_flag(2 ** o.FLAG_CF, v_cf)
+      self.emit_get_flag(2 ** o.FLAG_CF, v_cf)
       # We know CF is bit 0 - so no need to explicitly shift it.
       # self.out += '  %s >>= %s;\n' % (v_cf, o.FLAG_CF)
       v_res = self.emit_var_decl('sum', size, f'{v_aug} {op} {v_add} {op} {v_cf}')
@@ -825,7 +825,7 @@ class Instruction:
   def _emit_cmc(self):
     v_efl = self._emit_flag_decl()
     flag_mask = 2 ** o.FLAG_CF
-    self.emit_set_flag(flag_mask, v_efl)
+    self.emit_get_flag(flag_mask, v_efl)
     self.emit_set_flag(flag_mask, f'{v_efl} ^ {hex(flag_mask)}')
 
   # Shift instructions
@@ -861,7 +861,7 @@ class Instruction:
         if self.op == 'rc':
           # Inject the carry bit into the shift bit source field.
           v_cf = self._make_var('cf')
-          self.emit_set_flag(2 ** o.FLAG_CF, v_cf)
+          self.emit_get_flag(2 ** o.FLAG_CF, v_cf)
           self.out += f'  {v_bit_exp} = ({v_bit_exp} {anti_op} 1) | (({v_cf} >> {o.FLAG_CF}) << {self.size2*8-1 if self.c_left else 0});\n'
       self.out += f'  {v_shift} |= {v_bit_exp} {anti_op} ({self.size2*8} - {v_amt});\n'
 
@@ -893,7 +893,7 @@ class Instruction:
 
     assert self.cond == 'l' or self.cond in COND_FLAG
     v_efl = self._make_var('efl')
-    self.emit_set_flag(0xffff, v_efl)
+    self.emit_get_flag(0xffff, v_efl)
     if self.cond == 'l':
       j_exp = f'(({v_efl} >> {o.FLAG_SF}) ^ ({v_efl} >> {o.FLAG_OF})) & 0x1'
     else:
