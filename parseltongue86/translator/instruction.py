@@ -893,7 +893,7 @@ class Instruction:
 
     assert self.cond == 'l' or self.cond in COND_FLAG
     v_efl = self._make_var('efl')
-    self.out += self.emit_set_flag(0xffff, v_efl)
+    self.emit_set_flag(0xffff, v_efl)
     if self.cond == 'l':
       j_exp = f'(({v_efl} >> {o.FLAG_SF}) ^ ({v_efl} >> {o.FLAG_OF})) & 0x1'
     else:
