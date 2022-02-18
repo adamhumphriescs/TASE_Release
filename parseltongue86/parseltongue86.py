@@ -60,37 +60,41 @@ def batched(data):
 
     for instrs in funcs:
       for instr in instrs:
-        instr._var_count = var_count
-        instrCtr += 1
-        print(f"//InstrCtr {instrCtr}", file=fh)
+        try:
+          instr._var_count = var_count
+          instrCtr += 1
+          print(f"//InstrCtr {instrCtr}", file=fh)
 
-        if in_cartridge:
-          if instr.vaddr + instr.length >= curr_cartridge[1]:
-            print("//Cartridge end", file=fh)
-            instr.emit_function(3)
-            in_cartridge = False
-          else:
-            print("//In cartridge", file=fh)
-            instr.emit_function(2)
-        else:
-          if instr.vaddr in cartridge_pairs:
-            print("// Cartridge start", file=fh)
-            curr_cartridge = cartridge_pairs[instr.vaddr]
-            instr.emit_function(1)
-            in_cartridge = True
-            #Handle single instruction cartridge case:
-            if instr.vaddr + instr.length >= curr_cartridge[1]:
+          if in_cartridge:
+            if instr.vaddr + instr.length >= current_cartridge[1]:
+              print("//Cartridge end", file=fh)
+              instr.emit_function(3)
               in_cartridge = False
-              instr._emit_function_epilog()
-          else:
-            print("// Non-Cartridge record", file=fh)
-            if all(x in instr.original for x in ("jumpq", "sb_reopen")) or ("leaq   0x5(%rip),%r15" in instr.original):
-              print("//Skipping lea to r15 or jmp to sb_reopen", file=fh)
             else:
-              instr.emit_function(0)
+              print("//In cartridge", file=fh)
+              instr.emit_function(2)
+          else:
+            if instr.vaddr in cartridge_pairs:
+              print("// Cartridge start", file=fh)
+              current_cartridge = cartridge_pairs[instr.vaddr]
+              instr.emit_function(1)
+              in_cartridge = True
+              #Handle single instruction cartridge case:
+              if instr.vaddr + instr.length >= current_cartridge[1]:
+                in_cartridge = False
+                instr._emit_function_epilog()
+            else:
+              print("// Non-Cartridge record", file=fh)
+              if all(x in instr.original for x in ("jumpq", "sb_reopen")) or ("leaq   0x5(%rip),%r15" in instr.original):
+                print("//Skipping lea to r15 or jmp to sb_reopen", file=fh)
+              else:
+                instr.emit_function(0)
+        except:
+          print(f'Error generating Instr: {instr.fname} -> {instr.original}')
+          print(f'{instr.op}: {instr.operands}')
+          raise
         print(instr, file=fh)
         var_count = instr._var_count
-
 
 def main(args):
   filters = []
@@ -135,7 +139,7 @@ def main(args):
 #  file_counter = 0
 #  fh = open(Path(f'{args["outname"]}.{file_counter}.cpp'), 'w')
 #  print_header(fh, include_path)
-    for name, disasm in sorted(p.fasm(pool=pool).items(), key=lambda x: x[1][0].vaddr):
+    for name, disasm in sorted(p.fasm(pool=pool).items() if args['threads'] > 1 else p.fasm().items(), key=lambda x: x[1][0].vaddr):
       assert len(disasm) >= 1
       if args['log']:
         logging.info(f'{name} : {len(disasm)} instructions at {hex(disasm[0].vaddr)}')
@@ -187,11 +191,16 @@ def main(args):
 
     print('generating cpp files...')
 
-    if not args['no_batch']:
-      pool.map(batched, grouped)
+    if args['threads']:
+      if not args['no_batch']:
+        pool.map(batched, grouped)
+      else:
+        pool.map(unbatched, grouped)
     else:
-      pool.map(unbatched, grouped)
-
+      if not args['no_batch']:
+        map(batched, grouped)
+      else:
+        map(unbatched, grouped)
 
 
 parser = ArgumentParser()

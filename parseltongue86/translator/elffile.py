@@ -42,7 +42,7 @@ class ELFFile():
         If this is None, all functions are disassembled.
     """
     self._file_path = file_path
-    self._filter_functions = filter_functions
+    self._filter_functions = list(set(filter_functions)) if filter_functions else []
     self._fasm = {}
     self._vloc = {}
     # self._function_asm = dict() # name -> parsed assembly
@@ -67,13 +67,26 @@ class ELFFile():
       if self._filter_functions:
         res = None
         if pool:
-          res = pool.map(self._parse_objdump, set(self._filter_functions))
+          pcs = len(pool._pool)
+          gsize = len(self._filter_functions) // pcs
+          groups = []
+          for i in range(pcs):
+            if i == pcs-1:
+              groups.append((self._filter_functions[i*gsize:], i))
+            else:
+              groups.append((self._filter_functions[i*gsize:(i+1)*gsize], i))
+          fnames = []
+          for x in groups:
+            fnames.append(f'.group-{x[1]}')
+            with open(fnames[-1], 'w') as fh:
+              for y in x[0]:
+                print(y, file=fh)
+          for x in pool.map(self._parse_objdump, fnames):
+            self._fasm.update(x)
         else:
-          res = map(self._parse_objdump, set(self._filter_functions))
-        for x in res:
-          self._fasm.update(x)
+          self.fasm = self._parse_objdump()
       else:
-        self._parse_objdump()
+        self._fasm = self._parse_objdump()
     return self._fasm
 
   def _parse_nm_vars(self, text):
@@ -81,7 +94,7 @@ class ELFFile():
     text: [str]
     """
     for line in text:
-      if result := self._regex_var_symbol.match(line):
+      if (result := self._regex_var_symbol.match(line)):
         # We may have multiple symbols corresponding to the same object
         # name if they are local and static. Collect all of them in
         # a list.
@@ -90,21 +103,22 @@ class ELFFile():
         self._vloc.setdefault(result.group('name'), []).append((addr, size))
     return self._vloc
 
-  def _parse_objdump(self, func):
+
+  def _parse_objdump(self, filename=None):
     """
     text: [str]
     """
     dupname_ctr = 0
     fname = None
     _fasm = {}
-    lines = self._objdump(sym=func) if func else self._objdump()
+    lines = self._objdump(filename=filename)
     for line in lines:
       if fname and (result := self._regex_instr.match(line)):
         instr = instruction.Instruction(
           line,
           result.group('vaddr'), result.group('encoded'),
           result.group('prefix'), result.group('mnemonic'),
-          result.group('operands'))
+          result.group('operands').strip() if result.group('operands') else '', f'{filename}:{fname}')
         _fasm[fname].append(instr)
       elif not fname and (result := self._regex_function_header.match(line)):
         fname = result.group(1)
@@ -117,10 +131,10 @@ class ELFFile():
     return _fasm
 
 
-  def _objdump(self, sym=None):
+  def _objdump(self, filename):
     status = subprocess.run([
-        'objdump',
-        f'--disassemble={sym}' if sym else '-d',
+        '/objdump',
+        f'--disassemble_file={filename}' if filename else '-d',
         '-w',
         '-M', 'suffix',
         '-j', '.text',

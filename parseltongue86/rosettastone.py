@@ -14,8 +14,8 @@ def main(args):
   # If this is not provided, a ".a" file at the target binary's location is chosen.
   filter_file = args['filter_file'] if args['filter_file'] else target_binary + '.a'
 
-  filter_elf = elffile.ELFFile(sys.stderr, filter_file)
-  bin_elf = elffile.ELFFile(sys.stderr, target_binary)
+  filter_elf = elffile.ELFFile(filter_file)
+  bin_elf = elffile.ELFFile(target_binary)
 
   extents = []
 
@@ -35,4 +35,4 @@ parser = ArgumentParser()
 parser.add_argument('target_binary')
 parser.add_argument('-f,--filter_file', dest='filter_file', type=str, help='filter file')
 if __name__ == '__main__':
-  main(vars(parser.parse_arg()))
+  main(vars(parser.parse_args()))

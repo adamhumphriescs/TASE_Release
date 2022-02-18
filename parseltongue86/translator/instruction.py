@@ -2,7 +2,7 @@ import functools
 from itertools import chain
 import logging
 from . import operand as o
-
+import re
 
 # b,c -> CF=1, z,e -> ZF=1, l -> SF!=OF, o -> OF, p -> PF, s -> SF
 COND_DEMORGAN = {'a': 'c', 'g': 'l'}
@@ -107,6 +107,40 @@ OPS_IMM32 = ['test', 'mov', OPS_MATH[:8]]
 # OPS_IGNORE comes fires to catch 'movaps' etc. before they get matched.
 all_ops = [*OPS_IGNORE, *OPS_TRAN, *OPS_XCHG, *OPS_STR, *OPS_MATH, *OPS_BIT, *OPS_FLOW, *OPS_CONV, *OPS_FLAG, *OPS_SHIFT, *OPS_DATA]
 
+# operand_re = re.compile(
+#   r'(?P<pre>\*)?'
+#   r'(%(?P<reg>\w+)(?=,|$)|'
+#   r'(?P<addr>[0-9a-f]+)\s+<(?P<symbol>\S+)>|'
+#   r'\$(?P<imm>(0x)?[0-9a-f]+)|'
+#   r'(%(?P<seg>\w+):)?'
+#   r'(?P<offset>-?(0x)?[0-9a-f]+)?'
+#   r'(\((%(?P<base>\w+))?(,%(?P<index>\w+)(,(?P<scale>[1248]))?)?\))?)')
+
+
+# pre_re = r'(?P<pre>\*)?'
+# operand_res = [re.compile(pre_re + x) for x in [r'%(?P<reg>\w+)(?=,|$)',
+#                                                 r'(?P<addr>[0-9a-f]+)\s+<(?P<symbol>\S+)>(?=,|$)',
+#                                                 r'\$(?P<imm>(0x)?[0-9a-f]+)(?=,|$)',
+#                                                 r'%(?P<seg>\w+):(?P<offset>-?(0x)?[0-9a-f]+)(?=,|$)',
+#                                                 r'%(?P<seg>\w+):(?P<offset>-?(0x)?[0-9a-f]+)(\((%(?P<base>\w+))?(,%(?P<index>\w+)(,(?P<scale>[1248]))?)?\))(?=,|$)',
+#                                                 r'(?P<offset>-?(0x)?[0-9a-f]+)?(\((%(?P<base>\w+))?(,%(?P<index>\w+)(,(?P<scale>[1248]))?)?\))(?=,|$)']]
+
+# A) % -> reg ,/$ | seg offset (bis)? ,/$
+# B) \$ -> imm
+# C) hex -> addr symbol ,/$ | offset (bis)? ,/$
+# D) offset? (bis) ,/$
+
+operand_res = [re.compile(x) for x in [
+               r'^(?P<pre>\*)?%((?P<reg>\w+)(?=,|$)|((?P<seg>\w+):)(?P<offset>-?(0x)?[0-9a-f]+)(\((?!\))(%(?P<base>\w+))?(,%(?P<index>\w+)(,(?P<scale>[1248]))?)?\))?)(?=,|$)',
+               r'^\$(?P<imm>(0x)?[0-9a-f]+)(?=,|$)',
+               r'^(?P<pre>\*)?\((%(?P<base>\w+))?(,%(?P<index>\w+)(,(?P<scale>[1248]))?)?\)(?=,|$)',
+               r'^(?P<pre>\*)?(?P<addr>[0-9a-f]+)\s+<(?P<symbol>\S+)>(?=,|$)',
+               r'(?P<pre>\*)?(?P<offset>-?(0x)?[0-9a-f]+)?(\((?!\))(%(?P<base>\w+))?(,%(?P<index>\w+)(,(?P<scale>[1248]))?)?\))(?=,|$)',
+               r'(?P<pre>\*)?(?P<offset>-?(0x)?[0-9a-f]+)']]
+
+
+all_regnames = ['RIP', 'EFL', 'RAX', 'RBX', 'RCX', 'RDX', 'RSI', 'RDI', 'RSP', 'RBP', 'R8', 'R9', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15']
+
 dblookup64 = '0, 1, 48,  2, 57, 49, 28,  3,\n \
 61, 58, 50, 42, 38, 29, 17,  4,\n \
 62, 55, 59, 36, 53, 51, 43, 22,\n \
@@ -141,7 +175,7 @@ class Instruction:
   ignored:  bool      True if this needs no processing.
   """
 
-  def __init__(self, original, vaddr, encoded, prefix, mnemonic, operands):
+  def __init__(self, original, vaddr, encoded, prefix, mnemonic, operands, fxn):
 
     """
     Parses out an instruction from a format that elffile generates.
@@ -172,7 +206,7 @@ class Instruction:
 
     self.length = len(encoded.split())
     assert self.length > 0 and self.length < 16
-
+    self.fname = fxn
     self.prefixes = prefix.split()
     self.mnemonic = mnemonic.strip()
     self.sign_ext = None
@@ -194,10 +228,11 @@ class Instruction:
     try:
       (op, suffix) = self._parse_op()
       self.op = op
-      assert suffix is not None, 'Unknown instruction'
+      assert suffix is not None, f'Unknown instruction in function {fxn}'
       self._parse_mnemonic(suffix)
       if not self.ignored:
-        self._parse_operands(operands)
+        if operands:
+          self._parse_operands(operands)
         self._fixup_instructions()
 
       self._parsed_result_message = f'<{vaddr}> : <{encoded}> : <{prefix}> : <{mnemonic}> : <{operands}>'
@@ -205,17 +240,15 @@ class Instruction:
     except AssertionError as err:
       logging.error(f'Failed parsing assertion with:  {self.original}')
       logging.error(f'<{vaddr}> : <{encoded}> : <{prefix}> : <{mnemonic}> : <{operands}>')
-      raise err from None
+      print(err, self.operands)
+      raise err
+
+    self.instrumentation = any(op.instrumentation for op in self.operands) or "fs:0x28" in self.original
 
   def __str__(self):
     return self.out
 
   # Functions to parse out objdump instruction output.
-
-
-  def print_reg_writes(self):
-    for r in o.BB_ASSIGNED_REGS:
-      self.out += f'gregs[GREG_{r.upper()}] = {o.tmp_reg_name(r)};\n'
 
   def emit_get_flag(self, flags_mask, var):
     """
@@ -234,7 +267,7 @@ class Instruction:
     flags_mask: int  An "or" of the mask of all the flags being set.
     value: int  The values of the flags sepecified in flags_mask at their
               correct bit position with all other bits set to 0.
-    pre_kill_flags: bool  Completely clobber flags.
+   clean_clobber_flags: bool  Completely clobber flags.
               Can be used on cmp instructions.
               Assumes our compiler only uses/sets the 5 cozps flags
               in eflags, which are clobbered by cmp.
@@ -383,13 +416,33 @@ class Instruction:
     assert suffix == '', f'Unable to use all of the suffix: {suffix}'
 
   def _parse_operands(self, operand_str):
-    operand_str = operand_str.strip() if operand_str else ''
-    while operand_str != '':
-      self.operands.append(o.Operand(self, operand_str))
-      operand_str = operand_str[len(self.operands[-1].operand):]
-      if operand_str:
-        assert operand_str[0] == ',', 'Could not parse operand string'
-        operand_str = operand_str[1:]
+    # operand_str = operand_str.strip() if operand_str else ''
+    # while operand_str != '':
+    #   self.operands.append(o.Operand(self, operand_str))
+    #   operand_str = operand_str[len(self.operands[-1].operand):]
+    #   if operand_str:
+    #     assert operand_str[0] == ',', 'Could not parse operand string'
+    #     operand_str = operand_str[1:]
+
+    # x = [m for m in operand_re.finditer(operand_str) if m.start() != m.end()]
+    # assert sum([m.end()-m.start() for m in x]) + len(x)-1 == len(operand_str), f'Could not parse operand string "{operand_str}", {x}'
+    # self.operands = [o.Operand(self, m.groupdict()) for m in x]
+
+   # matches = sorted(filter(lambda x: x, [y for x in operand_res for y in x.finditer(operand_str)]), key=lambda x: x.start())
+   # assert sum([x.end() - x.start() for x in matches]), f'Could not parse operand string: "{operand_str}", {matches}'
+   # self.operands = [o.Operand(self, x.groupdict()) for x in matches]
+    prev = -1
+    start = 0
+    while start < len(operand_str):
+      prev = start
+      for x in operand_res:
+        if (m := x.match(operand_str[start:])):
+          start += m.end() - m.start() + 1
+          self.operands.append(o.Operand(self, m.groupdict()))
+      assert prev != start, f'Could not parse operand string: "{operand_str}", {self.operands}, failed at character {start} out of {len(operand_str)}'
+    start -= 1
+    assert start == len(operand_str), f'Could not parse operand string: "{operand_str}", {self.operands}, failed at character {start} out of {len(operand_str)}'
+
 
   def _fixup_instructions(self):
     # On x86-64, only mov and a very peculiar encoding of or are allowed to
@@ -446,7 +499,7 @@ class Instruction:
     # Implicit shift form.
     if self.op in OPS_SHIFT:
       if len(self.operands) == (2 if self.op == 'sh_d' else 1):
-        self.operands.insert(0, o.Operand(self, '$1'))
+        self.operands.insert(0, o.Operand(self, {'imm': '1'}))
 
       # A shift always has an amount and a destination
       # and the instruction suffix describes the destination.
@@ -457,7 +510,10 @@ class Instruction:
       if not (self.op == 'sh' and self.c_noflag):
         self.size1 = 1
 
-  # Functions to emit IR after instruction is parsed.
+  # Functions to emit IR after instruction is pars
+  #
+  #
+  #ed.
 
   def emit_tase_springboard(self, suffix):
     """
@@ -477,15 +533,14 @@ class Instruction:
        2 - Inside cartridge (no prolog/epilog)
        3 - End of cartridge (include closing brace '}')
     """
-
-    isInstrumentation = self._is_instrumentation()
+    if "fs:0x28" in self.original:
+      self.out += ' //Stackguard instruction with fs operand \n'
         
     if (Type == 0 or Type == 1):
       self._emit_function_prolog('')
-    #self.out += '  gregs[GREG_RIP].u64 = gregs[GREG_RIP].u64 + %d;\n' % self.length
     self.out += f'  rip_tmp = rip_tmp + {self.length};\n'
     
-    if self.ignored or self.op == 'nop' or isInstrumentation :
+    if self.ignored or self.op == 'nop' or self.instrumentation:
       self.out += '  // Nothing to do\n'
     elif self.op == 'xchg':
       self._emit_xchg()
@@ -518,11 +573,11 @@ class Instruction:
     elif self.op == 'cmp':
       self._emit_add(sub=True, target_l=None, clean_clobber_flags=True)
     elif self.op == 'neg':
-      self._emit_add(sub=True, arg_l=o.Operand(self, '$0'), target_l=False)
+      self._emit_add(sub=True, arg_l=o.Operand(self, {'imm': '0'}), target_l=False)
     elif self.op == 'inc':
-      self._emit_add(arg_l=self.operands[0], arg_r=o.Operand(self, '$1'), set_carry=False)
+      self._emit_add(arg_l=self.operands[0], arg_r=o.Operand(self, {'imm': '1'}), set_carry=False)
     elif self.op == 'dec':
-      self._emit_add(arg_l=self.operands[0], arg_r=o.Operand(self, '$1'), sub=True, set_carry=False)
+      self._emit_add(arg_l=self.operands[0], arg_r=o.Operand(self, {'imm': '1'}), sub=True, set_carry=False)
     elif self.op == 'mul':
       self._emit_mul()
     elif self.op == 'div':
@@ -546,13 +601,13 @@ class Instruction:
     elif self.op == 'bt':
       self._emit_bittest()
     elif self.op == 'test':
-      self._emit_logical('&', write_target=False,clean_clobber_flags=True)
+      self._emit_logical('&', write_target=False, clean_clobber_flags=True)
     elif self.op == 'bswap':
       self._emit_bswap()
     elif self.op == 'pushf':
-      self._emit_push(src=o.Operand(self, 'efl'))
+      self._emit_push(src=o.Operand(self, {'reg': 'efl'}))
     elif self.op == 'popf':
-      self._emit_pop(dest=o.Operand(self, 'efl'))
+      self._emit_pop(dest=o.Operand(self, {'reg': 'efl'}))
     elif self.op == 'cl':
       self._emit_flag(clear=True)
     elif self.op == 'st':
@@ -570,43 +625,21 @@ class Instruction:
       self._emit_function_epilog()
 
   def _emit_function_prolog(self, suffix):
-    self.out += f'// {self.original}\n'
-    self.out += f'// {self._parsed_result_message}\n'
-    self.out += f'extern "C" void interp_fn_{self.vaddr:x}{suffix}(tase_greg_t* __restrict__ gregs) {{\n'
-
     #Grab all possible register values as local variables.
     #If we don't use the register while interpreting through
     #the basic block, then we don't write it back at the end of the
     #basic block, and the compiler optimizes out the
     #initial load.
-    self.out += '  uint64_t rip_tmp = gregs[GREG_RIP]; \n'
-    self.out += '  uint64_t efl_tmp = gregs[GREG_EFL]; \n'
-    self.out += '  uint64_t rax_tmp = gregs[GREG_RAX]; \n'
-    self.out += '  uint64_t rbx_tmp = gregs[GREG_RBX]; \n'
-    self.out += '  uint64_t rcx_tmp = gregs[GREG_RCX]; \n'
-    self.out += '  uint64_t rdx_tmp = gregs[GREG_RDX]; \n'
-    self.out += '  uint64_t rsi_tmp = gregs[GREG_RSI]; \n'
-    self.out += '  uint64_t rdi_tmp = gregs[GREG_RDI]; \n'
-    self.out += '  uint64_t rsp_tmp = gregs[GREG_RSP]; \n'
-    self.out += '  uint64_t rbp_tmp = gregs[GREG_RBP]; \n'
-    self.out += '  uint64_t r8_tmp  = gregs[GREG_R8];  \n'
-    self.out += '  uint64_t r9_tmp  = gregs[GREG_R9];  \n'
-    self.out += '  uint64_t r10_tmp = gregs[GREG_R10]; \n'
-    self.out += '  uint64_t r11_tmp = gregs[GREG_R11]; \n'
-    self.out += '  uint64_t r12_tmp = gregs[GREG_R12]; \n'
-    self.out += '  uint64_t r13_tmp = gregs[GREG_R13]; \n'
-    self.out += '  uint64_t r14_tmp = gregs[GREG_R14]; \n'
-    self.out += '  uint64_t r15_tmp = gregs[GREG_R15]; \n'
+    self.out += f'// {self.original}\n// {self._parsed_result_message}\nextern "C" void interp_fn_{self.vaddr:x}{suffix}(tase_greg_t* __restrict__ gregs) {{\n'
+    self.out += '\n'.join([f'  uint64_t rip_tmp = gregs[GREG_{x}];' for x in all_regnames])
 
   def _emit_function_epilog(self):
-    self.print_reg_writes()
+    self.out +='\n'.join(f'gregs[GREG_{r.upper()}] = {r}_tmp;' for r in o.BB_ASSIGNED_REGS) + '}\n\n'
     o.clear_bb_reg_refs()
-    self.out += '}\n\n'
 
   def _make_var(self, prefix):
     self._var_count += 1
-    var = f'{prefix}{self._var_count}'
-    return var
+    return f'{prefix}{self._var_count}'
 
   def emit_var_decl(self, prefix, size, exp, signed=False):
     v = self._make_var(prefix)
@@ -721,7 +754,7 @@ class Instruction:
       multiplier = self.operands[0]
       dest_lo = multiplicand
       if self.size1 == 1:
-        dest_hi = o.Operand(self, '%ah')
+        dest_hi = o.Operand(self, reg='ah')
       else:
         dest_hi = o.reg_operand(self, 'rdx', self.size1)
 
@@ -731,17 +764,17 @@ class Instruction:
                                    f'{o.icast(v_multiplicand,self.size1*2,signed)} * {o.icast(v_multiplier,self.size1*2,signed)}',
                                    signed=signed)
     # Integral demotion should preserve the bitpattern we need here.
-    v_lo = self.emit_var_decl('product_lo', self.size1, o.ucast(v_product, self.size1))
+    v_lo = self.emit_var_decl('product_lo', self.size1, o.icast(v_product, self.size1))
     dest_lo.emit_store(v_lo, self.size1)
     v_hi = self.emit_var_decl('product_hi', self.size1,
-                              o.ucast(f'{v_product} >> {self.size1*8}', self.size1))
+                              o.icast(f'{v_product} >> {self.size1*8}', self.size1))
     if dest_hi:
       dest_hi.emit_store(v_hi, self.size1)
 
     mask = 2 ** o.FLAG_OF | 2 ** o.FLAG_CF
     if signed:
       self.emit_set_flag(mask,
-                      f'{o.scast(v_lo, self.size1)} >> {self.size1*8-1} == {o.scast(v_hi, self.size1)} ? 0 : {hex(mask)}')
+                      f'{o.icast(v_lo, self.size1, signed=True)} >> {self.size1*8-1} == {o.icast(v_hi, self.size1, signed=True)} ? 0 : {hex(mask)}')
     else:
       self.emit_set_flag(mask, f'{v_hi} == 0 ? 0 : {hex(mask)}')
 
@@ -752,7 +785,7 @@ class Instruction:
     dividend_lo = o.reg_operand(self, 'rax', self.size1)
     quotient = dividend_lo
     if self.size1 == 1:
-      dividend_hi = o.Operand(self, '%ah')
+      dividend_hi = o.Operand(self, {'reg': 'ah'})
     else:
       dividend_hi = o.reg_operand(self, 'rdx', self.size1)
     remainder = dividend_hi
@@ -915,13 +948,13 @@ class Instruction:
     # our compiler is a crafty little bugger and gave us "call %rsp"
     # to deal with.
     v_target = self.operands[0].emit_fetch('target', self.size1)
-    rip = o.Operand(self, '%rip')
+    rip = o.Operand(self, {'reg': 'rip'})
     self._emit_push(src=rip, size=8)
     rip.emit_store(v_target, self.size1)
 
   def _emit_ret(self):
     assert self.size1 == 8
-    self._emit_pop(dest=o.Operand(self, '%rip'), size=8)
+    self._emit_pop(dest=o.Operand(self, {'reg': 'rip'}), size=8)
 
   def _emit_loop(self):
     # I have no idea what this looks like in objdump.  This is a guess.
@@ -939,7 +972,7 @@ class Instruction:
     self._emit_return_for_cond()
     if (self.cond):
       self.out += ' else { \n'
-    self._emit_mov(dest=o.Operand(self, '%rip'))
+    self._emit_mov(dest=o.Operand(self, {'reg': 'rip'}))
     if (self.cond):
       self.out += ' } \n'
   # Data instructions
@@ -964,7 +997,7 @@ class Instruction:
     dest = dest or self.operands[1]
     size = size or self.size1
     assert (src.mode == o.MODE_MEM)
-    dest.emit_store(o.ucast(src.addr(), size), size)
+    dest.emit_store(o.icast(src.addr, size), size)
 
   def _emit_ctd(self):
     v_src = self.operands[0].emit_fetch('in', self.size1, signed=True)
@@ -1003,24 +1036,24 @@ class Instruction:
     src = src or self.operands[0]
     size = size or self.size1
     self._emit_lea(
-        src=o.Operand(self, f'-{hex(size)}(%rsp)'),
-        dest=o.Operand(self, '%rsp'),
+        src=o.Operand(self, {'offset': f'-{hex(size)}', 'base' :'rsp'}),
+        dest=o.Operand(self, {'reg': 'rsp'}),
         size=8)
     self._emit_mov(
         src=src,
-        dest=o.Operand(self, '(%rsp)'),
+        dest=o.Operand(self, {'base': 'rsp'}),
         size1=size)
 
   def _emit_pop(self, dest=None, size=None):
     dest = dest or self.operands[0]
     size = size or self.size1
     self._emit_mov(
-        src=o.Operand(self, '(%rsp)'),
+        src=o.Operand(self, {'base': 'rsp'}),
         dest=dest,
         size1=size)
     self._emit_lea(
-        src=o.Operand(self, f'{hex(size)}(%rsp)'),
-        dest=o.Operand(self, '%rsp'),
+        src=o.Operand(self, {'offset': f'{hex(size)}', 'base': 'rsp'}),
+        dest=o.Operand(self, {'reg': 'rsp'}),
         size=8)
 
   def _emit_enter(self):
@@ -1030,25 +1063,25 @@ class Instruction:
             self.operands[1].imm == 0)
     alloc = self.operands[0].imm
     self._emit_push(
-        src=o.Operand(self, '%rbp'),
+        src=o.Operand(self, {'reg': 'rbp'}),
         size=8)
     self._emit_mov(
-        src=o.Operand(self, '%rsp'),
-        dest=o.Operand(self, '%rbp'),
+        src=o.Operand(self, {'reg': 'rsp'}),
+        dest=o.Operand(self, {'reg': 'rbp'}),
         size1=8)
     self._emit_lea(
-        src=o.Operand(self, f'-{hex(alloc)}(%rsp)'),
-        dest=o.Operand(self, '%rsp'),
+        src=o.Operand(self, {'offset': f'-{hex(alloc)}', 'base': 'rsp'}),
+        dest=o.Operand(self, {'reg': 'rsp'}),
         size=8)
 
   def _emit_leave(self):
     # Don't implement nested entry variant.
     self._emit_mov(
-        src=o.Operand(self, '%rbp'),
-        dest=o.Operand(self, '%rsp'),
+        src=o.Operand(self, {'reg': 'rbp'}),
+        dest=o.Operand(self, {'reg': 'rsp'}),
         size1=8)
     self._emit_pop(
-        dest=o.Operand(self, '%rbp'),
+        dest=o.Operand(self, {'reg': 'rbp'}),
         size=8)
 
   def _emit_bsf(self):
@@ -1100,18 +1133,3 @@ class Instruction:
     self.out += f'{v_efl} |= (1<<{o.FLAG_ZF});\n'
     dest.emit_store(final, 8)
     self._emit_store_cozps(v_efl)
-    
-  #Check operands and opcodes to determine if instr should be skipped
-  #in IR generation
-  def _is_instrumentation(self):
-    isInstrumentation = False
-    for oper in self.operands:
-      if oper.is_instrumentation():
-        return True
-    #Omit stack guarding instrs from instrumentation
-    if "fs:0x28" in self.original:
-      self.out += ' //Stackguard instruction with fs operand \n'
-      return True
-
-    #Otherwise, return false
-    return False
