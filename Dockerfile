@@ -8,8 +8,8 @@ RUN apt-get update -y && apt-get install --no-install-recommends -y build-essent
 git clone --remote-submodules -b docker https://github.com/adamhumphriescs/TASE_Release.git /TASE_BUILD && \
 git clone git://sourceware.org/git/binutils-gdb.git && \
 cp /TASE_BUILD/objdump.c binutils-gdb/binutils/ && \
-cd binutils-gdb/ && ./configure && cd binutils && make objdump && \
-mv objdump / && cd / && rm -f binUtils-gdb && \
+cd binutils-gdb/ && ./configure && make && \
+mv binutils/objdump / && cd / && rm -f binUtils-gdb && \
 cd /TASE_BUILD/ && git submodule update --init && git checkout docker && cd / && \
 mkdir -p /TASE/llvm-3.4.2 && \
 curl -s https://releases.llvm.org/3.4.2/clang+llvm-3.4.2-x86_64-linux-gnu-ubuntu-14.04.xz | tar xJvf - -C /TASE/llvm-3.4.2 --strip 1 && \

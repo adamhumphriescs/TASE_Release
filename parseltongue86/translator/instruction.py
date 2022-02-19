@@ -631,7 +631,7 @@ class Instruction:
     #basic block, and the compiler optimizes out the
     #initial load.
     self.out += f'// {self.original}\n// {self._parsed_result_message}\nextern "C" void interp_fn_{self.vaddr:x}{suffix}(tase_greg_t* __restrict__ gregs) {{\n'
-    self.out += '\n'.join([f'  uint64_t rip_tmp = gregs[GREG_{x}];' for x in all_regnames])
+    self.out += '\n'.join([f'  uint64_t {x.lower()}_tmp = gregs[GREG_{x}];' for x in all_regnames])
 
   def _emit_function_epilog(self):
     self.out +='\n'.join(f'gregs[GREG_{r.upper()}] = {r}_tmp;' for r in o.BB_ASSIGNED_REGS) + '}\n\n'
