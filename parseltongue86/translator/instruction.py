@@ -175,7 +175,7 @@ class Instruction:
   ignored:  bool      True if this needs no processing.
   """
 
-  def __init__(self, original, vaddr, encoded, prefix, mnemonic, operands, fxn):
+  def __init__(self, original, vaddr, encoded, prefix, mnemonic, operands, var_count, fxn):
 
     """
     Parses out an instruction from a format that elffile generates.
@@ -223,7 +223,7 @@ class Instruction:
     self.out = ""
     self.ignored = False
 
-    self._var_count = 0
+    self._var_count = var_count
 
     try:
       (op, suffix) = self._parse_op()
@@ -631,10 +631,10 @@ class Instruction:
     #basic block, and the compiler optimizes out the
     #initial load.
     self.out += f'// {self.original}\n// {self._parsed_result_message}\nextern "C" void interp_fn_{self.vaddr:x}{suffix}(tase_greg_t* __restrict__ gregs) {{\n'
-    self.out += '\n'.join([f'  uint64_t {x.lower()}_tmp = gregs[GREG_{x}];' for x in all_regnames])
+    self.out += '\n'.join([f'  uint64_t {x.lower()}_tmp = gregs[GREG_{x}];' for x in all_regnames]) + '\n'
 
   def _emit_function_epilog(self):
-    self.out +='\n'.join(f'gregs[GREG_{r.upper()}] = {r}_tmp;' for r in o.BB_ASSIGNED_REGS) + '}\n\n'
+    self.out +='\n'.join(f'  gregs[GREG_{r.upper()}] = {r}_tmp;' for r in o.BB_ASSIGNED_REGS) + '\n}\n\n'
     o.clear_bb_reg_refs()
 
   def _make_var(self, prefix):

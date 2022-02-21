@@ -35,16 +35,20 @@ class ELFFile():
       r'^(?P<addr>[0-9a-f]+) (?P<size>[0-9a-f]+) '
       r'(?P<type>[^TtRrNp]) (?P<name>\S+)$')
 
-  def __init__(self, file_path, filter_functions=None):
+  def __init__(self, file_path, include_path=None, cartridge_pairs={}, springboard_functions=set(), filter_functions=set()):
     """
     file_path: str  a path to ELF file to be objdumped and analyzed.
     filter_functions: [str]  a list of functions to disassemble.
         If this is None, all functions are disassembled.
     """
     self._file_path = file_path
-    self._filter_functions = list(set(filter_functions)) if filter_functions else []
-    self._fasm = {}
+    self.include_path = include_path
+    self._filter_functions = list(filter_functions)
+    self._springboard_functions = springboard_functions
+    self.cartridge_pairs = cartridge_pairs
+    self.functions = {}
     self._vloc = {}
+    self.instrCtr = 0
     # self._function_asm = dict() # name -> parsed assembly
     # self._vars_loc = dict() # name -> [(start address, length)] non-empty
 
@@ -62,32 +66,52 @@ class ELFFile():
   def vars_loc(self):
     return self._vars_loc
 
-  def fasm(self, pool=None):
-    if not self._fasm:
-      if self._filter_functions:
-        res = None
-        if pool:
-          pcs = len(pool._pool)
-          gsize = len(self._filter_functions) // pcs
-          groups = []
-          for i in range(pcs):
-            if i == pcs-1:
-              groups.append((self._filter_functions[i*gsize:], i))
-            else:
-              groups.append((self._filter_functions[i*gsize:(i+1)*gsize], i))
-          fnames = []
-          for x in groups:
-            fnames.append(f'.group-{x[1]}')
-            with open(fnames[-1], 'w') as fh:
-              for y in x[0]:
-                print(y, file=fh)
-          for x in pool.map(self._parse_objdump, fnames):
-            self._fasm.update(x)
+  # def fasm(self, pool=None):
+  #   if not self._fasm:
+  #     if self._filter_functions:
+  #       res = None
+  #       if pool:
+  #         pcs = len(pool._pool)
+  #         gsize = len(self._filter_functions) // pcs
+  #         groups = []
+  #         for i in range(pcs):
+  #           if i == pcs-1:
+  #             groups.append((self._filter_functions[i*gsize:], i))
+  #           else:
+  #             groups.append((self._filter_functions[i*gsize:(i+1)*gsize], i))
+  #         fnames = []
+  #         for x in groups:
+  #           fnames.append(f'.group-{x[1]}')
+  #           with open(fnames[-1], 'w') as fh:
+  #             for y in x[0]:
+  #               print(y, file=fh)
+  #         for x in pool.map(self._parse_objdump, fnames):
+  #           self._fasm.update(x)
+  #       else:
+  #         self.fasm = self._parse_objdump()
+  #     else:
+  #       self._fasm = self._parse_objdump()
+  #   return self._fasm
+
+  def fasm(self, outname, pool=None):
+    if pool and self._filter_functions:
+      pcs = len(pool._pool)
+      gsize = len(self._filter_functions) // pcs
+      groups = []
+      for i in range(pcs):
+        if i == pcs-1:
+          groups.append(self._filter_functions[i*gsize:])
         else:
-          self.fasm = self._parse_objdump()
-      else:
-        self._fasm = self._parse_objdump()
-    return self._fasm
+          groups.append(self._filter_functions[i*gsize:(i+1)*gsize])
+      fnames = []
+      for i, x in enumerate(groups):
+        fnames.append((f'build/bitcode/{outname}.interp.{i}.cpp', f'.group-{i}', i == 0))
+        with open(fnames[-1][1], 'w') as fh:
+          for y in x:
+            print(y, file=fh)
+      pool.map(self._parse_objdump, fnames)
+    else:
+      self._parse_objdump((f'build/bitcode/{outname}.interp.0.cpp', None, True))
 
   def _parse_nm_vars(self, text):
     """
@@ -103,38 +127,86 @@ class ELFFile():
         self._vloc.setdefault(result.group('name'), []).append((addr, size))
     return self._vloc
 
-
-  def _parse_objdump(self, filename=None):
-    """
-    text: [str]
-    """
-    dupname_ctr = 0
-    fname = None
-    _fasm = {}
-    lines = self._objdump(filename=filename)
-    for line in lines:
-      if fname and (result := self._regex_instr.match(line)):
-        instr = instruction.Instruction(
-          line,
-          result.group('vaddr'), result.group('encoded'),
-          result.group('prefix'), result.group('mnemonic'),
-          result.group('operands').strip() if result.group('operands') else '', f'{filename}:{fname}')
-        _fasm[fname].append(instr)
-      elif not fname and (result := self._regex_function_header.match(line)):
-        fname = result.group(1)
-        if fname in _fasm:
-          fname = f'{fname} duplicate {dupname_ctr}'
-          dupname_ctr += 1
-        _fasm[fname] = []
+  def _instr(self, fh, instr, current_cartridge):
+    try:
+      if current_cartridge:
+        if instr.vaddr + instr.length >= current_cartridge[1]:
+          print(f'//Cartridge end in fxn {instr.fname}', file=fh)
+          instr.emit_function(3)
+          current_cartridge = False
+        else:
+          print('//In cartridge', file=fh)
+          instr.emit_function(2)
       else:
-        fname = None
-    return _fasm
+        if instr.vaddr in self.cartridge_pairs:
+          print(f'//Cartridge start in fxn {instr.fname}', file=fh)
+          current_cartridge = self.cartridge_pairs[instr.vaddr]
+          instr.emit_function(1)
+          if instr.vaddr + instr.length >= current_cartridge[1]:
+            current_cartridge = None
+            instr._emit_function_epilog()
+        else:
+          print(f'//Non-cartridge record in fxn {instr.fname}', file=fh)
+          if all(x in instr.original for x in ('jumpq', 'sb_reopen')) or ('leaq   0x5(%rip),%r15' in instr.original):
+            print("//Skipping lea to r15 or jmp to sb_reopen", file=fh)
+          else:
+            instr.emit_function(0)
+    except:
+      print(f'Error generating Instr: {instr.fname} -> {instr.original}')
+      print(f'{instr.op}: {instr.operands}')
+      raise
+    print(instr, file=fh)
+    return instr._var_count, current_cartridge
 
 
-  def _objdump(self, filename):
+  def print_header(self, fh):
+    print('#include <stdint.h>', file=fh)
+    print(f'#include "{self.include_path}"', file=fh)
+
+
+  def _parse_objdump(self, data):
+    outname, filterFile, first = data
+    with open(outname, 'w') as fh:
+      dupname_ctr = 0
+      fname = None
+      current_cartridge = None
+      instrCtr = 0
+      var_count = 0
+      _fasm = {}
+
+      self.print_header(fh)
+
+      if first:
+        print('void dummyMain () { ', file=fh)
+        print('return; } ', file=fh)
+
+      lines = self._objdump(filterFile=filterFile)
+      for line in lines:
+        if fname and (result := self._regex_instr.match(line)):
+          instr = instruction.Instruction(
+            line,
+            result.group('vaddr'), result.group('encoded'),
+            result.group('prefix'), result.group('mnemonic'),
+            result.group('operands').strip() if result.group('operands') else '', var_count, f'{filterFile}:{fname}')
+          instrCtr +=1
+          if fname in self._springboard_functions and self._filter_functions:
+            instr.emit_tase_springboard(f'_{fname.rpartition("sb_")[2]}')
+            var_count = instr._var_count
+          else:
+            var_count, current_cartridge = self._instr(fh, instr, current_cartridge)
+        elif not fname and (result := self._regex_function_header.match(line)):
+          var_count = 0
+          fname = result.group(1)
+          if fname in _fasm:
+            fname = f'{fname} duplicate {dupname_ctr}'
+            dupname_ctr += 1
+        else:
+          fname = None
+
+  def _objdump(self, filterFile=None):
     status = subprocess.run([
         '/objdump',
-        f'--disassemble_file={filename}' if filename else '-d',
+        f'--disassemble_file={filterFile}' if filterFile else '-d',
         '-w',
         '-M', 'suffix',
         '-j', '.text',
