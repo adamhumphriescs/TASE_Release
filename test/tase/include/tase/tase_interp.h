@@ -151,6 +151,7 @@ typedef union {
   int32_t    i32;
   uint16_t   u16;
   int16_t    i16;
+  double dbl;
   struct {
     uint8_t  u8;
     uint8_t  hu8;

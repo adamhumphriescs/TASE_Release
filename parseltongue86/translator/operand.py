@@ -203,7 +203,7 @@ class Operand:
         high = self.reg in REG_8H
         bits = "0000" if size == 2 else "00FF" if high else "FF00"
         post = f"(uint16_t) ({var_name} << 8)" if high and size == 1 else f"{whole_reg} += {var_name}"
-        self.instr.out += f'{whole_reg} = {whole_reg} & 0xFFFFFFFFFFFF{bits};\n{post}; \n'
+        self.instr.out += f'{whole_reg} = {whole_reg} & 0xFFFFFFFFFFFF{bits};\n {post}; \n'
         return
       elif size == 4:
         # Only for 32-bit register writes, the top 32-bits get cleared as well.

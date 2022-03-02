@@ -66,32 +66,6 @@ class ELFFile():
   def vars_loc(self):
     return self._vars_loc
 
-  # def fasm(self, pool=None):
-  #   if not self._fasm:
-  #     if self._filter_functions:
-  #       res = None
-  #       if pool:
-  #         pcs = len(pool._pool)
-  #         gsize = len(self._filter_functions) // pcs
-  #         groups = []
-  #         for i in range(pcs):
-  #           if i == pcs-1:
-  #             groups.append((self._filter_functions[i*gsize:], i))
-  #           else:
-  #             groups.append((self._filter_functions[i*gsize:(i+1)*gsize], i))
-  #         fnames = []
-  #         for x in groups:
-  #           fnames.append(f'.group-{x[1]}')
-  #           with open(fnames[-1], 'w') as fh:
-  #             for y in x[0]:
-  #               print(y, file=fh)
-  #         for x in pool.map(self._parse_objdump, fnames):
-  #           self._fasm.update(x)
-  #       else:
-  #         self.fasm = self._parse_objdump()
-  #     else:
-  #       self._fasm = self._parse_objdump()
-  #   return self._fasm
 
   def fasm(self, outname, pool=None):
     if pool and self._filter_functions:
