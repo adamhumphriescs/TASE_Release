@@ -40,7 +40,7 @@
 extern "C" {
   #endif
 
-typedef void (*target_fun_t)(void);
+typedef void (*target_fun_t)(int, char**);
 
 /* Returns if a transaction fails to complete or if a modeled function forces
  * an ejection from TASE mode.
