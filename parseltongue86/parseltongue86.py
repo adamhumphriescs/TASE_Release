@@ -48,7 +48,7 @@ def main(args):
 
   with Pool(args['threads']) as pool:
     p = elffile.ELFFile(target_binary, include_path=include_path, cartridge_pairs=cartridge_pairs, filter_functions=filters, springboard_functions=springboard_functions)
-    p.fasm(outname, pool=pool)
+    p.fasm(args['outname'], pool=pool)
 
 
 parser = ArgumentParser()
