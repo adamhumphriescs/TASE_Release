@@ -24,7 +24,7 @@ class ELFFile():
       r'^\s*(?P<vaddr>[0-9a-f]+):\s+'
       r'(?P<encoded>([0-9a-z]{2}\s)+)\s*'
       r'(?P<prefix>((lock|data16|data32|code16|'
-      r'code32|rep|repe|repne|repz|repnz) )*)'
+      r'code32|rep|repe|repne|repz|repnz|cs) )*)'
       r'(?P<mnemonic>[0-9a-z]+)'
       r'(\s+(?P<operands>[^#]+))?')
 
@@ -162,7 +162,7 @@ class ELFFile():
             result.group('vaddr'), result.group('encoded'),
             result.group('prefix'), result.group('mnemonic'),
             result.group('operands').strip() if result.group('operands') else '', var_count, f'{filterFile}:{fname}')
-          instrCtr +=1
+          instrCtr += 1
           if fname in self._springboard_functions and self._filter_functions:
             instr.emit_tase_springboard(f'_{fname.rpartition("sb_")[2]}')
             var_count = instr._var_count
