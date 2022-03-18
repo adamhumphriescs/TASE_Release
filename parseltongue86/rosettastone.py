@@ -29,7 +29,7 @@ def main(args):
         extents.append((addr, size))
 
   for addr, size in sorted(extents, key=operator.itemgetter(0)):
-    print('{hex(addr)} {hex(size)}')
+    print(f'{hex(addr)} {hex(size)}')
 
 parser = ArgumentParser()
 parser.add_argument('target_binary')
