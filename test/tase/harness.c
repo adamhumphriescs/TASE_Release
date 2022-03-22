@@ -12,6 +12,7 @@
 extern void begin_target_inner();
 
 static void run_target(target_fun_t f) {
+  memset(&target_ctx, 0, sizeof(target_ctx));
   enter_tase(f, TASE_ENABLE);
   // TODO: This is a stupid hack - actually extract the range of exit_tase
   // from our cartridge table.

@@ -9,8 +9,6 @@
 target_ctx_t target_ctx;
 
 void enter_tase(target_fun_t fun, int enable_tase) {
-  memset(&target_ctx, 0, sizeof(target_ctx));
-
   tase_model = sb_modeled;
   
   target_ctx.target_exit_addr = (uintptr_t)&exit_tase_shim;
