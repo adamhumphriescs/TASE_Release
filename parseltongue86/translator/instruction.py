@@ -533,6 +533,7 @@ class Instruction:
        2 - Inside cartridge (no prolog/epilog)
        3 - End of cartridge (include closing brace '}')
     """
+    self.out += f'  // addr 0x{self.vaddr}\n'
     if "fs:0x28" in self.original:
       self.out += ' //Stackguard instruction with fs operand \n'
         
@@ -1006,7 +1007,7 @@ class Instruction:
 
   def _emit_bswap(self):
     reg = self.operands[0]
-    self.size1 = o.reg_size(reg.reg)
+    self.size1 = reg.size
     assert (self.size1 == 4 or self.size1 == 8)
     v_reg = reg.emit_fetch('src', self.size1)
     byte_masks = ['0xff', '0xff00', '0xff0000', '0xff000000']
