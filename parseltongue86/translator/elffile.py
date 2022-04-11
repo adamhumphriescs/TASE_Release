@@ -121,7 +121,7 @@ class ELFFile():
             instr._emit_function_epilog()
         else:
           print(f'//Non-cartridge record in fxn {instr.fname}', file=fh)
-          if all(x in instr.original for x in ('jumpq', 'sb_reopen')) or ('leaq   0x5(%rip),%r15' in instr.original):
+          if all(x in instr.original for x in ('jmpq', 'sb_reopen')) or ('leaq   0x5(%rip),%r15' in instr.original):
             print("//Skipping lea to r15 or jmp to sb_reopen", file=fh)
           else:
             instr.emit_function(0)
