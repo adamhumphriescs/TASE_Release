@@ -22,7 +22,7 @@ MUSL_PATH=$(BUILD_DIR)/musl
 STDLIBS=abs atof atoi atol atoll bsearch div ecvt fcvt gcvt imaxabs imaxdiv labs ldiv llabs lldiv qsort io
 NETLIBS=htonl htons ntohl ntohs
 
-MUSL_OBJS=$(addprefix $(MUSL_PATH)/obj/src/,string/*.o locale/__lctrans.o ctype/*.o errno/*.o $(addsuffix .o,stdlib/,$(STDLIBS)) errno/*.o $(addsuffix .o,$(addprefix network/,$(NETLIB))) math/*.o fenv/fenv.o fenv/fesetround.o)
+MUSL_OBJS=$(addprefix $(MUSL_PATH)/obj/src/,string/*.o locale/__lctrans.o ctype/*.o errno/*.o $(addsuffix .o,stdlib/$(STDLIBS)) errno/*.o $(addsuffix .o,$(addprefix network/,$(NETLIB))) math/*.o fenv/fenv.o fenv/fesetround.o)
 
 
 # soft float
