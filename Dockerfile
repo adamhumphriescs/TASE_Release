@@ -8,7 +8,7 @@ git clone --remote-submodules -b docker https://github.com/adamhumphriescs/TASE_
 git clone git://sourceware.org/git/binutils-gdb.git && \
 cd binutils-gdb/ && git checkout 20756b0fbe065a84710aa38f2457563b57546440 && \
 cp /TASE_BUILD/objdump.c binutils/ && \
-cp /TASE_BUILD/section.c bfd.h bfd/ && \
+cp /TASE_BUILD/section.c /TASE_BUILD/bfd.h bfd/ && \
 ./configure && make && \
 mv binutils/objdump / && cd / && rm -f binUtils-gdb && \
 cd /TASE_BUILD/ && git submodule update --init && git checkout docker && cd / && \
