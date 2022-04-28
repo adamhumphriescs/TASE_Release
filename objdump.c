@@ -4145,11 +4145,6 @@ disassemble_data (bfd *abfd)
     bfd_map_over_sections_alt (abfd, disassemble_section_alt, & disasm_info, names, size);
 
     fflush(stdout);
-
-    for(int j = 0; j < size; j++){
-      free(names[i]);
-    }
-    free(names);
   } else {
 
     disasm_info.application_data = (void *) &aux;
