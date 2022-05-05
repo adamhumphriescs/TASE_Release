@@ -44,7 +44,7 @@ def main(args):
     cartridge_pairs = {int(head) : (int(head), int(tail)) for head, tail in (line.split() for line in c)}
 
   with Pool(args['threads']) as pool:
-    p = elffile.ELFFile(target_binary, include_path=include_path, cartridge_pairs=cartridge_pairs, filter_functions=filters, springboard_functions=springboard_functions)
+    p = elffile.ELFFile(target_binary, args['no_batch'], include_path=include_path, cartridge_pairs=cartridge_pairs, filter_functions=filters, springboard_functions=springboard_functions)
     p.fasm(args['outname'], pool=pool)
 
 

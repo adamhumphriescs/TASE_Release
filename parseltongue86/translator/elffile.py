@@ -35,7 +35,7 @@ class ELFFile():
       r'^(?P<addr>[0-9a-f]+) (?P<size>[0-9a-f]+) '
       r'(?P<type>[^TtRrNp]) (?P<name>\S+)$')
 
-  def __init__(self, file_path, nobatch, include_path=None, cartridge_pairs={}, springboard_functions=set(), filter_functions=[]):
+  def __init__(self, file_path, nobatch=False, include_path=None, cartridge_pairs={}, springboard_functions=set(), filter_functions=[]):
     """
     file_path: str  a path to ELF file to be objdumped and analyzed.
     filter_functions: [str]  a list of functions to disassemble.
@@ -61,10 +61,6 @@ class ELFFile():
 
   def __len__(self):
     return len(self._function_asm)
-
-  def vars_loc(self):
-    return self._vars_loc
-
 
   def fasm(self, outname, pool=None):
     if pool and self._filter_functions:
