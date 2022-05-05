@@ -59,6 +59,9 @@ class ELFFile():
     else:
       raise AttributeError
 
+  def vars_loc(self):
+    return self.__getattr__('_vars_loc')
+    
   def __len__(self):
     return len(self._function_asm)
 
