@@ -415,7 +415,7 @@ class Instruction:
       suffix = self._parse_size(suffix)
     assert suffix == '', f'Unable to use all of the suffix: {suffix}'
 
-  def _parse_operands(self, operand_str)
+  def _parse_operands(self, operand_str):
     prev = -1
     start = 0
     while start < len(operand_str):

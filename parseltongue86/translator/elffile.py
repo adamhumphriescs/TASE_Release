@@ -50,8 +50,6 @@ class ELFFile():
     self._vloc = {}
     self.instrCtr = 0
     self._instr_ = self._instr_nobatch if nobatch else self._instr
-    # self._function_asm = dict() # name -> parsed assembly
-    # self._vars_loc = dict() # name -> [(start address, length)] non-empty
 
   def __getattr__(self, name):
     if name == '_vars_loc':
