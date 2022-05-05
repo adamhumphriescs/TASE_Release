@@ -415,22 +415,7 @@ class Instruction:
       suffix = self._parse_size(suffix)
     assert suffix == '', f'Unable to use all of the suffix: {suffix}'
 
-  def _parse_operands(self, operand_str):
-    # operand_str = operand_str.strip() if operand_str else ''
-    # while operand_str != '':
-    #   self.operands.append(o.Operand(self, operand_str))
-    #   operand_str = operand_str[len(self.operands[-1].operand):]
-    #   if operand_str:
-    #     assert operand_str[0] == ',', 'Could not parse operand string'
-    #     operand_str = operand_str[1:]
-
-    # x = [m for m in operand_re.finditer(operand_str) if m.start() != m.end()]
-    # assert sum([m.end()-m.start() for m in x]) + len(x)-1 == len(operand_str), f'Could not parse operand string "{operand_str}", {x}'
-    # self.operands = [o.Operand(self, m.groupdict()) for m in x]
-
-   # matches = sorted(filter(lambda x: x, [y for x in operand_res for y in x.finditer(operand_str)]), key=lambda x: x.start())
-   # assert sum([x.end() - x.start() for x in matches]), f'Could not parse operand string: "{operand_str}", {matches}'
-   # self.operands = [o.Operand(self, x.groupdict()) for x in matches]
+  def _parse_operands(self, operand_str)
     prev = -1
     start = 0
     while start < len(operand_str):

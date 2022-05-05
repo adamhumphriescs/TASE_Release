@@ -17,7 +17,7 @@ def md5sum(filename):
 
 
 def main(args):
-  filters = set()
+  filters = []
   logging.basicConfig(level=logging.INFO)
 
   try:
@@ -26,14 +26,11 @@ def main(args):
 
     if args['functions_file']:
       with open(Path(args['functions_file']).resolve(strict=True), 'r') as f:
-        filters = set([l.strip() for l in f.readlines()])
+        filters = [l.strip() for l in f.readlines()]
     else:
       logging.error('No functions file found - falling back to disassembling all functions')
       filters = None
 
-  except FileNotFoundError as e:
-    logging.error(f'{e}')
-    raise e
 
   logging.info(f'{target_binary} md5sum: {md5sum(target_binary)}')
 
@@ -41,7 +38,7 @@ def main(args):
   # IR for normally.
   springboard_functions = set(['sb_open', 'sb_modeled_return'])
   if filters is not None:
-    filters |= springboard_functions
+    filters.extend(springboard_functions)
 
   with open('cartridge_info.txt') as c:
     cartridge_pairs = {int(head) : (int(head), int(tail)) for head, tail in (line.split() for line in c)}

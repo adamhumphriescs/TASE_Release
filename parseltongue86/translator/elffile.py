@@ -35,7 +35,7 @@ class ELFFile():
       r'^(?P<addr>[0-9a-f]+) (?P<size>[0-9a-f]+) '
       r'(?P<type>[^TtRrNp]) (?P<name>\S+)$')
 
-  def __init__(self, file_path, include_path=None, cartridge_pairs={}, springboard_functions=set(), filter_functions=set()):
+  def __init__(self, file_path, nobatch, include_path=None, cartridge_pairs={}, springboard_functions=set(), filter_functions=[]):
     """
     file_path: str  a path to ELF file to be objdumped and analyzed.
     filter_functions: [str]  a list of functions to disassemble.
@@ -43,12 +43,13 @@ class ELFFile():
     """
     self._file_path = file_path
     self.include_path = include_path
-    self._filter_functions = list(filter_functions)
+    self._filter_functions = filter_functions
     self._springboard_functions = springboard_functions
     self.cartridge_pairs = cartridge_pairs
     self.functions = {}
     self._vloc = {}
     self.instrCtr = 0
+    self._instr_ = self._instr_nobatch if nobatch else self._instr
     # self._function_asm = dict() # name -> parsed assembly
     # self._vars_loc = dict() # name -> [(start address, length)] non-empty
 
@@ -133,6 +134,17 @@ class ELFFile():
     return instr._var_count, current_cartridge
 
 
+  def _instr_nobatch(self, fh, instr, current_cartridge):
+    try:
+      instr.emit_function(0)
+    except:
+      print(f'Error generating Instr: {instr.fname} -> {instr.original}')
+      print(f'{instr.op}: {instr.operands}')
+      raise
+    print(instr, file=fh)
+    return instr._var_count, current_cartridge
+
+
   def print_header(self, fh):
     print('#include <stdint.h>', file=fh)
     print(f'#include "{self.include_path}"', file=fh)
@@ -167,7 +179,7 @@ class ELFFile():
             instr.emit_tase_springboard(f'_{fname.rpartition("sb_")[2]}')
             var_count = instr._var_count
           else:
-            var_count, current_cartridge = self._instr(fh, instr, current_cartridge)
+            var_count, current_cartridge = _instr_(self, fh, instr, current_cartridge)
         elif not fname and (result := self._regex_function_header.match(line)):
           var_count = 0
           fname = result.group(1)
