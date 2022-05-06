@@ -31,6 +31,9 @@ def main(args):
       logging.error('No functions file found - falling back to disassembling all functions')
       filters = None
 
+  except FileNotFoundError as e:
+    logging.error(f'{e}')
+    raise e
 
   logging.info(f'{target_binary} md5sum: {md5sum(target_binary)}')
 
