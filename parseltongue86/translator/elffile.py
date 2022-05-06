@@ -176,7 +176,7 @@ class ELFFile():
             instr.emit_tase_springboard(f'_{fname.rpartition("sb_")[2]}')
             var_count = instr._var_count
           else:
-            var_count, current_cartridge = _instr_(self, fh, instr, current_cartridge)
+            var_count, current_cartridge = self._instr_(fh, instr, current_cartridge)
         elif not fname and (result := self._regex_function_header.match(line)):
           var_count = 0
           fname = result.group(1)
