@@ -166,20 +166,21 @@ tase_clang: $(TASE_CLANG) $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
 
 
 .PHONY: setup
-setup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue cleanup
+setup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files cleanup
+# parseltongue cleanup
 
 
 .PHONY: cleanup
-cleanup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files parseltongue $(TASE_CLANG)
+cleanup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files $(TASE_CLANG) #parseltongue $(TASE_CLANG)
 	rm -f $(RUN_DIR)/lib/libLL*.a $(RUN_DIR)/lib/libclang* $(RUN_DIR)/lib/*.so* $(RUN_DIR)/bin/ll* $(RUN_DIR)/bin/minisat* $(RUN_DIR)/bin/s* $(addprefix $(RUN_DIR)/bin/,$(BIN_RM))
 
 
 # copy parseltongue over to install dir
-.PHONY: parseltongue
-parseltongue:
-	mkdir -p  $(RUN_DIR)/parseltongue86/
-	cp $(BUILD_DIR)/parseltongue86/parseltongue86.py $(BUILD_DIR)/parseltongue86/rosettastone.py $(RUN_DIR)/parseltongue86/
-	cp -r $(BUILD_DIR)/parseltongue86/translator $(RUN_DIR)/parseltongue86/
+#.PHONY: parseltongue
+#parseltongue:
+#	mkdir -p  $(RUN_DIR)/parseltongue86/
+#	cp $(BUILD_DIR)/parseltongue86/parseltongue86.py $(BUILD_DIR)/parseltongue86/rosettastone.py $(RUN_DIR)/parseltongue86/
+#	cp -r $(BUILD_DIR)/parseltongue86/translator $(RUN_DIR)/parseltongue86/
 
 
 # compile tase Objects
@@ -210,7 +211,6 @@ $(RUN_DIR)/lib/musl.o: $(TASE_CLANG)
 	rm -rf ltbuild
 	cp $(BUILD_DIR)/test/scripts/redefinedSF .
 	cp $(BUILD_DIR)/test/scripts/redefinedStrConv .
-#	./localize.sh $(RUN_DIR)/lib/musl.o
 	rm libtasec.a
 
 
@@ -221,14 +221,14 @@ $(BUILD_DIR)/compiler-rt_soft_float/%.o: $(BUILD_DIR)/compiler-rt_soft_float/%.c
 
 # copy klee main, needed for project compilation
 $(RUN_DIR)/lib/main.cpp.o: klee
-	mv $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/main.cpp.o $(RUN_DIR)/lib/main.cpp.o
+	cp $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/main.cpp.o $(RUN_DIR)/lib/main.cpp.o
 
 
 # copy klee bitcode files to install dir
 .PHONY: bitcode_files
 bitcode_files: klee
 	mkdir -p klee_bitcode
-	mv $(BUILD_DIR)/build_klee/$(KLEE_BUILD_TYPE)/lib/klee*.bc klee_bitcode/
+	cp $(BUILD_DIR)/build_klee/$(KLEE_BUILD_TYPE)/lib/klee*.bc klee_bitcode/
 
 
 $(RUN_DIR)/lib/libtase.a: $(TASE_OBJS) $(TASE_CLANG)
@@ -242,7 +242,7 @@ klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build_klee/lib
 	cd $(BUILD_DIR)/build_klee/ && $(KLEE_ENV) cmake $(KLEE_OPTS) ../klee
 	echo 'echo "Do not link!"' > $(BUILD_DIR)/build_klee/tools/klee/CMakeFiles/klee.dir/link.txt
 	$(MAKE) -C $(BUILD_DIR)/build_klee/
-	mv $(BUILD_DIR)/build_klee/lib/libk*.a $(RUN_DIR)/lib/
+	cp $(BUILD_DIR)/build_klee/lib/libk*.a $(RUN_DIR)/lib/
 
 
 $(BUILD_DIR)/build_klee/lib/checksum.a: $(CKSUM_OBJS)
