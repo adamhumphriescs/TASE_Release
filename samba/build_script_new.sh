@@ -78,16 +78,26 @@ sed -i 's|CC = \[.*\]|CC = ["/compilers/clang"]|g' /samba/bin/c4che/default.cach
 
 sed -i 's/CC_NAME = .*/CC_NAME = "clang"/g' /samba/bin/c4che/default.cache.py
 
-sed -Ei 's|EXTRA_INCLUDES = \[(.*)\]|EXTRA_INCLUDES = [\1, "-mllvm", "-x86-tase-max-cartridge-size=100000", "-I/TASE/include/traps/", "-I/TASE/include/tase/", "-DTASE_TEST", "-mllvm", "-x86-tase-modeled-functions=/TASE/include/tase/core_modeled.h", "-mno-mmx", "-mno-sse", "-mno-sse2", "-mno-sse3", "-mno-sse4", "-mno-80387", "-mno-avx", "-O0"]|g' /samba/bin/c4che/default.cache.py
+sed -Ei 's|EXTRA_CFLAGS = \[(.*)\]|EXTRA_CFLAGS = [\1, "-mllvm", "-x86-tase-max-cartridge-size=100000", "-I/TASE/include/traps/", "-I/TASE/include/tase/", "-DTASE_TEST", "-mllvm -x86-tase-modeled-functions=/TASE/include/tase/core_modeled.h", "-mno-mmx", "-mno-sse", "-mno-sse2", "-mno-sse3", "-mno-sse4", "-mno-80387", "-mno-avx", "-O0", "-emit-llvm"]|g' /samba/bin/c4che/default.cache.py
 
 sed -Ei 's|EXTRA_LDFLAGS = \[(.*)\]|EXTRA_LDFLAGS = [\1, "-D_GLIBCXX_USE_CXX11_ABI=0", "-fno-pie", "-no-pie", "-I/TASE/include/openssl/", "-Wall", "-Wextra", "-Wno-unused-parameter", "-O0", "-Wl,--start-group", "/TASE/lib/libtase.a", "/TASE/lib/libkleeCore.a", "/TASE/lib/libkleeModule.a", "/TASE/lib/libkleeTase.a", "/TASE/lib/libkleeCore.a", "/TASE/lib/libkleeModule.a", "/TASE/lib/libkleeTase.a", "/TASE/lib/libkleeBasic.a", "/TASE/lib/libkleaverSolver.a", "/TASE/lib/libkleeBasic.a", "/TASE/lib/libkleaverSolver.a", "/TASE/lib/libstp.a", "/TASE/lib/libminisat.a", "/TASE/lib/libkleaverExpr.a", "/TASE/lib/libkleeSupport.a", "/TASE/llvm-3.4.2/lib/libLLVMInstrumentation.a", "/TASE/llvm-3.4.2/lib/libLLVMIRReader.a", "/TASE/llvm-3.4.2/lib/libLLVMAsmParser.a", "/TASE/llvm-3.4.2/lib/libLLVMOption.a", "/TASE/llvm-3.4.2/lib/libLLVMLTO.a", "/TASE/llvm-3.4.2/lib/libLLVMLinker.a", "/TASE/llvm-3.4.2/lib/libLLVMipo.a", "/TASE/llvm-3.4.2/lib/libLLVMVectorize.a", "/TASE/llvm-3.4.2/lib/libLLVMTableGen.a", "/TASE/llvm-3.4.2/lib/libLLVMX86Disassembler.a", "/TASE/llvm-3.4.2/lib/libLLVMX86AsmParser.a", "/TASE/llvm-3.4.2/lib/libLLVMX86CodeGen.a", "/TASE/llvm-3.4.2/lib/libLLVMSelectionDAG.a", "/TASE/llvm-3.4.2/lib/libLLVMAsmPrinter.a", "/TASE/llvm-3.4.2/lib/libLLVMMCDisassembler.a", "/TASE/llvm-3.4.2/lib/libLLVMMCParser.a", "/TASE/llvm-3.4.2/lib/libLLVMX86Desc.a", "/TASE/llvm-3.4.2/lib/libLLVMX86Info.a" ,"/TASE/llvm-3.4.2/lib/libLLVMX86AsmPrinter.a", "/TASE/llvm-3.4.2/lib/libLLVMX86Utils.a", "/TASE/llvm-3.4.2/lib/libLLVMInterpreter.a", "/TASE/llvm-3.4.2/lib/libLLVMMCJIT.a", "/TASE/llvm-3.4.2/lib/libLLVMRuntimeDyld.a", "/TASE/llvm-3.4.2/lib/libLLVMExecutionEngine.a", "/TASE/llvm-3.4.2/lib/libLLVMCodeGen.a", "/TASE/llvm-3.4.2/lib/libLLVMObjCARCOpts.a", "/TASE/llvm-3.4.2/lib/libLLVMScalarOpts.a", "/TASE/llvm-3.4.2/lib/libLLVMInstCombine.a", "/TASE/llvm-3.4.2/lib/libLLVMTransformUtils.a", "/TASE/llvm-3.4.2/lib/libLLVMAnalysis.a", "/TASE/llvm-3.4.2/lib/libLLVMTarget.a", "/TASE/llvm-3.4.2/lib/libLLVMMC.a", "/TASE/llvm-3.4.2/lib/libLLVMObject.a", "/TASE/llvm-3.4.2/lib/libLLVMBitWriter.a", "/TASE/llvm-3.4.2/lib/libLLVMBitReader.a", "/TASE/llvm-3.4.2/lib/libLLVMCore.a", "/TASE/llvm-3.4.2/lib/libLLVMSupport.a", "/TASE/llvm-3.4.2/lib/libLLVMJIT.a", "/TASE/llvm-3.4.2/lib/libLTO.a", "/TASE/llvm-3.4.2/lib/libLLVMipa.a", "-lz", "-lpthread", "-ltinfo", "-ldl", "-lm", "-lstdc++", "-Wl,--end-group"]|g' /samba/bin/c4che/default.cache.py
 
 sed -i 's|LINK_CC = \[.*\]|LINK_CC = ["/compilers/gcc"]|g' /samba/bin/c4che/default.cache.py
 
-rep=$'        kw["shell"] = True\n\tif not isinstance(s, str):\n\t\tfor idx, x, in enumerate(s):\n\t\t\tif " " in x:\n\t\t\t\ta = x.split("=")\n\t\t\t\tif len(a) > 1:\n\t\t\t\t\ts[idx] = "=".join([a[0], "\"" + a[1] + "\""])\n\t\twith open("/compile.log", "a") as fh:\n\t\t\tfh.write(str(s))\n\t\t\tfh.write("\\n\\n")\n\t\ts = " ".join(s)\n'  
-
 head -n 198 /samba/third_party/waf/wafadmin/Utils.py > /cache.tmp
-echo "$rep" >> /cache.tmp
+echo $'        kw["shell"] = True\n\tif not isinstance(s, str):'  >> /cache.tmp
+echo $'\t\tfor idx, x, in enumerate(s):'  >> /cache.tmp
+echo $'\t\t\tif " " in x:'  >> /cache.tmp
+echo $'\t\t\t\ta = x.split("=")'  >> /cache.tmp
+echo $'\t\t\t\tif len(a) > 1:'  >> /cache.tmp
+echo $'\t\t\t\t\ts[idx] = "=".join([a[0], "\"" + a[1] + "\""])'  >> /cache.tmp
+echo $'\t\t\telif "\"" in x:'  >> /cache.tmp
+echo $'\t\t\t\ta = x.split("=")'  >> /cache.tmp
+echo $'\t\t\t\ts[idx] = "=".join([a[0], ' "\"'\" + a[1] + \"'\"])"  >> /cache.tmp
+echo $'\t\twith open("/compile.log", "a") as fh:'  >> /cache.tmp
+echo $'\t\t\tfh.write(str(s))'  >> /cache.tmp
+echo $'\t\t\tfh.write("\\n\\n")'  >> /cache.tmp
+echo $'\t\ts = " ".join(s)\n'  >> /cache.tmp
 tail -n+200 /samba/third_party/waf/wafadmin/Utils.py >> /cache.tmp
 mv /cache.tmp /samba/third_party/waf/wafadmin/Utils.py
 sed -i 's|^\$||g' /samba/third_party/waf/wafadmin/Utils.py  # ?? bash is being strange
@@ -119,3 +129,25 @@ sed -i 's|^\$||g' /samba/third_party/waf/wafadmin/Utils.py  # ?? bash is being s
 #/recompile.sh
 sed -i 's|--targets=client/smbclient|-vvv --targets=client/smbclient|g' /samba/Makefile
 make bin/smbclient
+
+mkdir -p /samba/bin/objs/
+#cd /samba/bin/default/
+#find . -name '*.o' | xargs -n1 -I{} bash -c 'mv {} /samba/bin/objs/$(basename -s .o {}).bc'
+#cd /samba/bin/objs/
+#for x in $(ls)
+#do
+#    /compilers/clang -fPIC -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -mllvm -x86-tase-max-cartridge-size=100000 -DTASE_TEST -mllvm -x86-tase-modeled-functions=/TASE/include/tase/core_modeled.h -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 -mno-80387 -mno-avx -O0 -DSTATIC_samba3core_MODULES=NULL -DSTATIC_samba3core_MODULES_PROTO="extern void __samba3core_dummy_module_proto(void)" -D_SAMBA_BUILD_=4 -DHAVE_CONFIG_H=1 -D_GNU_SOURCE=1 -D_XOPEN_SOURCE_EXTENDED=1 $x -c -o $(basename -s .bc $x).o
+#done
+#rm *.bc
+
+cd /samba/bin/
+echo "#!/bin/bash" > finish.sh
+while read line; do
+    sed 's/-emit-llvm//g' $line | sed 's/-fstack-protector//g' >> finish.sh
+done < /compilers/compile_commands.txt
+chmod +x finish.sh
+
+./finish.sh
+
+
+    

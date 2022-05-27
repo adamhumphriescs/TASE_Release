@@ -1,0 +1,113 @@
+#!/bin/bash
+ld -o out/libreplace-samba4.o -r  replace_2.o cwrap_2.o closefrom_2.o
+ld -o out/libtalloc-report-samba4.o -r  talloc_report_14.o
+ld -o out/libtime-basic-samba4.o -r  time_basic_1.o
+ld -o out/libsocket-blocking-samba4.o -r  blocking_11.o
+ld -o out/libiov-buf-samba4.o -r  iov_buf_18.o
+ld -o out/libsys-rw-samba4.o -r  sys_rw_24.o sys_rw_data_24.o
+ld -o out/libmsghdr-samba4.o -r  msghdr_21.o
+ld -o out/libutil-setid-samba4.o -r  setid_70.o
+ld -o out/libutil-tdb-samba4.o -r  util_tdb_61.o
+ld -o out/libsmbd-shim-samba4.o -r  smbd_shim_56.o
+ld -o out/libwinbind-client-samba4.o -r  wb_common_1.o
+ld -o out/libldb.o -r ldb_modules_6.o ldb_ldif_6.o ldb_parse_6.o ldb_msg_6.o ldb_utf8_6.o ldb_debug_6.o ldb_dn_6.o ldb_match_6.o ldb_options_6.o ldb_pack_6.o ldb_attributes_6.o attrib_handlers_6.o ldb_controls_6.o qsort_6.o ldb_map_6.o ldb_map_inbound_6.o ldb_map_outbound_6.o ldb_27.o
+ld -o out/libsamba-cluster-support-samba4.o -r  cluster_support_45.o ctdb_dummy_45.o
+ld -o out/libwbclient.o -r  wbc_guid_1.o wbc_idmap_1.o wbclient_1.o wbc_pam_1.o wbc_pwd_1.o wbc_sid_1.o wbc_util_1.o
+ld -o out/libsamba-debug-samba4.o -r  close_low_fd_7.o debug_8.o
+ld -o out/libsamba-errors.o -r  doserr_1.o errormap_1.o nterr_1.o errmap_unix_1.o hresult_1.o
+ld -o out/libgenrand-samba4.o -r  genrand_27.o
+ld -o out/libtdb-wrap-samba4.o -r  tdb_wrap_1.o
+ld -o out/libtevent-util.o -r  tevent_unix_64.o tevent_ntstatus_64.o tevent_werror_64.o
+ld -o out/libsamba-util.o -r  crc32_1.o hmacmd5_1.o md4_1.o arcfour_1.o sha256_1.o sha512_1.o hmacsha256_1.o aes_1.o rijndael-alg-fst_1.o aes_cmac_128_1.o aes_ccm_128_1.o aes_gcm_128_1.o md5_1.o codepoints_2.o convert_string_2.o util_str_2.o util_unistr_w_2.o pull_push_2.o util_unistr_2.o weird_2.o charset_macosxfs_2.o strv_6.o iconv_1.o dynconfig_1.o tini_4.o talloc_stack_32.o smb_threads_32.o rbtree_32.o rfc1738_32.o become_daemon_32.o system_32.o select_32.o getpass_32.o genrand_util_32.o fsusage_32.o params_32.o util_id_32.o util_net_32.o util_strlist_v3_32.o util_paths_32.o idtree_random_32.o base64_32.o util_str_32.o util_str_common_32.o ms_fnmatch_32.o server_id_32.o dprintf_32.o bitmap_32.o pidfile_32.o tevent_debug_32.o memcache_32.o tiniparser_5.o xfile_17.o data_blob_17.o util_file_17.o time_17.o signal_17.o util_17.o idtree_17.o fault_17.o substitute_17.o util_process_17.o util_strlist_17.o strv_util_17.o
+ld -o out/libinterfaces-samba4.o -r  interfaces_1.o
+ld -o out/libasn1util-samba4.o -r  asn1_56.o
+ld -o out/libflag-mapping-samba4.o -r  flag_mapping_1.o
+ld -o out/libsamba-modules-samba4.o -r  modules_53.o
+ld -o out/libsmb-transport-samba4.o -r  async_sock_1.o read_smb_1.o
+ld -o out/libkrb5samba-samba4.o -r  krb5_samba_1.o gss_samba_1.o keytab_util_1.o enctype_convert_1.o
+ld -o out/libserver-role-samba4.o -r  loadparm_server_role_6.o
+ld -o out/libsamba3-util-samba4.o -r  util_sec_112.o util_str_112.o adt_tree_112.o util_malloc_112.o namearray_112.o file_id_112.o
+ld -o out/libndr.o -r  ndr_string_174.o ndr_basic_174.o uuid_174.o ndr_174.o ndr_misc_174.o util_174.o
+ld -o out/libmessages-dgm-samba4.o -r unix_msg_1.o pthreadpool_1.o poll_funcs_tevent_1.o messages_dgm_49.o messages_dgm_ref_49.o
+ld -o out/libCHARSET3-samba4.o -r  charcnv_118.o fstring_118.o
+ld -o out/libevents-samba4.o -r  tevent_s4_1.o
+ld -o out/libaddns-samba4.o -r  dnsquery_1.o dnsrecord_1.o dnsutils_1.o dnssock_1.o dnsgss_1.o dnsmarshall_1.o error_1.o
+ld -o out/libsamba-security-samba4.o -r  dom_sid_1.o display_sec_1.o secace_1.o secacl_1.o security_descriptor_1.o sddl_1.o privileges_1.o security_token_1.o access_check_1.o object_tree_1.o create_descriptor_1.o util_sid_1.o session_1.o secdesc_1.o ndr_security_54.o ndr_sec_helper_54.o
+ld -o out/libserver-id-db-samba4.o -r  server_id_db_77.o
+ld -o out/libutil-reg-samba4.o -r  util_reg_1.o
+ld -o out/libmessages-util-samba4.o -r  messages_util_52.o
+ld -o out/libsamba-hostconfig.o -r  loadparm_9.o util_9.o param_table_9.o
+ld -o out/libauth-sam-reply-samba4.o -r  auth_sam_reply_1.o wbc_auth_util_1.o
+ld -o out/libcli-ldap-common-samba4.o -r  ldap_message_1.o ldap_ndr_1.o
+ld -o out/libndr-nbt.o -r  nbtname_1.o ndr_nbt_105.o
+ld -o out/libdbwrap-samba4.o -r  dbwrap_1.o dbwrap_util_1.o dbwrap_rbt_1.o dbwrap_cache_1.o dbwrap_tdb_1.o dbwrap_local_open_1.o
+ld -o out/libsamba-sockets-samba4.o -r  composite_4.o samba-sockets.empty_2.o socket_7.o access_7.o connect_multi_7.o connect_7.o socket_ip_5.o tsocket_1.o tsocket_helpers_1.o tsocket_bsd_1.o socket_unix_6.o resolve_12.o
+ld -o out/libsmbregistry-samba4.o -r  reg_api_32.o reg_dispatcher_32.o reg_cachehook_32.o reg_objects_32.o reg_util_internal_32.o util_nttoken_32.o reg_backend_db_32.o reg_parse_internal_32.o cbuf_32.o srprs_32.o reg_init_basic_32.o errormap_121.o smberr_121.o errmap_unix_121.o util_tdb_111.o
+ld -o out/libndr-standard.o -r  ndr_spoolss_23.o ndr_initshutdown_64.o ndr_dnsp_49.o ndr_srvsvc_58.o ndr_echo_63.o ndr_wkssvc_62.o ndr_spoolss_buf_24.o ndr_svcctl_57.o ndr_netlogon_59.o ndr_samr_52.o ndr_eventlog_60.o ndr_dfs_9.o ndr_lsa_53.o ndr_atsvc_4.o ndr_winreg_10.o ndr_ntsvcs_61.o ndr_notify_46.o ndr_dns_7.o ndr_dssetup_28.o ndr_file_id_114.o ndr_eventlog6_89.o ndr_server_id_40.o
+ld -o out/libcli-nbt-samba4.o -r  lmhosts_3.o nbtsocket_4.o namequery_4.o nameregister_4.o namerefresh_4.o namerelease_4.o
+ld -o out/libnetif-samba4.o -r  interface_1.o
+ld -o out/libdcerpc-binding.o -r ndr_dcerpc_70.o dcerpc_error_181.o binding_181.o dcerpc_util_181.o binding_handle_181.o
+ld -o out/libndr-krb5pac.o -r ndr_krb5pac_82.o
+ld -o out/libndr-samba-samba4.o -r ndr_ntprinting_51.o ndr_named_pipe_auth_5.o ndr_mdssvc_69.o ndr_unixinfo_22.o ndr_mgmt_30.o ndr_idmap_45.o ndr_witness_67.o ndr_orpc_31.o ndr_compression_65.o ndr-samba.empty_167.o ndr_schannel_104.o ndr_drsuapi_74.o ndr_auth_2.o ndr_smbXsrv_4.o lzxpress_1.o ndr_ntlmssp_47.o ndr_epmapper_26.o ndr_dnsserver_6.o ndr_drsblobs_78.o ndr_dcom_34.o ndr_xattr_101.o ndr_negoex_48.o ndr_open_files_3.o ndr_fsrvp_66.o ndr_smb2_lease_struct_102.o
+ld -o out/libcliauth-samba4.o -r  pam_errors_11.o ntlm_check_6.o spnego_parse_12.o credentials_7.o session_7.o smbencrypt_7.o smbdes_7.o util_lsarpc_1.o schannel_state_tdb_9.o cliauth.empty_2.o msrpc_parse_5.o
+ld -o out/libauthkrb5-samba4.o -r  packet_1.o tls_1.o tlscert_1.o tls_tstream_1.o kerberos_pac_2.o gssapi_pac_1.o kerberos_pac_1.o gssapi_helper_1.o krb5_init_context_1.o
+ld -o out/libsamdb-common-samba4.o -r  util_runcmd_75.o util_6.o util_trusts_6.o util_groups_6.o util_samr_6.o dsdb_dn_6.o dsdb_access_6.o util_ldb_73.o
+ld -o out/libdcerpc-samba-samba4.o -r  ndr_winreg_c_146.o ndr_epmapper_c_142.o ndr_netlogon_c_156.o ndr_dfs_c_127.o ndr_lsa_c_125.o ndr_eventlog_c_141.o ndr_atsvc_c_120.o ndr_spoolss_c_134.o ndr_samr_c_126.o ndr_wkssvc_c_136.o dcerpc-samba.empty_171.o ndr_echo_c_122.o ndr_srvsvc_c_137.o ndr_dnsserver_c_160.o ndr_initshutdown_c_147.o ndr_ntsvcs_c_155.o ndr_svcctl_c_138.o
+ld -o out/libldbsamba-samba4.o -r  ldb_wrap_5.o schema_init_10.o schema_set_10.o schema_query_10.o schema_syntax_10.o schema_description_10.o schema_convert_to_ol_10.o schema_inferiors_10.o schema_prefixmap_10.o schema_info_attr_10.o schema_filtered_10.o dsdb_dn_10.o ldif_handlers_1.o ldb_matching_rules_1.o
+ld -o out/libndr-samba4.o -r  ndr_wzcsvc_36.o ndr_efs_11.o ndr_w32time_38.o ndr_oxidresolver_32.o ndr_frsapi_15.o ndr_remact_33.o ndr_frsblobs_20.o ndr_msgsvc_29.o ndr_dfsblobs_17.o ndr_winsrepl_7.o ndr_ntp_signd_6.o ndr_nfs4acl_50.o ndr_fscc_19.o ndr_opendb_5.o ndr_winsif_4.o ndr_trkwks_42.o ndr_frstrans_16.o ndr_dsbackup_8.o ndr_preg_113.o ndr_sasl_helpers_3.o ndr_frsrpc_13.o ndr_keysvc_43.o ndr_winbind_185.o ndr-samba4.empty_9.o ndr_clusapi_68.o ndr_table_17.o tables_17.o ndr_policyagent_21.o ndr_dbgidl_27.o ndr_winstation_1.o ndr_audiosrv_1.o ndr_browser_37.o ndr_rot_12.o ndr_scerpc_39.o ndr_wmi_35.o ndr_irpc_2.o ndr_bkupblobs_18.o ndr_backupkey_112.o
+ld -o out/libsamba-credentials.o -r  srv_keytab_8.o credentials_1.o secrets_6.o credentials_krb5_7.o credentials_ntlm_9.o credentials_secrets_8.o kerberos_util_6.o
+ld -o out/libsamdb.o -r  system_session_9.o repl_decrypt_1.o sam_11.o samdb_1.o samdb_privilege_1.o cracknames_1.o replicated_objects_1.o
+ld -o out/libgensec-samba4.o -r  basic_4.o schannel_7.o spnego_5.o external_10.o gensec_tstream_1.o ncalrpc_9.o gensec_ntlmssp_1.o ntlmssp_1.o ntlmssp_util_1.o ntlmssp_ndr_1.o ntlmssp_client_1.o ntlmssp_server_1.o ntlmssp_sign_1.o gensec_ntlmssp_server_1.o ntlm_5.o gensec_ntlmssp.empty_3.o gensec_gssapi_3.o gensec_1.o gensec_start_1.o gensec_util_1.o
+ld -o out/libcli-smb-common-samba4.o -r  smb_signing_4.o smb_seal_4.o smb2_negotiate_context_4.o smb2_create_blob_4.o smb2_signing_4.o smb2_lease_4.o util_4.o smbXcli_base_4.o smb1cli_trans_4.o smb1cli_echo_4.o smb1cli_create_4.o smb1cli_close_4.o smb1cli_write_4.o smb1cli_read_4.o smb2cli_session_4.o smb2cli_tcon_4.o smb2cli_create_4.o smb2cli_close_4.o smb2cli_read_4.o smb2cli_write_4.o smb2cli_flush_4.o smb2cli_set_info_4.o smb2cli_query_info_4.o smb2cli_query_directory_4.o smb2cli_ioctl_4.o smb2cli_echo_4.o tstream_smbXcli_np_4.o
+ld -o out/libcli-ldap-samba4.o -r  ldap_client_1.o ldap_bind_1.o ldap_ildap_1.o ldap_controls_1.o tstream_1.o bcast_14.o nbtlist_14.o wins_14.o dns_ex_14.o host_14.o lmhosts_14.o resolve_lp_14.o
+ld -o out/libsmbconf.o -r  util_1.o system_44.o sendfile_44.o recvfile_44.o time_44.o util_sid_44.o util_specialsids_44.o util_file_44.o util_44.o util_path_44.o util_procid_44.o util_tsock_44.o util_sock_44.o util_transfer_file_44.o sys_popen_44.o sock_exec_44.o loadparm_ctx_2.o dbwrap_open_48.o dbwrap_watch_48.o g_lock_48.o version_105.o ndr_messaging_115.o messages_55.o util_cluster_55.o id_cache_55.o talloc_dict_55.o serverid_55.o server_id_watch_55.o server_id_db_util_55.o addrchange_55.o debug_s3_55.o dumpcore_55.o interface_55.o username_55.o access_55.o smbrun_55.o wins_srv_55.o substitute_55.o substitute_generic_55.o ms_fnmatch_55.o tallocmsg_55.o dmallocmsg_55.o lang_tdb_55.o gencache_55.o util_event_55.o server_contexts_55.o server_prefork_55.o server_prefork_util_55.o ldap_escape_55.o fncall_55.o krb5_errs_55.o system_smbd_55.o audit_55.o tevent_wait_55.o idmap_cache_55.o util_ea_55.o background_55.o cleanupdb_55.o loadparm_28.o sharesec_28.o ldap_debug_handler_28.o util_names_28.o smbconf_init_72.o smbconf_reg_72.o util_pw_76.o reg_backend_smbconf_35.o reg_init_smbconf_35.o reg_util_token_35.o reg_api_util_35.o smbconf_1.o smbconf_txt_1.o smbconf_util_1.o
+ld -o out/libcli-cldap-samba4.o -r  netlogon_1.o cldap_1.o
+ld -o out/libsecrets3-samba4.o -r  ndr_secrets_6.o secrets_64.o machine_account_secrets_64.o machine_sid_64.o secrets_lsa_64.o
+ld -o out/libutil-cmdline-samba4.o -r  util_cmdline_40.o
+ld -o out/libgse-samba4.o -r  kerberos_43.o ads_status_43.o cldap_63.o unexpected_101.o namecache_101.o nmblib_101.o namequery_101.o conncache_101.o sitename_cache_101.o gse_krb5_8.o gse_8.o
+ld -o out/liblibsmb-samba4.o -r  auth_generic_59.o clientgen_60.o cliconnect_60.o clifile_60.o clispnego_60.o clirap_60.o clierror_60.o climessage_60.o clireadwrite_60.o clilist_60.o cliprint_60.o clitrans_60.o clisecdesc_60.o clidgram_60.o clistr_60.o cliquota_60.o clifsinfo_60.o clidfs_60.o clioplock_60.o clirap2_60.o async_smb_60.o reparse_symlink_60.o clisymlink_60.o smbsock_connect_60.o cli_smb2_fnum_60.o
+ld -o out/libmsrpc3-samba4.o -r  netlogon_creds_cli_10.o cli_pipe_11.o rpc_transport_np_11.o rpc_transport_sock_11.o rpc_transport_tstream_11.o dcerpc_helpers_11.o
+ld -o out/libpopt-samba3-samba4.o -r popt_common_37.o
+#ld -o out/libpopt-samba3-samba4.o -r client_148.o clitar_148.o dnsbrowse_148.o smbreadline_1.o
+
+/TASE/bin/clang -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 -mno-80387 -mno-avx -mllvm -x86-tase-modeled-functions=/TASE/include/tase/core_modeled.h -c /harness.c -o /harness.o
+ld -o out/harness.o -r /harness.o client_148.o clitar_148.o dnsbrowse_148.o smbreadline_1.o
+
+cd /samba/bin/objs/out/
+for x in $(find . -name '*.o'); do objcopy --localize-hidden $x; done
+ld -r $(find . -name '*.o') /TASE/lib/musl.o -o ../everything.o
+cd /TASE/install/ && ./localize.sh /samba/bin/default/objs/everything.o
+mv /samba/bin/default/objs/everything.o /samba/bin/default/source3/client/
+cd /samba/bin/default/source3/client/
+/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o/samba/bin/default/source3/client/smbclient -rdynamic /TASE/lib/main.cpp.o everything.o -L/usr/lib/x86_64-linux-gnu/mit-krb5 -Wl,--start-group /TASE/lib/libtase.a /TASE/lib/libkleeCore.a /TASE/lib/libkleeModule.a /TASE/lib/libkleeTase.a /TASE/lib/libkleeCore.a /TASE/lib/libkleeModule.a /TASE/lib/libkleeTase.a /TASE/lib/libkleeBasic.a /TASE/lib/libkleaverSolver.a /TASE/lib/libkleeBasic.a /TASE/lib/libkleaverSolver.a /TASE/lib/libstp.a /TASE/lib/libminisat.a /TASE/lib/libkleaverExpr.a /TASE/lib/libkleeSupport.a /TASE/llvm-3.4.2/lib/libLLVMInstrumentation.a /TASE/llvm-3.4.2/lib/libLLVMIRReader.a /TASE/llvm-3.4.2/lib/libLLVMAsmParser.a /TASE/llvm-3.4.2/lib/libLLVMOption.a /TASE/llvm-3.4.2/lib/libLLVMLTO.a /TASE/llvm-3.4.2/lib/libLLVMLinker.a /TASE/llvm-3.4.2/lib/libLLVMipo.a /TASE/llvm-3.4.2/lib/libLLVMVectorize.a /TASE/llvm-3.4.2/lib/libLLVMTableGen.a /TASE/llvm-3.4.2/lib/libLLVMX86Disassembler.a /TASE/llvm-3.4.2/lib/libLLVMX86AsmParser.a /TASE/llvm-3.4.2/lib/libLLVMX86CodeGen.a /TASE/llvm-3.4.2/lib/libLLVMSelectionDAG.a /TASE/llvm-3.4.2/lib/libLLVMAsmPrinter.a /TASE/llvm-3.4.2/lib/libLLVMMCDisassembler.a /TASE/llvm-3.4.2/lib/libLLVMMCParser.a /TASE/llvm-3.4.2/lib/libLLVMX86Desc.a /TASE/llvm-3.4.2/lib/libLLVMX86Info.a /TASE/llvm-3.4.2/lib/libLLVMX86AsmPrinter.a /TASE/llvm-3.4.2/lib/libLLVMX86Utils.a /TASE/llvm-3.4.2/lib/libLLVMInterpreter.a /TASE/llvm-3.4.2/lib/libLLVMMCJIT.a /TASE/llvm-3.4.2/lib/libLLVMRuntimeDyld.a /TASE/llvm-3.4.2/lib/libLLVMExecutionEngine.a /TASE/llvm-3.4.2/lib/libLLVMCodeGen.a /TASE/llvm-3.4.2/lib/libLLVMObjCARCOpts.a /TASE/llvm-3.4.2/lib/libLLVMScalarOpts.a /TASE/llvm-3.4.2/lib/libLLVMInstCombine.a /TASE/llvm-3.4.2/lib/libLLVMTransformUtils.a /TASE/llvm-3.4.2/lib/libLLVMAnalysis.a /TASE/llvm-3.4.2/lib/libLLVMTarget.a /TASE/llvm-3.4.2/lib/libLLVMMC.a /TASE/llvm-3.4.2/lib/libLLVMObject.a /TASE/llvm-3.4.2/lib/libLLVMBitWriter.a /TASE/llvm-3.4.2/lib/libLLVMBitReader.a /TASE/llvm-3.4.2/lib/libLLVMCore.a /TASE/llvm-3.4.2/lib/libLLVMSupport.a /TASE/llvm-3.4.2/lib/libLLVMJIT.a /TASE/llvm-3.4.2/lib/libLTO.a /TASE/llvm-3.4.2/lib/libLLVMipa.a -lz -lpthread -ltinfo -ldl -lm -lgnutls -lkrb5 -lk5crypto -lcom_err -lgssapi_krb5 -lcap -lresolv -lstdc++ -Wl,--end-group
+
+echo "#!/bin/bash" > run_smbclient.sh
+echo 'KLEE_RUNTIME_LIBRARY_PATH=/samba/bin/default/source3/client/build/bitcode/ ./smbclient "${@}"' >> run_smbclient.sh
+chmod +x run_smbclient.sh
+
+mkdir -p build/bitcode
+cp /TASE/install/libtasec.syms client.tase.tmp
+for x in $(ls /samba/bin/default/objs/); do  python3 /TASE/parseltongue86/rosettastone.py smbclient -f /samba/bin/default/objs/$x >> client.vars.tmp; nm --defined-only /samba/bin/default/objs/$x | grep -i " t " | cut -d' ' -f 3 >> client.tase.tmp; done
+readelf --relocs smbclient | grep std | grep GLIBC | grep GLOB_DAT | awk '{print $1, "0x8"; print $4, "0x10"}' >> client.vars.tmp
+sort client.tase.tmp | uniq > client.tase && rm client.tase.tmp
+sort client.vars.tmp | uniq > client.vars && rm client.vars.tmp
+cp /TASE/install/klee_bitcode/* build/bitcode
+
+./run_smbclient.sh -tasePreProcess=TRUE
+python3 /TASE/parseltongue86/parseltongue86.py -n -f client.tase smbclient /TASE/include/tase/ client -t 40
+
+echo '#!/bin/bash' > compile.sh
+echo '/TASE/llvm-3.4.2/bin/clang -fno-slp-vectorize -Wall -Wextra -emit-llvm -Wno-unused -O3 -std=c++11 -c $1 -o build/bitcode/$(basename -s .cpp $1).bc' >> compile.sh
+chmod +x compile.sh
+
+ls build/bitcode | grep .cpp$ | xargs -n1 -P20 -I{} ./compile.sh build/bitcode/{}
+if [[ $(ls build/bitcode | grep -E -c 'client.interp.[0-9]+.bc$') -gt 1 ]]
+then
+    /TASE/llvm-3.4.2/bin/llvm-link build/bitcode/client.interp.*.bc -o build/bitcode/client.interp.bc
+else
+    mv build/bitcode/client.interp.0.bc build/bitcode/client.interp.bc
+fi
+
+objdump -D -C -w -M suffix -j .text smbclient > obj.dump
+
+./run_smbclient.sh -taseManager=false -dontFork -execMode=INTERP_ONLY -taseDebug -modelDebug - --help
