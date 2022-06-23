@@ -77,7 +77,9 @@ OPS_CONV = ['cbtw', 'cwtl', 'cltq', 'cwtd', 'cltd', 'cqtd', 'cqto']
 OPS_FLAG = [
     'pushf', 'popf',  # allows {wlq}
     'cl', 'st',  # allows SUFFIX_FLAG
-    'cmc'
+    'cmc',
+    'lahf',
+    'sahf'
 ]
 
 OPS_SHIFT = [  # {lr}{bwlq}
@@ -600,6 +602,10 @@ class Instruction:
       self._emit_flag(clear=False)
     elif self.op == 'cmc':
       self._emit_cmc()
+    elif self.op == 'lahf':
+      self._emit_lahf()
+    elif self.op == 'sahf':
+      self._emit_sahf()
     elif self.op == 'bsr':
       self._emit_bsr()
     elif self.op == 'bsf':
@@ -1070,6 +1076,16 @@ class Instruction:
         dest=o.Operand(self, {'reg': 'rbp'}),
         size=8)
 
+  def _emit_lahf(self):
+    dest = o.reg_operand(self, 'rax', 2)
+    v_efl = self._emit_flag_decl()
+    dest.emit_store(v_efl, 2)
+    
+  def _emit_sahf(self):
+    src = o.reg_operand(self, 'rax', 2)
+    v_efl = src.emit_fetch('v_efl', 2)
+    self._emit_store_cozps(v_efl, clean_clobber_flags=True)
+    
   def _emit_bsf(self):
     src = self.operands[0]
     dest = o.reg_operand(self, 'rax', 8)
