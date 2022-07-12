@@ -2,7 +2,7 @@ SHELL=/bin/bash
 TARGET?=tase
 DIR?=
 
-all: docker
+all: tase
 
 
 objdump:
@@ -39,7 +39,7 @@ tase_llvm: .tase_llvm_id objdump
 	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name tase_build -d tase_llvm > .tase_id
 
 
-docker: .tase_id
+tase: .tase_id
 #	nohup docker build --network=host -t tase . 2>&1 > err.txt &
 	docker exec tase_build bash -c 'cd /TASE_BUILD/install && make -j 16 setup && cd / && cp -r /TASE_BUILD/install/ /TASE/ && apt-get autoremove'
 	docker tag $$(docker commit tase_build | awk '{split($$0, m, /:/); print m[2]}') tase
@@ -70,3 +70,13 @@ klee-update:
 	git add klee
 	git commit -m 'updated klee'
 	git push
+
+llvm-update:
+	make -C ../llvm/
+	git submodule update --remote --force llvm
+	git add llvm
+	git commit -m 'updated llvm'
+	git push
+
+#llvm-dev-container:
+#	docker run --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --mount type=bind,src=$$(pwd)/llvm_test/,dst=/test/ --rm -it tase_llvm

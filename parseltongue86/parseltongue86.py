@@ -43,7 +43,7 @@ def main(args):
   if filters is not None:
     filters.extend(springboard_functions)
 
-  with open('cartridge_info.txt') as c:
+  with open(target_binary.parent / 'cartridge_info.txt') as c:
     cartridge_pairs = {int(head) : (int(head), int(tail)) for head, tail in (line.split() for line in c)}
 
   with Pool(args['threads']) as pool:

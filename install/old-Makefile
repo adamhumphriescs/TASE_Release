@@ -73,6 +73,94 @@ export KLEE_LINK_LIBS=$(addprefix $(RUN_DIR)/lib/,$KLEE_LIBS libtase.a libminisa
 BIN_RM=bugpoint c-index-test clang-check clang-extdef-mapping clang-format clang-import-test clang-offload-bundler clang-refactor clang-rename diagtool dsymutil git-clang-format hmaptool llc lli llvm-ar llvm-as llvm-bcanalyzer llvm-c-test llvm-cat llvm-cfi-verify llvm-config llvm-cov llvm-cvtres llvm-cxxdump llvm-cxxfilt llvm-cxxmap llvm-diff llvm-dis llvm-dlltool llvm-dwarfdump llvm-dwp llvm-elfabi llvm-exegesis llvm-extract llvm-lib llvm-link llvm-lto llvm-lto2 llvm-mc llvm-mca llvm-modextract llvm-mt llvm-nm llvm-objcopy llvm-objdump llvm-opt-report llvm-pdbutil llvm-profdata llvm-ranlib llvm-rc llvm-readelf llvm-readobj llvm-rtdyld llvm-size llvm-split llvm-stress llvm-strings llvm-strip llvm-symbolizer llvm-tblgen llvm-undname llvm-xray minisat minisat_core obj2yaml opt sancov sanstats scan-build scan-view stp_simple verify-uselistorder yaml2obj
 
 
+# @runtime items:
+#
+# user project Object targets
+OBJS=$(addsuffix .o,$(basename $(wildcard project/src/*.c)))
+SOBJS=$(addsuffix .o,$(basename $(wildcard project/src/*.s)))
+#
+# user project binary name
+TARGET?=
+
+
+### Usage
+## project/ dir: create project, drop in source, edit harness.c, run docker container, mount project dir to test_build/project/ compile compile to *.o files in tmp/, link *.o tmp/, and then run this makefile with `make`
+## alternatively (out-of-docker build): symlink your project dir to ./project
+
+
+########################################
+############ @runtime section ##########
+########################################
+
+all: target project/$(TARGET) preprocess project/build/bitcode/$(TARGET).interp.cpp project/build/bitcode/$(TARGET).interp.bc bitcode_other project/run_$(TARGET).sh
+
+
+# build project Object files
+.PHONY: target
+target: $(SOBJS) $(OBJS)
+
+project/src/%.o: project/src/%.s
+	$(TASE_CLANG) -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
+	./localize.sh $<
+
+project/src/%.o: project/src/%.c
+	$(TASE_CLANG) -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
+	./localize.sh $<
+
+
+# compile project
+project/$(TARGET): project/build/proj.a
+	/usr/bin/c++  -D_GLIBCXX_USE_CXX11_ABI=0 -fno-pie -no-pie -T$(RUN_DIR)/tase_link.ld -I$(RUN_DIR)/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O3  -rdynamic $(RUN_DIR)/lib/main.cpp.o  -o project/$(TARGET) -Wl,--start-group $$(pwd)/project/build/proj.a $(KLEE_LINK_LIBS) $(LLVM_LIBS) -lz -lpthread -ltinfo -ldl -lm -Wl,--end-group
+
+
+# cartridge.log -> cartridgeInfo.txt for klee
+.PHONY: preprocess
+preprocess: project/build/$(TARGET).vars project/build/$(TARGET).tase
+	cd project/ && ./$(TARGET) -tasePreProcess=TRUE
+
+
+project/build/$(TARGET).vars: project/$(TARGET)
+	python3 $(RUN_DIR)/parseltongue86/rosettastone.py project/$(TARGET) project/build/proj.a | sort -u > project/$(TARGET).vars
+
+
+# combine libtase.a and project Objects
+project/build/proj.a:
+	mkdir -p project/build
+	ar crs project/build/proj.a $$(pwd)/project/src/*.o
+
+
+# previously made project/build/everything.o
+project/build/$(TARGET).tase: project/$(TARGET)
+	nm --defined-only project/build/proj.a | grep -i " t " | cut -d' ' -f 3 > project/build/$(TARGET).tase
+
+
+# create project bitcode files
+project/build/bitcode/$(TARGET).interp.cpp:
+	mkdir -p project/build/bitcode
+	cd project && python3 $(RUN_DIR)/parseltongue86/parseltongue86.py -f build/$(TARGET).tase $(TARGET) $(INCLUDE_DIR)/tase/ > build/bitcode/$(TARGET).interp.cpp
+
+
+project/build/bitcode/$(TARGET).interp.bc:
+	$(CLANG) -fno-slp-vectorize -Wall -Wextra -emit-llvm -Wno-unused -O3 -std=c++11 -I$(INCLUDE_DIR)/tase/ -c project/build/bitcode/$(TARGET).interp.cpp -o project/build/bitcode/$(TARGET).interp.bc
+
+
+# copy in klee bitcode items
+.PHONY: bitcode_other
+bitcode_other:
+	cp klee_bitcode/* project/build/bitcode/
+
+
+# create script to: point klee to bitcode, run the binary
+project/run_$(TARGET).sh:
+	echo '#/bin/bash' > project/run_$(TARGET).sh
+	echo 'KLEE_RUNTIME_LIBRARY_PATH=build/bitcode/ ./$(TARGET)' >> project/run_$(TARGET).sh
+	chmod +x project/run_$(TARGET).sh
+
+
+
+######################################## 
+############ @build section ############
+########################################
 
 .PHONY: tase_clang
 tase_clang: $(TASE_CLANG) $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
@@ -86,6 +174,14 @@ setup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files cleanup
 .PHONY: cleanup
 cleanup: klee $(RUN_DIR)/lib/main.cpp.o bitcode_files $(TASE_CLANG)
 	rm -f $(RUN_DIR)/lib/libLL*.a $(RUN_DIR)/lib/libclang* $(RUN_DIR)/lib/*.so* $(RUN_DIR)/bin/ll* $(RUN_DIR)/bin/minisat* $(RUN_DIR)/bin/s* $(addprefix $(RUN_DIR)/bin/,$(BIN_RM))
+
+
+# copy parseltongue over to install dir
+#.PHONY: parseltongue
+#parseltongue:
+#	mkdir -p  $(RUN_DIR)/parseltongue86/
+#	cp $(BUILD_DIR)/parseltongue86/parseltongue86.py $(BUILD_DIR)/parseltongue86/rosettastone.py $(RUN_DIR)/parseltongue86/
+#	cp -r $(BUILD_DIR)/parseltongue86/translator $(RUN_DIR)/parseltongue86/
 
 
 # compile tase Objects
@@ -181,3 +277,5 @@ $(TASE_CLANG):
 openssl:
 	cd openssl && ./config $(SSL_OPTS)
 	$(MAKE) -C $(BUILD_DIR)/openssl/ build_taseall
+
+

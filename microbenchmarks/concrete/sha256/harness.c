@@ -5,13 +5,16 @@
 #include <stdlib.h>
 
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "/TASE/include/traps/tasetraps.h"
 #endif 
 
 #ifdef S2E_TEST
 #include <time.h>
 #include <s2e/s2e.h> 
 #endif
+
+
+extern uint32_t saved_rax;
 
 
 #ifndef TASE_TEST

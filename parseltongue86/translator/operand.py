@@ -23,7 +23,7 @@ REG_8L = ([r.replace('x', 'l') for r in REG_16[:4]] +
 
 REG_8H = [r.replace('l', 'h') for r in REG_8L[:8]]
 
-REG_SIZE_MAP = {8: REG_64, 4: REG_32, 2: REG_16, 1: REG_8L}
+REG_SIZE_MAP = {8: REG_64, 4: REG_32, 2: REG_16, 1: REG_8L + REG_8H}
 
 BASE_REG = {}
 for lst in [REG_64, REG_32, REG_16, REG_8L, REG_8H]:
