@@ -5,6 +5,7 @@ DIR?=
 all: update tase_llvm tase
 
 .phony: update
+update:
 	git submodule update --init --jobs 7
 
 .phony: tase_llvm_base
@@ -12,7 +13,7 @@ tase_llvm_base:
 	docker build --network=host --no-cache --target tase_llvm -t tase_llvm_base .
 
 .tase_llvm_id:
-	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name tase_llvm_build -d tase_llvm_base > .tase_llvm_id
+	docker run --user $$(id -u):$$(id -g) -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name tase_llvm_build -d tase_llvm_base > .tase_llvm_id
 
 tase_llvm: .tase_llvm_id
 	docker exec tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /objdump'
