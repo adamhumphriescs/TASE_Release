@@ -16,36 +16,36 @@ tase_llvm_base:
 	docker run --user $$(id -u):$$(id -g) -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name tase_llvm_build -d tase_llvm_base > .tase_llvm_id
 
 tase_llvm: .tase_llvm_id
-	docker exec tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /objdump'
-	docker exec tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 tase_clang'
+	docker exec -u $$(id -u):$$(id -g) tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /objdump'
+	docker exec -u $$(id -u):$$(id -g) tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 tase_clang'
 	docker tag $$(docker commit tase_llvm_build | awk '{split($$0, m, /:/); print m[2]}') tase_llvm
 	docker stop tase_llvm_build
 	docker rm tase_llvm_build
 	rm -f .tase_llvm_id
 
 .tase_id:
-	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name tase_build -d tase_llvm > .tase_id
+	docker run -u $$(id -u):$$(id -g) -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name tase_build -d tase_llvm > .tase_id
 
 
 tase: .tase_id
-	docker exec tase_build bash -c 'cd /TASE_BUILD/install && make -j 16 setup && cd / && cp -r /TASE_BUILD/install/ /TASE/ && apt-get autoremove'
+	docker exec -u $$(id -u):$$(id -g) tase_build bash -c 'cd /TASE_BUILD/install && make -j 16 setup && cd / && cp -r /TASE_BUILD/install/ /TASE/ && apt-get autoremove'
 	docker tag $$(docker commit tase_build | awk '{split($$0, m, /:/); print m[2]}') tase
 	docker stop tase_build
 	docker rm tase_build
 	rm -f .tase_id
 
-directory:
-	mkdir -p $(DIR)/llvm-3.4.2
-	curl -s https://releases.llvm.org/3.4.2/clang+llvm-3.4.2-x86_64-linux-gnu-ubuntu-14.04.xz | tar xJvf - -C $(DIR)/llvm-3.4.2 --strip 1
-	mkdir -p $(DIR)/include/ $(DIR)/scripts/
-	cp -r $$(pwd)/test/tase/include/tase/ $(DIR)/include/tase/
-	cp -r $$(pwd)/test/other/ $(DIR)/include/traps/
-	cp -r $$(pwd)/openssl/include/ $(DIR)/include/openssl/
-	cp $$(pwd)/test/tase/tase_link.ld $(DIR)/
-	cp -r $$(pwd)/test/scripts/ $(DIR)/scripts/
-	env BUILD_DIR=$$(pwd) RUN_DIR=$(DIR) $(MAKE) -C install setup
-	mkdir -p $(DIR)/install
-	cp -r $$(pwd)/install/* $(DIR)/install/
+# directory:
+# 	mkdir -p $(DIR)/llvm-3.4.2
+# 	curl -s https://releases.llvm.org/3.4.2/clang+llvm-3.4.2-x86_64-linux-gnu-ubuntu-14.04.xz | tar xJvf - -C $(DIR)/llvm-3.4.2 --strip 1
+# 	mkdir -p $(DIR)/include/ $(DIR)/scripts/
+# 	cp -r $$(pwd)/test/tase/include/tase/ $(DIR)/include/tase/
+# 	cp -r $$(pwd)/test/other/ $(DIR)/include/traps/
+# 	cp -r $$(pwd)/openssl/include/ $(DIR)/include/openssl/
+# 	cp $$(pwd)/test/tase/tase_link.ld $(DIR)/
+# 	cp -r $$(pwd)/test/scripts/ $(DIR)/scripts/
+# 	env BUILD_DIR=$$(pwd) RUN_DIR=$(DIR) $(MAKE) -C install setup
+# 	mkdir -p $(DIR)/install
+# 	cp -r $$(pwd)/install/* $(DIR)/install/
 
 
 klee-update:
