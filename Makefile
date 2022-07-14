@@ -2,7 +2,10 @@ SHELL=/bin/bash
 TARGET?=tase
 DIR?=
 
-all: tase
+all: update tase_llvm tase
+
+.phony: update
+	git submodule update --init --jobs 7
 
 .phony: tase_llvm_base
 tase_llvm_base:
