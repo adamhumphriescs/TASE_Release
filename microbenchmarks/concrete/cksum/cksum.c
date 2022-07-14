@@ -1,5 +1,5 @@
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif
 
 /* cksum -- calculate and print POSIX checksums and sizes of files

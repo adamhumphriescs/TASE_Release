@@ -1,11 +1,11 @@
 [submodule "llvm"]
 	path = llvm
 	url = https://github.com/adamhumphriescs/TASE_LLVM_MIRROR.git
-	branch = tase_release
+	branch = NaiveChecks
 [submodule "klee"]
 	path = klee
 	url = https://github.com/adamhumphriescs/TASE_KLEE.git
-	branch = tase_release
+	branch = docker
 [submodule "minisat"]
 	path = minisat
 	url = https://github.com/adamhumphriescs/TASE_minisat.git
@@ -25,4 +25,7 @@
 [submodule "musl"]
 	path = musl
   url = https://github.com/adamhumphriescs/TASE_musl.git
-  branch = tase_release
+	branch = docker
+[submodule "binutils-gdb"]
+	path = binutils-gdb
+	url = git://sourceware.org/git/binutils-gdb.git

@@ -1,12 +1,10 @@
 # Various fragments downloaded from github/gitignore.  Some rules may
 # appear multiple times since the various files were just concatenated.
 
+.group-*
+
 # build/installation paths
-build_llvm
-build_stp
-build_minisat
-build_klee
-build_tase
+build/
 install_root
 
 .vscode

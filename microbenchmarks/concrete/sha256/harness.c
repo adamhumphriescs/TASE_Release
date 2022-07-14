@@ -14,7 +14,7 @@
 #endif
 
 
-extern uint32_t saved_rax;
+extern uint64_t saved_rax;
 
 
 #ifndef TASE_TEST
