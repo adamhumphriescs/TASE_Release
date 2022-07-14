@@ -48,17 +48,28 @@ klee-update:
 	cd klee && git status --porcelain | awk '$$1=="M"{print $$2}' > ../klee_changes.txt
 	while read line; do cp klee/$$line ../TASE_KLEE/$$line; done < klee_changes.txt
 	rm klee_changes.txt
-	make -C ../TASE_KLEE/
+	make -C ../TASE_KLEE/update/
 	git submodule update --remote --force klee
 	git add klee
 	git commit -m 'updated klee'
 	git push
 
 llvm-update:
-	make -C ../llvm/
+	cd llvm && git status --porcelain | awk '$$1=="M"{print $$2}' > ../llvm_changes.txt
+	while read line; do cp llvm/$$line ../llvm/$$line; done < llvm_changes.txt
+	make -C ../llvm/update
 	git submodule update --remote --force llvm
 	git add llvm
 	git commit -m 'updated llvm'
+	git push
+
+musl-update:
+	cd musl && git status --porcelain | awk '$$1=="M"{print $$2}' > ../musl_changes.txt
+	while read line; do cp musl/$$line ../TASE_musl/$$line; done < musl_changes.txt
+	make -C ../TASE_musl/update
+	git submodule update --remote --force musl
+	git add musl
+	git commit -m 'updated musl'
 	git push
 
 #llvm-dev-container:
