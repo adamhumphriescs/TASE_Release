@@ -3,7 +3,7 @@ TARGET?=tase
 DIR?=
 
 #all: tase_llvm_base update tase_llvm tase
-all: tase_llvm tase
+all: update tase_llvm tase
 
 .phony: update
 update:
