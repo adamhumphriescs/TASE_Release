@@ -65,6 +65,7 @@ $(TASE_CLANG): $(INCLUDES)
 
 
 $(INCLUDE_DIR)/tase/%.h: $(BUILD_DIR)/tase/include/%.h
+	mkdir -p $(INCLUDE_DIR)/tase/
 	cp $< $@ 
 
 
@@ -79,7 +80,7 @@ setup: klee cleanup
 
 klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build/klee/lib/checksum.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
 	mkdir -p $(BUILD_DIR)/build/klee
-	$(MAKE) -C $(BUILD_DIR)/klee/
+	$(MAKE) -C $(BUILD_DIR)/klee/ && echo "built klee, ignore error"
 
 
 /objdump:

@@ -6,7 +6,7 @@ ROOT?=/project
 OUTDIR?=/project/build
 
 all:
-	docker run --user $$(id -u $$USER):1000000 --rm -it --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make $(BIN)'
+	docker run --user $$(id -u):$$(id -g) --rm -it --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make $(BIN)'
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
