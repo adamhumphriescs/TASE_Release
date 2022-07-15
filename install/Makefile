@@ -56,7 +56,7 @@ setup: klee cleanup
 
 klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build/klee/lib/checksum.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
 	mkdir -p $(BUILD_DIR)/build/klee
-	$(MAKE) -C $(BUILD_DIR)/klee/ || echo "built klee, ignore error"
+	$(MAKE) -C $(BUILD_DIR)/klee/
 
 
 $(BUILD_DIR)/binutils-gdb/binutils/objdump:
