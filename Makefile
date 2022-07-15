@@ -2,7 +2,8 @@ SHELL=/bin/bash
 TARGET?=tase
 DIR?=
 
-all: tase_llvm_base update tase_llvm tase
+#all: tase_llvm_base update tase_llvm tase
+all: tase_llvm tase
 
 .phony: update
 update:
@@ -18,7 +19,6 @@ tase_llvm_base:
 # seperate command for the objdump move so we have root permissions...
 tase_llvm: .tase_llvm_id
 	docker exec tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /objdump'
-#	docker cp binutils-gdb/binutils/objdump tase_llvm_build:/
 	docker exec tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 tase_clang'
 	docker tag $$(docker commit tase_llvm_build | awk '{split($$0, m, /:/); print m[2]}') tase_llvm
 	docker stop tase_llvm_build
