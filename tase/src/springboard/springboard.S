@@ -1,4 +1,4 @@
-#include "tase/tase_asm.h"
+#include "tase_asm.h"
 
 .extern target_ctx
 .extern tase_eject

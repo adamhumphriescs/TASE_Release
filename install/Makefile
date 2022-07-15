@@ -45,6 +45,7 @@ $(INCLUDE_DIR)/tase/%.h: $(BUILD_DIR)/tase/include/%.h
 
 
 .PHONY: parseltongue
+parseltongue:
 	cp -r $(BUILD_DIR)/parseltongue86/ $(RUN_DIR)/parseltongue86/
 	cd $(RUN_DIR)/parseltongue86/ && ./setup.sh
 

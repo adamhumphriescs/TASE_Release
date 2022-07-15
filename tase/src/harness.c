@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "tase/tase.h"
-#include "tase/tase_interp.h"
+#include "tase.h"
+#include "tase_interp.h"
 
 #ifndef TASE_INTERP
 

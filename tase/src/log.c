@@ -1,5 +1,5 @@
-#include "tase/tase.h"
-#include "tase/tase_interp.h"
+#include "tase.h"
+#include "tase_interp.h"
 #include <stdio.h>
 #include <stdlib.h>
 

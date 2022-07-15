@@ -1,6 +1,6 @@
-#include "tase/tase.h"
-#include "tase/tase_interp.h"
-#include "tase/tase_modeled.h"
+#include "tase.h"
+#include "tase_interp.h"
+#include "tase_modeled.h"
 #include <setjmp.h>
 #include <stdnoreturn.h>
 #include <string.h>
