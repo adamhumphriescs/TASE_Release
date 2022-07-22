@@ -1,28 +1,45 @@
 include /TASE/install/exports.Makefile
 
-OBJS=$(addprefix /project/build/,$(addsuffix .o,$(basename $(wildcard *.c))))
 BIN?=main
 ROOT?=/project
 OUTDIR?=/project/build
 
+OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,$(basename $(wildcard *.c))))
+TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,$(basename $(wildcard *.c))))
+VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(wildcard *.c))))
+
+
+all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
-	$(TASE_CLANG) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O1  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) -mllvm -x86-tase-instrumentation-mode=naive $< -o $@
+	$(TASE_CLANG) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O1 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) -mllvm -x86-tase-instrumentation-mode=naive $< -o $@
 	objcopy --localize-hidden $@
-	python3 /TASE/parseltongue86/rosettastone.py $(BIN) -f $@ >> $(OUTDIR)/tmp.vars
-	cp /TASE/install/libtasec.syms $(OUTDIR)/tmp.tase
-	nm --defined-only $@ | grep -i " t " | cut -d' ' -f 3 >> $(OUTDIR)/tmp.tase
-	echo "begin_target_inner" >> $(OUTDIR)/tmp.tase
-	sort $(OUTDIR)/tmp.vars | uniq > $(OUTDIR)/$(BIN).vars && rm $(OUTDIR)/tmp.vars
-	sort $(OUTDIR)/tmp.tase | uniq > $(OUTDIR)/$(BIN).tase && rm $(OUTDIR)/tmp.tase
+
+$(OUTDIR)/%.tase: $(OUTDIR)/%.o
+	cp /TASE/install/libtasec.syms $@
+	nm --defined-only $< | grep -i " t " | cut -d' ' -f 3 >> $@
+
+$(OUTDIR)/%.vars: $(OUTDIR)/%.o $(OUTDIR)/$(BIN)
+	python3 /TASE/parseltongue86/rosettastone.py $(OUTDIR)/$(BIN) -f $< > $@
 
 $(OUTDIR)/everything.o: $(OBJS)
 	ld -r $(OBJS) /TASE/lib/musl.o -o $(OUTDIR)/everything.o
 	cd /TASE/install/ && ./localize.sh $(OUTDIR)/everything.o
 
-$(BIN): $(OUTDIR)/everything.o
+$(OUTDIR)/$(BIN).tase: $(TASE)
+	cat $(TASE) > $(OUTDIR)/tmp.tase
+	echo "begin_target_inner" >> $(OUTDIR)/tmp.tase
+	sort $(OUTDIR)/tmp.tase | uniq > $(OUTDIR)/$(BIN).tase && rm $(OUTDIR)/tmp.tase
+
+$(OUTDIR)/$(BIN).vars: $(VARS)
+	cat $(VARS) | sort | uniq > $(OUTDIR)/$(BIN).vars
+
+$(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
 	/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o build/everything.o -Wl,--start-group $$(find /TASE/lib/ -name '*.a') $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
+
+.PHONY: finish
+finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars
 	mkdir -p $(OUTDIR)/bitcode/ && rm -rf $(OUTDIR)/bitcode/*
 	echo '#!/bin/bash' > $(OUTDIR)/run.sh
 	echo 'KLEE_RUNTIME_LIBRARY_PATH=$$(pwd)/bitcode/ ./$(BIN) -project=$(BIN) $${@}' >> $(OUTDIR)/run.sh

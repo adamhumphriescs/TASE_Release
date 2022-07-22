@@ -1,5 +1,5 @@
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif
 
 /* sha256.c - Functions to compute SHA256 and SHA224 message digest of files or

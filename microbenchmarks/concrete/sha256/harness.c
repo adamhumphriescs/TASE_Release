@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #ifdef TASE_TEST
-#include "/TASE/include/traps/tasetraps.h"
+#include "tasetraps.h"
 #endif 
 
 #ifdef S2E_TEST
@@ -23,14 +23,22 @@ int main() {
 }
 #endif
 
-int begin_target_inner () {
+int begin_target_inner (int argc, char** argv) {
 
 #ifdef S2E_TEST
   struct timespec start;
   clock_gettime(CLOCK_REALTIME, &start);
 #endif
   
-  FILE * f = fopen( "GutenburgDictionary.txt", "r");
+  char * fname;
+  
+  if ( argc > 1 ) {
+    fname = argv[1];
+  } else {
+    fname = "GutenburgDictionary.txt";
+  }
+  
+  FILE * f = fopen( fname, "r" );
   if (f == NULL) {
     printf("Something went wrong with fopen \n");
 #ifdef S2E_TEST
