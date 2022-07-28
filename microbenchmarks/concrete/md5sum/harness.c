@@ -71,7 +71,7 @@ int begin_target_inner (int argc, char** argv) {
   printf("%s\n", res);
   fflush(stdout);
   //Necessary?
-  free((char *) res);
+  free((char *) mres);
   free(endRes);
   
 #ifdef S2E_TEST
