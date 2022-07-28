@@ -1,5 +1,5 @@
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif
 
 /* xmalloc.c -- malloc with out of memory checking
@@ -19,12 +19,12 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
-#include <config.h>
+#include "config.h"
 
 #define XALLOC_INLINE _GL_EXTERN_INLINE
 
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif
 
 #include "xalloc.h"

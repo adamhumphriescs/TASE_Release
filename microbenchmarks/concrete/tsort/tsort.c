@@ -1,5 +1,5 @@
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif
 /* tsort - topological sort.
    Copyright (C) 1998-2020 Free Software Foundation, Inc.

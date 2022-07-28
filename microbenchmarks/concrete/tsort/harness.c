@@ -7,23 +7,20 @@
 #endif
 
 extern bool tsort( const char * filename);
-void begin_target_inner();
 
-#ifndef TASE_TEST
-int main (int argc, char **argv) {
-  begin_target_inner();
+char tase_progname[6] = "test\n";
 
-}
-#endif
 
-const char * filename = "./tsortFile";
-void begin_target_inner () {
+void begin_target_inner (int argc, char** argv) {
   #ifdef S2E_TEST
   struct timespec start;                                                                                                  clock_gettime(CLOCK_REALTIME, &start);
   #endif
+  if ( argc > 1 ) {
+    tsort(argv[1]);
+  } else {
+    tsort("../tsortFile");
+  }
   
-  tsort(filename);
-
 #ifdef S2E_TEST
   struct timespec end;
   clock_gettime(CLOCK_REALTIME, &end);

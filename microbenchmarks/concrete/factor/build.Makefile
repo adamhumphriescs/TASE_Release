@@ -13,7 +13,7 @@ all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
-	$(TASE_CLANG) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O1 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) $< -o $@
+	$(TASE_CLANG) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O1 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) -U __amd64__ $< -o $@
 	objcopy --localize-hidden $@
 
 $(OUTDIR)/%.tase: $(OUTDIR)/%.o

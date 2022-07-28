@@ -15,7 +15,7 @@
 
 
 extern uint64_t saved_rax;
-
+char tase_progname[6] = "test\n";
 
 #ifndef TASE_TEST
 int main() {
@@ -66,12 +66,13 @@ int begin_target_inner (int argc, char** argv) {
 
 
 
-  
+  char res[65];
+  res[64] = '\0';
   printf("Result is ... \n");
-  for (int i = 0 ; i < 16; i++) {
-    printf("%02x", *(((uint8_t *)(endRes)) + i));    
+  for (int i = 0 ; i < 32; i++) {
+    sprintf(&res[2*i], "%02x", *(((uint8_t *)(endRes)) + i));    
   }
-  printf("\n");
+  printf("%s\n", res);
 
   //For ASAN memory leak detection
   free(tmp);

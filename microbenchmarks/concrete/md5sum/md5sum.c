@@ -5,7 +5,7 @@
 //#include "alloc.h"
 //#include "str.h"
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif
 
 typedef long value;
