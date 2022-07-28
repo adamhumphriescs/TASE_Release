@@ -8,17 +8,10 @@
 
 extern void
 factorEntryShim (const char *input) ;
-void begin_target_inner();
-
-#ifndef TASE_TEST
-int main (int argc, char **argv) {
-  begin_target_inner();
-
-}
-#endif
+char tase_progname[6] = "test\n";
 
 const char * numString = "16895424309675413218152718641574491217";
-void begin_target_inner () {
+void begin_target_inner (int argc, char** argv) {
   #ifdef S2E_TEST
   struct timespec start;
   clock_gettime(CLOCK_REALTIME, &start);

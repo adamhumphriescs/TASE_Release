@@ -1,5 +1,5 @@
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif
 
 /* readtokens.c  -- Functions for reading tokens from an input stream.
@@ -26,7 +26,7 @@
    gives the same functionality, except that these functions
    would never return empty lines. */
 
-#include <config.h>
+#include "config.h"
 
 #include "readtokens.h"
 

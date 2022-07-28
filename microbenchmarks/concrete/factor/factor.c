@@ -1,5 +1,5 @@
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif
 
 /* factor -- print prime factors of n.
@@ -104,7 +104,7 @@
 #endif
 
 
-#include <config.h>
+#include "config.h"
 //#include <getopt.h>
 #include <stdio.h>
 //#include <gmp.h> //We use mini-gmp.c instead

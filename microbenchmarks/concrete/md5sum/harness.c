@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #ifdef TASE_TEST
-#include "../../../../test/other/tasetraps.h"
+#include "tasetraps.h"
 #endif 
 
 #ifdef S2E_TEST
@@ -17,20 +17,22 @@
 typedef long value;
 extern value md5sum(value input);
 
-#ifndef TASE_TEST
-int main() {
-  begin_target_inner();
-}
-#endif
+char tase_progname[6] = "test\n";
 
-int begin_target_inner () {
+int begin_target_inner (int argc, char** argv) {
 
 #ifdef S2E_TEST
   struct timespec start;
   clock_gettime(CLOCK_REALTIME, &start);
 #endif
+
+  FILE* f;
+  if ( argc > 1 ) {
+    f = fopen( argv[1], "r" );
+  } else {
+    f = fopen( "GutenburgDictionary.txt", "r");
+  }
   
-  FILE * f = fopen( "GutenburgDictionary.txt", "r");
   if (f == NULL) {
     printf("Something went wrong with fopen \n");
 #ifdef S2E_TEST
@@ -52,20 +54,22 @@ int begin_target_inner () {
   char * tmp = malloc (size+1);
   fread(tmp, 1, size, f); 
   tmp[size] = '\0';
-  long res = md5sum((long) tmp);
+  long mres = md5sum((long) tmp);
 
   //Necessary?
   free(tmp);
   
   char * endRes = malloc(22);
-  dec64(endRes, res, 22);
+  dec64(endRes, mres, 22);
 
+  char res[33];
+  res[32] = '\0';
   printf("Result is ... \n");
   for (int i = 0 ; i < 16; i++) {
-    printf("%02x", *(((uint8_t *)(endRes)) + i));    
+    sprintf(&res[2*i], "%02x", *(((uint8_t *)(endRes)) + i));    
   }
-  printf("\n");
-
+  printf("%s\n", res);
+  fflush(stdout);
   //Necessary?
   free((char *) res);
   free(endRes);
