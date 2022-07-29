@@ -21,8 +21,8 @@ tase_llvm: .tase_llvm_id
 	docker exec tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /objdump'
 	docker exec tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 tase_clang'
 	docker tag $$(docker commit tase_llvm_build | awk '{split($$0, m, /:/); print m[2]}') tase_llvm
-#	docker stop tase_llvm_build
-#	docker rm tase_llvm_build
+	docker stop tase_llvm_build
+	docker rm tase_llvm_build
 	rm -f .tase_llvm_id
 
 .tase_id:
@@ -30,7 +30,7 @@ tase_llvm: .tase_llvm_id
 
 
 tase: .tase_id
-	docker exec tase_build bash -c 'cd /TASE_BUILD/install && make -j 16 setup && cd / && cp -r /TASE_BUILD/install/ /TASE/ && apt-get autoremove'
+	docker exec tase_build bash -c 'cp -r /TASE_BUILD/install/ /TASE/ && cd /TASE_BUILD/install && make -j 16 setup && apt-get autoremove'
 	docker tag $$(docker commit tase_build | awk '{split($$0, m, /:/); print m[2]}') tase
 	docker stop tase_build
 	docker rm tase_build

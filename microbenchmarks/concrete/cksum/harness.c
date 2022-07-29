@@ -1,34 +1,28 @@
 #include <stdlib.h>
 #include <stdbool.h>
-
+#include <stdint.h>
 #ifdef S2E_TEST
 #include <time.h>
 #include <s2e/s2e.h>
 #endif
 
-extern bool
-cksum (const char *file, bool print_name);
-void begin_target_inner();
+extern bool cksum (const char *file, bool print_name);
 
-#ifndef TASE_TEST
-int main (int argc, char **argv) {
-  begin_target_inner();
-  return 0;
+char tase_progname[6] = "test\n";
+extern uint64_t saved_rax;
 
-}
-#endif 
-  
-const char * fileName = "GutenburgDictionary.txt";
-void begin_target_inner () {
+void begin_target_inner (int argc, char** argv) {
 
 #ifdef S2E_TEST
   struct timespec start;
   clock_gettime(CLOCK_REALTIME, &start);
 #endif
   
-  
-  cksum((fileName),1);
-
+  if ( argc > 1 ) {
+    cksum(argv[1], 1);
+  } else {
+    cksum("../GutenburgDictionary.txt", 1);
+  }
 
 #ifdef S2E_TEST
   struct timespec end;

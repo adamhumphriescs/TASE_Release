@@ -12,9 +12,6 @@ NETLIBS=htonl htons ntohl ntohs
 MUSL_OBJS=$(addprefix $(MUSL_PATH)/obj/src/,string/*.o locale/__lctrans.o ctype/*.o errno/*.o $(addsuffix .o, $(addprefix stdlib/, $(STDLIBS))) errno/*.o $(addsuffix .o,$(addprefix network/,$(NETLIB))) math/*.o fenv/fenv.o fenv/fesetround.o)
 #stdio/*.o
 
-# dummy project vars
-CKSUM_OBJS=$(addsuffix .o,$(basename $(wildcard $(BUILD_DIR)/microbenchmarks/concrete/cksum/*.c)))
-
 # minisat cmake
 MINISAT_OPTS=-DSTATIC_BINARIES=ON -DCMAKE_INSTALL_PREFIX="$(RUN_DIR)"
 
@@ -54,7 +51,7 @@ parseltongue:
 setup: klee cleanup
 
 
-klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build/klee/lib/checksum.a $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
+klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build/klee/lib/everything.o $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
 	mkdir -p $(BUILD_DIR)/build/klee
 	$(MAKE) -C $(BUILD_DIR)/klee/
 
@@ -86,13 +83,10 @@ $(RUN_DIR)/lib/musl.o: $(TASE_CLANG)
 	rm libtasec.a
 
 
-$(BUILD_DIR)/build/klee/lib/checksum.a: $(CKSUM_OBJS)
+$(BUILD_DIR)/build/klee/lib/everything.o: $(RUN_DIR)/lib/musl.o
 	mkdir -p $(BUILD_DIR)/build/klee/lib/
-	ar crs $(BUILD_DIR)/build/klee/lib/checksum.a $(CKSUM_OBJS)
-
-
-$(BUILD_DIR)/microbenchmarks/concrete/cksum/%.o: $(BUILD_DIR)/microbenchmarks/concrete/cksum/%.c $(TASE_CLANG)
-	$(TASE_CLANG) -fPIC -I$(BUILD_DIR)/microbenchmarks/concrete/cksum/ -I$(INCLUDE_DIR)/tase/ -c -O1 -DTASE_TEST $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
+	$(MAKE) -C $(BUILD_DIR)/microbenchmarks/concrete/cksum/ -f build.Makefile ROOT=$(BUILD_DIR)/build/cksum OUTDIR=$(BUILD_DIR)/build/cksum/build $(BUILD_DIR)/build/cksum/build/everything.o
+	mv $(BUILD_DIR)/build/cksum/build/everything.o $(BUILD_DIR)/build/klee/lib/
 
 
 $(RUN_DIR)/lib/libstp.a: $(RUN_DIR)/lib/libminisat.a

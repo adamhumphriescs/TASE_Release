@@ -37,7 +37,7 @@
   (other than foreign language support) is a bug.  */
 
 //Moved config.h to local dir for TASE Eval
-//#include <config.h>
+//#include "config.h"
 #include "config.h"
 
 
@@ -59,7 +59,7 @@
 #include <stdbool.h>
 #include "intprops.h"
 #include <errno.h>
-#include <fcntl.h>
+#include "fcntl.h"
 char *
 umaxtostr (uintmax_t i, char *buf)
 {
