@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #ifdef S2E_TEST
 #include <time.h>
 #include <s2e/s2e.h>
@@ -19,6 +20,9 @@ void begin_target_inner (int argc, char** argv) {
 #endif
   
   if ( argc > 1 ) {
+    puts(argv[1]);
+    printf("Opening %s for cksum\n", argv[1]);
+    fflush(stdout);
     cksum(argv[1], 1);
   } else {
     cksum("../GutenburgDictionary.txt", 1);
