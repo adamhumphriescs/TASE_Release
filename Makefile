@@ -1,5 +1,5 @@
 SHELL=/bin/bash
-TARGET?=tase
+IMAGE_NAME?=tase
 DIR?=
 
 #all: tase_llvm_base update tase_llvm tase
@@ -31,7 +31,7 @@ tase_llvm: .tase_llvm_id
 
 tase: .tase_id
 	docker exec tase_build bash -c 'cp -r /TASE_BUILD/install/ /TASE/ && cd /TASE_BUILD/install && make -j 16 setup && apt-get autoremove'
-	docker tag $$(docker commit tase_build | awk '{split($$0, m, /:/); print m[2]}') tase
+	docker tag $$(docker commit tase_build | awk '{split($$0, m, /:/); print m[2]}') $(IMAGE_NAME)
 	docker stop tase_build
 	docker rm tase_build
 	rm -f .tase_id
