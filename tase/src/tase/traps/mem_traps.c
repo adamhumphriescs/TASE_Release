@@ -1,9 +1,10 @@
 //Update: 6/30/2020 -- Changing return value from "0" to "0LL" so that
 //the compiler expects a potentially 64 bit value returned, rather than
 //the default 32-bit "0".
+#include "tasetraps.h"
 #include <stdio.h>
 
-void tase_make_symbolic (void * ptr, unsigned long size, const char * name) __attribute__ ((optnone)) {
+void tase_make_symbolic(void * ptr, unsigned long size, const char * name) __attribute__ ((optnone)) {
   return;
 }
 

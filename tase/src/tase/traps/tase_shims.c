@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-__attribute__ ((optnone)) void tase_make_symbolic (void * ptr, unsigned long size, const char * name)  {
+__attribute__ ((optnone)) void tase_make_symbolic(void * ptr, unsigned long size, const char * name)  {
   return;
 }
 
@@ -28,10 +28,10 @@ void * realloc_tase_shim(void * ptr, long int size) {
   return realloc_tase( ptr, size);
 }
 
-void * calloc_tase (long int num, long int size) {
+void * calloc_tase(long int num, long int size) {
   return 0LL;
 }
-void * calloc_tase_shim (long int num, long int size) {
+void * calloc_tase_shim(long int num, long int size) {
   return calloc_tase(num,size);
 }
 
@@ -47,7 +47,7 @@ void free_tase_shim(void * ptr) {
 //  return 0LL;
 //}
 void * memcpy_tase_shim(void * dest, const void * src, unsigned long n) {
-  return memcpy_tase(dest,src,n);
+  return memcpy_tase(dest, src, n);
 }
 
 int * getc_unlocked_tase (FILE * f) {
