@@ -51,7 +51,7 @@ parseltongue:
 setup: klee cleanup
 
 
-klee: $(RUN_DIR)/lib/libtase.a $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build/klee/lib/everything.o $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
+klee: $(LIBTASE) $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build/klee/lib/everything.o $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
 	mkdir -p $(BUILD_DIR)/build/klee
 	$(MAKE) -C $(BUILD_DIR)/klee/
 
@@ -67,7 +67,7 @@ $(BUILD_DIR)/binutils-gdb/binutils/objdump:
 	cp $(BUILD_DIR)/binutils-gdb/binutils/objdump /objdump
 
 
-$(RUN_DIR)/lib/libtase.a: $(TASE_CLANG)
+$(LIBTASE): $(TASE_CLANG)
 	mkdir -p $(BUILD_DIR)/build/tase
 	$(MAKE) -C $(BUILD_DIR)/tase
 
