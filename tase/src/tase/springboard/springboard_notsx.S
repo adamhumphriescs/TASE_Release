@@ -4,6 +4,7 @@
 .extern tase_eject
 .extern exit_tase
 
+	
 DEF_UINT64(tase_ztest0, 0x0001000100010001)
 DEF_UINT64(tase_ztest1, 0x8000800080008000)
 DEF_UINT64(tase_poison_reference, POISON_REFERENCE64)
@@ -23,11 +24,13 @@ DEF_FUNC(sb_modeled_return)
   jmp        *GPR_RET
 END_FUNC(sb_modeled_return)
 
+	
 DEF_FUNC(sb_modeled)
   movl IMM(0x010000001), %eax
   jmp .Lsb_fallback
 END_FUNC(sb_modeled)
 
+	
 DEF_FUNC(sb_disabled)
   jmp *GPR_RET
 END_FUNC(sb_disabled)
@@ -38,6 +41,7 @@ DEF_FUNC(sb_open)
   jmp *GPR_RET	
 END_FUNC(sb_open)
 
+	
 DEF_FUNC(sb_reopen)
   jmp *GPR_RET
 END_FUNC(sb_reopen)	
@@ -72,7 +76,6 @@ DEF_FUNC(sb_eject)
   //Let's try to only load and store XMM0. We will see what the                                                                    
   //minimum number of XMM registers is for abi compatability                                                                       
   CTX_XMMSTORE(0)
-
   CTX_XMMSTORE(12)
   CTX_XMMSTORE(13)
   CTX_XMMSTORE(14)
@@ -91,9 +94,17 @@ DEF_FUNC(sb_inject)
   subq       $256, %rsp
   orq        $8, %rsp
   movq       %rsp, CTX(CTX_OFFSET_INTERP_STACK)
+
+  CTX_XMMLOAD(0)
+  CTX_XMMLOAD(12)
+  CTX_XMMLOAD(13)
+  CTX_XMMLOAD(14)
+  CTX_XMMLOAD(15)
+	
   movq $0, %rax
   movb CTX_REG(GREG_EFL), %ah
   sahf
+
   CTX_LOAD(ax)
   CTX_LOAD(bx)
   CTX_LOAD(cx)
@@ -110,6 +121,7 @@ DEF_FUNC(sb_inject)
   CTX_LOAD(13)
   CTX_LOAD(14)
   CTX_LOAD(15)
+	
   jmpq *GPR_RET
 END_FUNC(sb_inject)
 
@@ -118,4 +130,5 @@ DEF_FUNC(exit_tase_shim)
   call exit_tase
 END_FUNC(exit_tase_shim)
 
+	
   .section ".note.GNU-stack","",@progbits	

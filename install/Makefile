@@ -51,6 +51,7 @@ parseltongue:
 setup: klee cleanup
 
 
+.PHONY: klee
 klee: $(LIBTASE) $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build/klee/lib/everything.o $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
 	mkdir -p $(BUILD_DIR)/build/klee
 	$(MAKE) -C $(BUILD_DIR)/klee/

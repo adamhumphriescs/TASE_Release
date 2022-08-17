@@ -14,8 +14,10 @@ export TASE_LINK=$(RUN_DIR)/tase_link.ld
 
 ifndef TASE_TSX
 export LIBTASE=libtase_notsx.a
+export KLEE_LINK=link_notsx.txt
 else
 export LIBTASE=libtase.a
+export KLEE_LINK=link.txt
 endif
 
 
