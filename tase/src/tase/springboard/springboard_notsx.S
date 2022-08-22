@@ -27,7 +27,7 @@ END_FUNC(sb_modeled_return)
 	
 DEF_FUNC(sb_modeled)
 	//  movl IMM(0x010000001), %eax
-  movl IMM(0x0xff000001), %eax	
+  movl IMM(0xff000001), %eax	
   jmp .Lsb_fallback
 END_FUNC(sb_modeled)
 
