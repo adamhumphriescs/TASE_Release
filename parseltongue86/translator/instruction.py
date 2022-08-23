@@ -746,7 +746,7 @@ class Instruction:
       multiplier = self.operands[0]
       dest_lo = multiplicand
       if self.size1 == 1:
-        dest_hi = o.Operand(self, reg='ah')
+        dest_hi = o.Operand(self, {'reg': 'ah'})
       else:
         dest_hi = o.reg_operand(self, 'rdx', self.size1)
 
