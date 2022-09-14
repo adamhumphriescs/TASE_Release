@@ -68,13 +68,13 @@ $(BUILD_DIR)/binutils-gdb/binutils/objdump:
 	cp $(BUILD_DIR)/binutils-gdb/binutils/objdump /objdump
 
 
-$(LIBTASE): $(TASE_CLANG)
+$(LIBTASE):
 	mkdir -p $(BUILD_DIR)/build/tase
 	$(MAKE) -C $(BUILD_DIR)/tase
 
 
 # ar -> ld because otherwise get multiple definition errors from errno
-$(RUN_DIR)/lib/musl.o: $(TASE_CLANG)
+$(RUN_DIR)/lib/musl.o:
 	cp $(MUSL_PATH)/TASEConfig/config.mak_no_simd $(MUSL_PATH)/config.mak
 	env PATH="$(RUN_DIR)/bin:$${PATH}" $(MAKE) -C $(MUSL_PATH)
 	ar crs libtasec.a $(MUSL_OBJS)
@@ -105,7 +105,7 @@ $(RUN_DIR)/lib/libminisat.a:
 
 
 .PHONY: cleanup
-cleanup: klee $(TASE_CLANG)
+cleanup:
 	rm -f $(RUN_DIR)/lib/libLL*.a $(RUN_DIR)/lib/libclang* $(RUN_DIR)/lib/*.so* $(RUN_DIR)/bin/ll* $(RUN_DIR)/bin/minisat* $(RUN_DIR)/bin/s* $(addprefix $(RUN_DIR)/bin/,$(BIN_RM))
 
 

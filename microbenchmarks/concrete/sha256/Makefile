@@ -1,6 +1,6 @@
 ROOT?=/project
 BIN?=main
-all: main objdump test
+all: main objdump smalltest
 
 
 main: 
@@ -8,8 +8,14 @@ main:
 
 
 test:
-	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY
+	cd build/ && rm -f Monitor* && cp ../GutenburgDictionary.txt . && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY
 
+
+smalltest:
+	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY - ../harness.c
+
+mixedtest:
+	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false  - ../harness.c
 
 objdump:
 	objdump -C -D -w -M suffix -j .text build/main > build/obj.dump

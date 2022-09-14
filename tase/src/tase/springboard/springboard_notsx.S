@@ -122,7 +122,8 @@ DEF_FUNC(sb_inject)
   CTX_LOAD(13)
   CTX_LOAD(14)
   CTX_LOAD(15)
-	
+
+  movq       %rax, GPR_TMP	
   jmpq *GPR_RET
 END_FUNC(sb_inject)
 

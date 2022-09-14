@@ -279,7 +279,7 @@ typedef struct {
   uint16_t head_size;
   uint16_t body_size;
 } tase_record_t;
-
+  
 extern target_ctx_t target_ctx;
 // Imported from the linker - it gives us the section boundaries of
 // .rodata.tase_records.
@@ -288,6 +288,9 @@ extern const size_t tase_num_global_records;
   
 extern const tase_record_t tase_live_flags_block_records[];
 extern const size_t tase_num_live_flags_block_records;
+
+extern const uint32_t tase_kill_flags_block_records[];
+extern const size_t tase_num_kill_flags_block_records;
   
 // Anything prefixed with tase_ is run on the interpreter stack and in the
 // interpreter "no-transactions" context.

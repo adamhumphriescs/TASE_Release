@@ -4,16 +4,16 @@ BIN?=main
 ROOT?=/project
 OUTDIR?=/project/build
 
-OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,$(basename $(wildcard *.c))))
-TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,$(basename $(wildcard *.c))))
-VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(wildcard *.c))))
+OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,harness))
+TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,harness))
+VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,harness))
 
 
 all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
-	$(TASE_CLANG) -fPIC -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O1 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) $< -o $@
+	$(TASE_CLANG) -Wall -Werror -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O0 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) $< -o $@
 	objcopy --localize-hidden $@
 
 $(OUTDIR)/%.tase: $(OUTDIR)/%.o
@@ -38,7 +38,7 @@ $(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
 	rm vars.tmp
 
 $(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
-	/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
+	/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Werror -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
 #$$(find /TASE/lib/ -name '*.a')
 
 .PHONY: finish
@@ -55,7 +55,7 @@ finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars
 
 	if [ $$(find $(OUTDIR)/bitcode/ -name '$(BIN).interp.*.bc' | wc -l) -gt 1 ]; \
 	then\
-		/TASE/llvm-3.4.2/bin/llvm-link $$(find $(OUTDIR)/bitcode/ -name '$(BIN).interp.*.bc') -o $(OUTDIR)/bitcode/$(BIN).interp.bc;\
+		  /TASE/llvm-3.4.2/bin/llvm-link $$(find $(OUTDIR)/bitcode/ -name '$(BIN).interp.*.bc') -o $(OUTDIR)/bitcode/$(BIN).interp.bc;\
 	else\
-		mv $(OUTDIR)/bitcode/$(BIN).interp.0.bc $(OUTDIR)/bitcode/$(BIN).interp.bc;\
+		  mv $(OUTDIR)/bitcode/$(BIN).interp.0.bc $(OUTDIR)/bitcode/$(BIN).interp.bc;\
 	fi
