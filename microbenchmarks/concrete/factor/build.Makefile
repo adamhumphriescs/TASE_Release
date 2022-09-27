@@ -4,16 +4,18 @@ BIN?=main
 ROOT?=/project
 OUTDIR?=/project/build
 
-OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,$(basename $(wildcard *.c))))
-TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,$(basename $(wildcard *.c))))
-VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(wildcard *.c))))
+
+CFILES=factor.c harness.c make_byte_symbolic.c mini-gmp.c readtokens.c xmalloc.c xalloc-die.c
+OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,$(basename $(CFILES))))
+TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,$(basename $(CFILES))))
+VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(CFILES))))
 
 
 all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
-	$(TASE_CLANG) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O1 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) -U __amd64__ $< -o $@
+	$(TASE_CLANG) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O0 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) -U __amd64__ $< -o $@
 	objcopy --localize-hidden $@
 
 $(OUTDIR)/%.tase: $(OUTDIR)/%.o

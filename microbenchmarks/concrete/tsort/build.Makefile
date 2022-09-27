@@ -13,7 +13,7 @@ all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
-	$(TASE_CLANG) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O1 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) $< -o $@
+	$(TASE_CLANG) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O0 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) $< -o $@
 	objcopy --localize-hidden $@
 
 $(OUTDIR)/%.tase: $(OUTDIR)/%.o
@@ -30,10 +30,12 @@ $(OUTDIR)/everything.o: $(OBJS)
 $(OUTDIR)/$(BIN).tase: $(TASE)
 	cat $(TASE) > $(OUTDIR)/tmp.tase
 	echo "begin_target_inner" >> $(OUTDIR)/tmp.tase
+	objdump -D -j .plt build/main | grep ^0 | cut -d' ' -f2 | sed 's/^<//g' | sed 's/>://g' >> tmp.tase
 	sort $(OUTDIR)/tmp.tase | uniq > $(OUTDIR)/$(BIN).tase && rm $(OUTDIR)/tmp.tase
 
 $(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
-	readelf --relocs $(OUTDIR)/$(BIN)| grep GLOB_DAT | awk '{print $$1, "0x8"; print $$4, "0x10"}' > vars.tmp
+	readelf -a $(OUTDIR)/$(BIN)| grep GLOB_DAT | awk '{if($$1!="000000000000"){print $$1, "0x8"} if($$4!="0000000000000000"){ print $$4, "0x10"}}' > vars.tmp
+#	objdump -D -j .plt $(OUTDIR)/$(BIN) | grep @plt | awk '{print $$1, "0x10"}' >> vars.tmp
 	cat $(VARS) vars.tmp | sort | uniq > $(OUTDIR)/$(BIN).vars
 	rm vars.tmp
 

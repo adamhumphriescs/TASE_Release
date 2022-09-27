@@ -26,8 +26,8 @@ END_FUNC(sb_modeled_return)
 
 	
 DEF_FUNC(sb_modeled)
-	//  movl IMM(0x010000001), %eax
-  movl IMM(0xff000001), %eax	
+  //movl IMM(0x010000001), %eax
+  movl IMM(0xff000001), CTX(CTX_OFFSET_ABORT_STATUS)
   jmp .Lsb_fallback
 END_FUNC(sb_modeled)
 
@@ -50,8 +50,9 @@ END_FUNC(sb_reopen)
 	
 
 DEF_FUNC(sb_eject)
+	//  movl       %eax, CTX(CTX_OFFSET_ABORT_STATUS)
+  movl IMM(0x01000001), CTX(CTX_OFFSET_ABORT_STATUS)  // Psn Abort
 .Lsb_fallback:
-  movl       %eax, CTX(CTX_OFFSET_ABORT_STATUS)
   movq       GPR_TMP, %rax
 .Lsb_eject:
   CTX_STORE(ax)
@@ -123,7 +124,6 @@ DEF_FUNC(sb_inject)
   CTX_LOAD(14)
   CTX_LOAD(15)
 
-  movq       %rax, GPR_TMP	
   jmpq *GPR_RET
 END_FUNC(sb_inject)
 
