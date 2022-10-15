@@ -193,6 +193,7 @@ class ELFFile():
         '-w',
         '-M', 'suffix',
         '-j', '.text',
+        '-j', '.plt',
         self._file_path],
         stdout=subprocess.PIPE,
         universal_newlines=True)

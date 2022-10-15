@@ -58,6 +58,8 @@ enum { bits_per_word = sizeof (word) * CHAR_BIT };
 static bool
 get_nth_bit (size_t n, word const *bitset)
 {
+  //  printf("nth_bit? %c: %lu\n", (char) n, bitset[n / bits_per_word] >> n % bits_per_word);
+  //  fflush(stdout);
   return bitset[n / bits_per_word] >> n % bits_per_word & 1;
 }
 
@@ -87,11 +89,11 @@ readtoken (FILE *stream,
            size_t n_delim,
            token_buffer *tokenbuffer)
 {
+  //  printf("called readtoken\n");
   char *p;
   int c;
   size_t i, n;
   word isdelim[(UCHAR_MAX + bits_per_word) / bits_per_word];
-
   memset (isdelim, 0, sizeof isdelim);
   for (i = 0; i < n_delim; i++)
     {
@@ -99,15 +101,18 @@ readtoken (FILE *stream,
       set_nth_bit (ch, isdelim);
     }
 
+  //  printf("skipping delims\n");
   /* skip over any leading delimiters */
   for (c = getc (stream); c >= 0 && get_nth_bit (c, isdelim); c = getc (stream))
     {
       /* empty */
     }
-
+  
   p = tokenbuffer->buffer;
   n = tokenbuffer->size;
   i = 0;
+
+  //  printf("reading tokens\n");
   for (;;)
     {
       if (c < 0 && i == 0)

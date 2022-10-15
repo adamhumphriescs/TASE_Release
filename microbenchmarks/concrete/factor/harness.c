@@ -10,15 +10,17 @@ extern void
 factorEntryShim (const char *input) ;
 char tase_progname[6] = "test\n";
 
-const char * numString = "16895424309675413218152718641574491217";
+const char * numString = "5413218152718641574491217"; //"16895424309675413218152718641574491217";
 void begin_target_inner (int argc, char** argv) {
   #ifdef S2E_TEST
   struct timespec start;
   clock_gettime(CLOCK_REALTIME, &start);
   #endif
-  
-  factorEntryShim(numString);
-
+  if( argc < 2 ) {  
+    factorEntryShim(numString);
+  } else {
+    factorEntryShim(argv[1]);
+  }
 #ifdef S2E_TEST
   struct timespec end;
   clock_gettime(CLOCK_REALTIME, &end);

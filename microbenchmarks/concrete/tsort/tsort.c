@@ -556,7 +556,8 @@ tsort (const char *file)
           struct successor *p = head->top;
 
           /* T5. Output front of queue.  */
-          puts (head->str);
+          //puts (head->str);
+	  printf("OUT: %s\n", head->str);
 #ifdef lint
           /* suppress valgrind "definitely lost" warnings.  */
           void *head_str = (void *) head->str;

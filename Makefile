@@ -3,7 +3,7 @@ TARGET?=tase
 DIR?=
 
 #all: tase_llvm_base update tase_llvm tase
-all: update tase_llvm tase
+all: update clean tase_llvm tase
 
 .phony: update
 update:
@@ -38,7 +38,7 @@ tase: .tase_id
 
 
 clean:
-	docker run --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --rm -it tase_llvm bash -c 'make -C /TASE_BUILD/musl/ clean && rm -rf /TASE_BUILD/build/*'
+	docker run --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --rm -it cleaner bash -c 'make -C /TASE_BUILD/musl/ clean && rm -rf /TASE_BUILD/build/*'
 
 
 # directory:

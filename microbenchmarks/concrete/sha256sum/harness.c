@@ -73,7 +73,7 @@ int begin_target_inner (int argc, char** argv) {
     sprintf(&res[2*i], "%02x", *(((uint8_t *)(endRes)) + i));    
   }
   printf("%s\n", res);
-
+  fflush(stdout);
   //For ASAN memory leak detection
   free(tmp);
   free(endRes);

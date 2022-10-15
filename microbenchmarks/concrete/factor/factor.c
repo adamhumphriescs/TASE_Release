@@ -827,6 +827,7 @@ static uintmax_t
 factor_using_division (uintmax_t *t1p, uintmax_t t1, uintmax_t t0,
                        struct factors *factors)
 {
+  //  printf("Division with: %lx, %lx, %ld\n", t1, t0, t0 % 2);
   if (t0 % 2 == 0)
     {
       unsigned int cnt;
@@ -837,16 +838,19 @@ factor_using_division (uintmax_t *t1p, uintmax_t t1, uintmax_t t0,
           t0 = t1 >> cnt;
           t1 = 0;
           cnt += W_TYPE_SIZE;
+	  //	  printf("cnt: %d\n", cnt);
         }
       else
         {
           count_trailing_zeros (cnt, t0);
+	  //	  printf("ctz: %d\n", cnt);
           rsh2 (t1, t0, t1, t0, cnt);
+	  //	  printf("rsh2: %lx, %lx, %d\n", t1, t0, cnt);
         }
 
       factor_insert_multiplicity (factors, 2, cnt);
     }
-
+  //  printf("partial: %lx, %lx\n", t1, t0);
   uintmax_t p = 3;
   unsigned int i;
   for (i = 0; t1 > 0 && i < PRIMES_PTAB_ENTRIES; i++)
@@ -871,6 +875,9 @@ factor_using_division (uintmax_t *t1p, uintmax_t t1, uintmax_t t0,
   if (t1p)
     *t1p = t1;
 
+  //  printf("middle: %lx, %lx\n", t1, t0);
+  //  fflush(stdout);
+  
 #define DIVBLOCK(I)                                                     \
   do {                                                                  \
     for (;;)                                                            \
@@ -1061,12 +1068,14 @@ mulredc2 (uintmax_t *r1p,
           uintmax_t a1, uintmax_t a0, uintmax_t b1, uintmax_t b0,
           uintmax_t m1, uintmax_t m0, uintmax_t mi)
 {
+  //  printf("start: %lx\n", (uintmax_t) r1p);
   uintmax_t r1, r0, q, p1, p0 _GL_UNUSED, t1, t0, s1, s0;
   mi = -mi;
   assert ( (a1 >> (W_TYPE_SIZE - 1)) == 0);
   assert ( (b1 >> (W_TYPE_SIZE - 1)) == 0);
   assert ( (m1 >> (W_TYPE_SIZE - 1)) == 0);
 
+  //  printf("post asserts: %lx\n", (uintmax_t) r1p);
   /* First compute a0 * <b1, b0> B^{-1}
         +-----+
         |a0 b0|
@@ -1089,7 +1098,7 @@ mulredc2 (uintmax_t *r1p,
   add_ssaaaa (r1, r0, r1, r0, 0, p1);
   add_ssaaaa (r1, r0, r1, r0, 0, t1);
   add_ssaaaa (r1, r0, r1, r0, s1, s0);
-
+  //  printf("mid mulredc2: %lx\n", (uintmax_t) r1p);
   /* Next, (a1 * <b1, b0> + <r1, r0> B^{-1}
         +-----+
         |a1 b0|
@@ -1119,8 +1128,9 @@ mulredc2 (uintmax_t *r1p,
 
   if (ge2 (r1, r0, m1, m0))
     sub_ddmmss (r1, r0, r1, r0, m1, m0);
-
+  //  printf("mulredc2 swap: %lx\n", (uintmax_t) r1p);
   *r1p = r1;
+  //  printf("mulredc2 post swap: %lx\n", (uintmax_t) r1p);
   return r0;
 }
 
@@ -1216,17 +1226,18 @@ millerrabin2 (const uintmax_t *np, uintmax_t ni, const uintmax_t *bp,
 
   y0 = powm2 (&r1m, bp, qp, np, ni, one);
   y1 = r1m;
-
+  //  printf("post powm2: %lx\n", (uintmax_t) &r1m);
   if (y0 == one[0] && y1 == one[1])
     return true;
 
   sub_ddmmss (nm1_1, nm1_0, np[1], np[0], one[1], one[0]);
-
+  //  printf("post sub_ddmmss: %lx\n", (uintmax_t) &r1m);
   if (y0 == nm1_0 && y1 == nm1_1)
     return true;
 
   for (unsigned int i = 1; i < k; i++)
     {
+      //      printf("before last call: %lx\n", (uintmax_t) &r1m);
       y0 = mulredc2 (&r1m, y1, y0, y1, y0, np[1], np[0], ni);
       y1 = r1m;
 
@@ -2532,6 +2543,7 @@ print_factors_single (uintmax_t t1, uintmax_t t0)
     }
 
   lbuf_putc ('\n');
+  lbuf_flush();
 }
 
 /* Emit the factors of the indicated number.  If we have the option of using
