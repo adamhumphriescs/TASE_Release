@@ -1,5 +1,5 @@
-dirs=cksum md5sum sha256sum factor tsort #$(realpath $(wildcard */))
-
+dirs=cksum md5sum sha256sum factor #$(realpath $(wildcard */))
+SHELL:=/bin/bash
 #MAKEFLAGS:= -j 4 -k
 
 all: progs mixed interp
@@ -37,7 +37,7 @@ interp: $(addsuffix .iitem,$(dirs))
 interpres: $(addsuffix .interp,$(dirs))
 
 tsort.interp:
-	echo ""; echo ""; echo "tsort"; echo "test:"; x=$(diff <(tsort tsort/tsortShort) <(cat tsort/interpres.txt); if [[ $x ]] then echo "PASS"; else echo "FAIL"; fi
+	echo ""; echo ""; echo "tsort"; x=$$(diff <(tsort tsort/tsortShort) <(cat tsort/interpres.txt)); if [[ $$x ]]; then echo "test: FAIL"; else echo "test: PASS"; fi
 
 %.interp: %
 	echo ""; echo ""; echo $<; echo "test:"; cat $</interpres.txt; echo "ref:"; cat $</ref.txt;
