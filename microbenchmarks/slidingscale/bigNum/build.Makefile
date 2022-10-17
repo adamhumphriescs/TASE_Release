@@ -3,6 +3,7 @@ include /TASE/install/exports.Makefile
 BIN?=main
 ROOT?=/project
 OUTDIR?=/project/build
+TASE_CFLAGS=$(CFLAGS) -Wall -Werror -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG)
 
 OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,harness))
 TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,harness))
@@ -13,7 +14,7 @@ all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
-	$(TASE_CLANG) -Wall -Werror -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -O0 -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG) $< -o $@
+	$(TASE_CLANG) $(TASE_CFLAGS) $< -o $@
 	objcopy --localize-hidden $@
 
 $(OUTDIR)/%.tase: $(OUTDIR)/%.o

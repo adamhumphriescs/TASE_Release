@@ -1,10 +1,12 @@
 ROOT?=/project
 BIN?=main
+CFLAGS?=-O1
+
 all: build/main build/obj.dump
 
 
 build/main: 
-	docker run --user $$(id -u):$$(id -g) --rm -it --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make -f build.Makefile'
+	docker run --user $$(id -u):$$(id -g) --rm -it --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
 
 
 test:

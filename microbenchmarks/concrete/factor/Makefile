@@ -2,12 +2,13 @@ ROOT?=/project
 BIN?=main
 SMALL=5413218152718641574491217
 LARGE=16895424309675413218152718641574491217
+CFLAGS?=-O1
 
 all: build/main build/obj.dump
 
 
 build/main: 
-	docker run --user $$(id -u):$$(id -g) --rm -it --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make -f build.Makefile'
+	docker run --user $$(id -u):$$(id -g) --rm -it --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
 
 .PHONY: test gdbtest smalltest mixedtest objdump clean
 test:

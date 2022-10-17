@@ -1,5 +1,7 @@
-dirs=cksum md5sum sha256sum factor #$(realpath $(wildcard */))
+dirs=$(realpath $(wildcard */))
 SHELL:=/bin/bash
+CFLAGS?=-O1
+
 #MAKEFLAGS:= -j 4 -k
 
 all: progs mixed interp
@@ -44,4 +46,4 @@ tsort.interp:
 
 
 %.main: %
-	$(MAKE) -C $<
+	$(MAKE) CFLAGS="$(CFLAGS)" -C $<
