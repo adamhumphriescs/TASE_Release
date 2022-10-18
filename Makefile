@@ -1,5 +1,6 @@
 SHELL=/bin/bash
-TARGET?=tase
+NAME?=
+TARGET?=tase$(NAME)
 DIR?=
 
 #all: tase_llvm_base update tase_llvm tase
@@ -11,29 +12,29 @@ update:
 
 .phony: tase_llvm_base
 tase_llvm_base:
-	docker build --network=host --no-cache --target tase_llvm -t tase_llvm_base .
+	docker build --network=host --no-cache --target $(TARGET)_llvm -t $(TARGET)_llvm_base .
 
 .tase_llvm_id:
-	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name tase_llvm_build -d tase_llvm_base > .tase_llvm_id
+	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name $(TARGET)_llvm_build -d $(TARGET)_llvm_base > .tase_llvm_id
 
 # seperate command for the objdump move so we have root permissions...
 tase_llvm: .tase_llvm_id
-	docker exec tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /objdump'
-	docker exec tase_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 tase_clang'
-	docker tag $$(docker commit tase_llvm_build | awk '{split($$0, m, /:/); print m[2]}') tase_llvm
-	docker stop tase_llvm_build
-	docker rm tase_llvm_build
+	docker exec $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /objdump'
+	docker exec $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 tase_clang'
+	docker tag $$(docker commit $(TARGET)_llvm_build | awk '{split($$0, m, /:/); print m[2]}') $(TARGET)_llvm
+	docker stop $(TARGET)_llvm_build
+	docker rm $(TARGET)_llvm_build
 	rm -f .tase_llvm_id
 
 .tase_id:
-	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name tase_build -d tase_llvm > .tase_id
+	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name $(TARGET)_build -d $(TARGET)_llvm > .tase_id
 
 
 tase: .tase_id
-	docker exec tase_build bash -c 'cp -r /TASE_BUILD/install/ /TASE/ && cd /TASE_BUILD/install && make -j 16 setup && apt-get autoremove'
-	docker tag $$(docker commit tase_build | awk '{split($$0, m, /:/); print m[2]}') tase
-	docker stop tase_build
-	docker rm tase_build
+	docker exec $(TARGET)_build bash -c 'cp -r /TASE_BUILD/install/ /TASE/ && cd /TASE_BUILD/install && make -j 16 setup && apt-get autoremove'
+	docker tag $$(docker commit $(TARGET)_build | awk '{split($$0, m, /:/); print m[2]}') $(TARGET)
+	docker stop $(TARGET)_build
+	docker rm $(TARGET)_build
 	rm -f .tase_id
 
 
