@@ -1,6 +1,6 @@
 ROOT?=/project
 BIN?=main
-CFLAGS=-O1
+CFLAGS=-O0
 
 all: main
 

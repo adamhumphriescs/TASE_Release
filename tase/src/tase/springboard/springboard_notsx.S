@@ -53,8 +53,8 @@ DEF_FUNC(sb_eject)
 	//  movl       %eax, CTX(CTX_OFFSET_ABORT_STATUS)
   movl IMM(0x01000001), CTX(CTX_OFFSET_ABORT_STATUS)  // Psn Abort
 .Lsb_fallback:
-  movq       GPR_TMP, %rax
-.Lsb_eject:
+//  movq       GPR_TMP, %rax
+//.Lsb_eject:
   CTX_STORE(ax)
   CTX_STORE(bx)
   CTX_STORE(cx)

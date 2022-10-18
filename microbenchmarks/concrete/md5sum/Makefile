@@ -1,6 +1,6 @@
 ROOT?=/project
 BIN?=main
-CFLAGS?=-O1
+CFLAGS?=-O0
 
 all: build/main build/obj.dump
 
@@ -29,7 +29,7 @@ clean:
 	rm -rf build/*
 
 mixedres:
-	grep -A19 printf build/Monitor  | grep RDX | awk 'BEGIN{a=""}{split($$3,m,/x/); a=a""m[2]}END{print a}' > mixedres.txt
+	grep -A2 printf build/Monitor | tail -n1 > mixedres.txt
 
 interpres:
-	grep -A1 puts build/Monitor | tail -n1 > interpres.txt
+	grep -A2 printf build/Monitor | tail -n1 > interpres.txt

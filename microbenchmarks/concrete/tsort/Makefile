@@ -1,6 +1,6 @@
 ROOT?=/project
 BIN?=main
-CFLAGS?=-O1
+CFLAGS?=-O0
 
 all: build/main build/obj.dump
 
@@ -17,10 +17,10 @@ gdbtest: tsortShort
 	cd build/ && head -n 1000 ../tsortFile > tsortShort && env KLEE_RUNTIME_LIBRARY_PATH=$$(pwd)/bitcode/ gdb --args main -project=main -taseDebug -modelDebug -dontFork -taseManager=false -singleStepping -check-overshift=false - tsortShort
 
 smalltest: tsortShort
-	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false - ../tsortShort
+	cd build/ && rm -f Monitor* && ./run.sh -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false - ../tsortShort
 
 smallmixedtest: tsortShort
-	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false  -singleStepping -check-overshift=false - ../tsortShort
+	cd build/ && rm -f Monitor* && ./run.sh -modelDebug -dontFork -taseManager=false  -singleStepping -check-overshift=false - ../tsortShort
 
 mixedtest:
 	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -check-overshift=false -singleStepping -check-overshift=false - ../tsortFile

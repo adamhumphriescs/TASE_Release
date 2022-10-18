@@ -1,6 +1,6 @@
 ROOT?=/project
 BIN?=main
-CFLAGS?=-O1
+CFLAGS?=-O0
 
 all: build/main build/obj.dump
 
@@ -30,7 +30,7 @@ clean:
 
 
 mixedres:
-	grep harness build/Monitor > mixedres.txt
+	grep harness build/Monitor | tail -n1 > mixedres.txt
 
 interpres:
-	grep harness build/Monitor > interpres.txt
+	grep harness build/Monitor | tail -n1 > interpres.txt
