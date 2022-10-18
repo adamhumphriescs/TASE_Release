@@ -15,7 +15,7 @@ tase_llvm_base:
 	docker build --network=host --no-cache --target $(TARGET)_llvm -t tase_llvm_base .
 
 .tase_llvm_id:
-	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name $(TARGET)_llvm_build -d $(TARGET)_llvm_base > .tase_llvm_id
+	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name $(TARGET)_llvm_build -d tase_llvm_base > .tase_llvm_id
 
 # seperate command for the objdump move so we have root permissions...
 tase_llvm: .tase_llvm_id
