@@ -12,7 +12,7 @@ update:
 
 .phony: tase_llvm_base
 tase_llvm_base:
-	docker build --network=host --no-cache --target $(TARGET)_llvm -t $(TARGET)_llvm_base .
+	docker build --network=host --no-cache --target $(TARGET)_llvm -t tase_llvm_base .
 
 .tase_llvm_id:
 	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name $(TARGET)_llvm_build -d $(TARGET)_llvm_base > .tase_llvm_id
