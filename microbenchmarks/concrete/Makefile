@@ -1,47 +1,26 @@
-dirs=cksum md5sum sha256sum factor # $(realpath $(wildcard */))
 SHELL:=/bin/bash
 CFLAGS?=-O0
+MAKEFLAGS:=-j 5 -k
+dirs=$(realpath $(wildcard */))
+results=$(addsuffix /resx5.txt,$(dirs))
 
-#MAKEFLAGS:= -j 4 -k
+all: results.txt
 
-all: progs mixedres
+.PHONY: clean %.clean
+clean: $(addsuffix .clean,$(dirs)) tsort.clean
 
-.PHONY: mixed mixeditems mixedres interp interpitems interpres clean progs tsort
+%.clean:
+	$(MAKE) -C $* clean
 
-clean: $(addsuffix .clean,$(dirs))
-
-%.clean: %
-	$(MAKE) -C $< clean
-
-
-progs: $(addsuffix .main,$(dirs))
-
-mixeditems: $(addsuffix .mitem,$(dirs)) tsort.mitem
-
-interpitems: $(addsuffix .mitem,$(dirs)) tsort.iitem
-
-%.mitem: %
-	$(MAKE) -C $< smallmixedtest && $(MAKE) -C $< mixedres
-
-mixedres: $(addsuffix .mixed,$(dirs)) tsort.mm interpitems
-
-tsort.mm: tsort.mitem
-	echo ""; echo ""; echo "tsort"; x=$$(diff <(tsort tsort/tsortShort) <(cat tsort/mixedred.txt)); if [[ $$x ]]; then echo "test: FAIL"; else echo "test: PASS"; fi
-
-%.mixed: % $(addsuffix .mitem,$(dirs)) tsort.mitem
-	echo ""; echo ""; echo $<; echo "test:"; cat $</mixedres.txt; echo "ref:"; cat $</ref.txt
+progs: $(addsuffix /build/main,$(dirs))
 
 
-%.iitem: %
-	$(MAKE) -C $< smalltest && $(MAKE) -C $< interpres
+%/build/main: %
+	$(MAKE) CFLAGS="$(CFLAGS)" -C $< build/main
 
-interpres: $(addsuffix .interp,$(dirs)) tsort.ii mixeditems
+results.txt: $(results)
+	cat $(results) > results.txt
 
-tsort.ii: tsort.iitem $(addsuffix .iitem,$(dirs))
-	echo ""; echo ""; echo "tsort"; x=$$(diff <(tsort tsort/tsortShort) <(cat tsort/interpres.txt)); if [[ $$x ]]; then echo "test: FAIL"; else echo "test: PASS"; fi
+%/resx5.txt: progs
+	$(MAKE) -C $* resx5.txt
 
-%.interp: % $(addsuffix .iitem,$(dirs)) tsort.iitem
-	echo ""; echo ""; echo $<; echo "test:"; cat $</interpres.txt; echo "ref:"; cat $</ref.txt;
-
-%.main: %
-	$(MAKE) CFLAGS="$(CFLAGS)" -C $<

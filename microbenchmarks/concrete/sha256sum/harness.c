@@ -59,6 +59,7 @@ int begin_target_inner (int argc, char** argv) {
 
   char * tmp = malloc (size);
   fread(tmp, 1, size, f); 
+  fclose(f);
 
   void * endRes = malloc(256);
   

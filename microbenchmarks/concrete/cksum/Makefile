@@ -6,18 +6,11 @@ all: build/main build/obj.dump
 
 
 build/main:
-	docker run --user $$(id -u):$$(id -g) --rm -it --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
+	docker run --user $$(id -u):$$(id -g) --rm --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
 
 
 test:
 	cd build/ && rm -f Monitor* && cp ../GutenburgDictionary.txt . && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false
-
-
-smalltest:
-	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false - ../harness.c
-
-smallmixedtest:
-	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -singleStepping -check-overshift=false - ../harness.c
 
 mixedtest:
 	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -singleStepping -check-overshift=false  - ../harness.c
@@ -26,11 +19,46 @@ build/obj.dump: build/main
 	objdump -C -D -w -M suffix -j .text build/main > build/obj.dump
 
 clean:
-	rm -rf build/*
+	rm -rf build/* res*.txt interpres*.txt mixedres*.txt
 
 
-mixedres:
-	grep harness build/Monitor | tail -n1 > mixedres.txt
 
-interpres:
-	grep harness build/Monitor | tail -n1 > interpres.txt
+
+build/Monitor.interp%:
+	cd build/ && ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../harness.c
+
+build/Monitor.mixed%:
+	cd build/ && ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../harness.c
+
+ref.txt:
+	cd build/ && cksum ../harness.c > ../ref.txt
+
+
+mixedres%.txt: build/Monitor.mixed%
+	grep harness $< | tail -n1 > $@
+
+interpres%.txt: build/Monitor.interp% 
+	grep harness $< | tail -n1 > $@
+
+
+.PHONY: resx5.txt
+resx5.txt: cleanres res_1.txt res_2.txt res_3.txt res_4.txt res_5.txt
+	echo "cksum:" > resx5.txt
+	cat res_*.txt >> resx5.txt
+
+.PHONY: res.txt
+res.txt: cleanres res_1.txt
+	echo "cksum:" > res.txt
+	cat res_1.txt >> res.txt
+
+
+.PHONY: cleanres
+cleanres:
+	rm -f res_*.txt mixedres*.txt interpres*.txt Monitor.mixed* Monitor.interp*
+
+
+
+res_%.txt: ref.txt mixedres%.txt interpres%.txt
+	echo "  rep$*:" >> $@
+	diff -q ref.txt interpres$*.txt &>/dev/null; x=$$?; if [ $$x -ne 0 ]; then echo "    interp: FAIL"; else echo "    interp: PASS"; fi >> $@
+	diff -q ref.txt mixedres$*.txt &>/dev/null; y=$$?; if [ $$y -ne 0 ]; then echo "    mixed: FAIL"; else echo "    mixed: PASS"; fi >> $@
