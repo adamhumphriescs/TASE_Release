@@ -4,7 +4,7 @@ TARGET?=tase$(NAME)
 DIR?=
 
 #all: tase_llvm_base update tase_llvm tase
-all: update clean tase_llvm tase
+all: update clean tase_llvm_base tase_llvm tase
 
 .phony: update
 update:
@@ -12,7 +12,7 @@ update:
 
 .phony: tase_llvm_base
 tase_llvm_base:
-	docker build --network=host --no-cache --target $(TARGET)_llvm -t tase_llvm_base .
+	docker build --network=host --no-cache --target tase_llvm -t tase_llvm_base .
 
 .tase_llvm_id:
 	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name $(TARGET)_llvm_build -d tase_llvm_base > .tase_llvm_id
