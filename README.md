@@ -16,6 +16,9 @@ but its core symbolic execution engine should be capable of the task.
 TASE requires several other code bases to build, including the LLVM toolchain, KLEE, musl's libc implementation, 
 and others.  Because of this, we provide TASE with and dockerfile and recommend that it be used within a container.
 
+The TASE repo now contains a branch with experimental support for machines without transactional hardware.  Change to the 
+noTSX branch for more details.
+
 # Requirements
 TASE can only run on a machine with support for Intel's Restricted Transactional Memory (RTM) instructions (i.e., XBEGIN, XEND, XABORT).  
 You can determine if your processor supports the XBEGIN/XEND/XABORT instructions by consulting the Intel processor 
