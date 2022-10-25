@@ -1,6 +1,6 @@
 SHELL:=/bin/bash
 CFLAGS?=-O0
-MAKEFLAGS:=-j 5 -k
+MAKEFLAGS:=-j 10 -k
 dirs=$(realpath $(wildcard */))
 results=$(addsuffix /resx5.txt,$(dirs))
 

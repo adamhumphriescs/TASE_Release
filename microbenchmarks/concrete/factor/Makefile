@@ -31,8 +31,6 @@ clean:
 	rm -rf build/* res*.txt interpres*.txt mixedres*.txt
 
 
-
-.PRECIOUS: build/Monitor.interp% build/Monitor.mixed%
 build/Monitor.interp%:
 	cd build/ && ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL)
 
@@ -42,7 +40,7 @@ build/Monitor.mixed%:
 
 
 mixedres%.txt: build/Monitor.mixed%
-	grep $(SMALL) $< | tail -n1 | sed 's/.*"//g' > $@
+	grep $(SMALL) $< | tail -n1 > $@
 
 
 interpres%.txt: build/Monitor.interp%
@@ -55,12 +53,12 @@ ref.txt:
 .PHONY: resx5.txt
 resx5.txt: cleanres res_1.txt res_2.txt res_3.txt res_4.txt res_5.txt
 	echo "factor:" > resx5.txt
-	cat $(wildcard res_*.txt) >> resx5.txt
+	cat res_*.txt >> resx5.txt
 
 .PHONY: res.txt
 res.txt: cleanres res_1.txt
 	echo "factor:" > res.txt
-	cat $(wildcard res_*.txt) >> res.txt
+	cat res_*.txt >> res.txt
 
 .PHONY: cleanres
 cleanres:
