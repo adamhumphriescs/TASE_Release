@@ -1,3 +1,4 @@
+# TASE: Transactionally-Assisted Symbolic Execution
 
 This branch contains an experimental build of TASE which removes its dependence on transactional hardware.
 
