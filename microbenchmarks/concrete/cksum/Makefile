@@ -1,13 +1,14 @@
 ROOT?=/project
 BIN?=main
 CFLAGS?=-O0
-
+USER=$$(id -u):$$(id -g)
+DOCKER=docker run --user $(USER) --rm --mount type=bind,src=$$(pwd),dst=/project/ tase bash
 all: build/main build/obj.dump
 
 
 build/main:
-	docker run --user $$(id -u):$$(id -g) --rm --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
-
+	$(DOCKER) -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
+#RPATH="lib"
 
 test:
 	cd build/ && rm -f Monitor* && cp ../GutenburgDictionary.txt . && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false
@@ -23,12 +24,12 @@ clean:
 
 
 
-
+.PRECIOUS:build/Monitor.interp% interp_time% build/Monitor.mixed% mixed_time% mixedres%.txt interpres%.txt
 build/Monitor.interp% interp_time%:
-	cd build/ && ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../harness.c ) > interp_time$*
+	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -taseDebug -modelDebug -log=$(notdir $@) - ../harness.c 2>1 ; } 2> ../interp_time$*'
 
 build/Monitor.mixed% mixed_time%:
-	cd build/ && time( ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../harness.c ) > mixed_time$*
+	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -taseDebug -modelDebug -log=$(notdir $@) - ../harness.c 2>1 ; } 2> ../mixed_time$*'
 
 ref.txt:
 	cd build/ && cksum ../harness.c > ../ref.txt

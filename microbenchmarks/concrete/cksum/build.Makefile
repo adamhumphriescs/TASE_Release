@@ -42,9 +42,13 @@ $(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
 $(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
 	/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $$(find /TASE/lib/ -name '*.a') $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
 
+#LD_RUN_PATH='$ORIGIN/$(RPATH)'   -Wl,-rpath $(RPATH) 
+
 .PHONY: finish
 finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars
-	mkdir -p $(OUTDIR)/bitcode/ && rm -rf $(OUTDIR)/bitcode/*
+	mkdir -p $(OUTDIR)/bitcode/ $(OUTDIR)/$(RPATH)/ && rm -rf $(OUTDIR)/bitcode/*
+#	cp -p $$(ldd $(OUTDIR)/$(BIN) | awk '{print $$3}') $(OUTDIR)/$(RPATH)/
+#	cp -p $$(readlink -f $$(ldd $(OUTDIR)/$(BIN) | awk '{print $$3}')) $(OUTDIR)/$(RPATH)/
 	echo '#!/bin/bash' > $(OUTDIR)/run.sh
 	echo 'KLEE_RUNTIME_LIBRARY_PATH=$$(pwd)/bitcode/ ./$(BIN) -project=$(BIN) $${@}' >> $(OUTDIR)/run.sh
 	chmod +x $(OUTDIR)/run.sh
