@@ -3,6 +3,8 @@ import re
 import subprocess
 from . import instruction
 from itertools import chain
+#from multiprocessing import Pool
+import concurrent.futures
 
 class ELFFile():
   """
@@ -65,13 +67,12 @@ class ELFFile():
   def __len__(self):
     return len(self._function_asm)
 
-  def fasm(self, outname, pool=None):
-    if pool and self._filter_functions:
-      pcs = len(pool._pool)
-      gsize = len(self._filter_functions) // pcs
+  def fasm(self, outname, threads=None):
+    if threads and self._filter_functions:
+      gsize = len(self._filter_functions) // threads
       groups = []
-      for i in range(pcs):
-        if i == pcs-1:
+      for i in range(threads):
+        if i == threads-1:
           groups.append(self._filter_functions[i*gsize:])
         else:
           groups.append(self._filter_functions[i*gsize:(i+1)*gsize])
@@ -81,9 +82,11 @@ class ELFFile():
         with open(fnames[-1][1], 'w') as fh:
           for y in x:
             print(y, file=fh)
-      pool.map(self._parse_objdump, fnames)
+      with concurrent.futures.ThreadPoolExecutor(threads) as pool:
+        pool.map(self._parse_objdump, fnames)
+        
     else:
-      self._parse_objdump((f'build/bitcode/{outname}.interp.0.cpp', None, True))
+      self._parse_objdump((f'build/bitcode/{outname}.interp.0.cpp', 'build/main.tase', True))
 
   def _parse_nm_vars(self, text):
     """
@@ -148,7 +151,7 @@ class ELFFile():
 
 
   def _parse_objdump(self, data):
-    outname, filterFile, first = data
+    outname, filterFile, first = data # nobatch, 
     with open(outname, 'w') as fh:
       dupname_ctr = 0
       fname = None
@@ -188,7 +191,7 @@ class ELFFile():
 
   def _objdump(self, filterFile=None):
     status = subprocess.run([
-        '/objdump',
+        '/TASE/objdump',
         f'--disassemble_file={filterFile}' if filterFile else '-d',
         '-w',
         '-M', 'suffix',

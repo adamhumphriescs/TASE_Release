@@ -24,11 +24,11 @@ clean:
 
 
 
-build/Monitor.interp%:
-	cd build/ && ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../harness.c
+build/Monitor.interp% interp_time%:
+	cd build/ && ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../harness.c ) > interp_time$*
 
-build/Monitor.mixed%:
-	cd build/ && ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../harness.c
+build/Monitor.mixed% mixed_time%:
+	cd build/ && time( ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../harness.c ) > mixed_time$*
 
 ref.txt:
 	cd build/ && cksum ../harness.c > ../ref.txt
@@ -60,5 +60,5 @@ cleanres:
 
 res_%.txt: ref.txt mixedres%.txt interpres%.txt
 	echo "  rep$*:" >> $@
-	diff -q ref.txt interpres$*.txt &>/dev/null; x=$$?; if [ $$x -ne 0 ]; then echo "    interp: FAIL"; else echo "    interp: PASS"; fi >> $@
-	diff -q ref.txt mixedres$*.txt &>/dev/null; y=$$?; if [ $$y -ne 0 ]; then echo "    mixed: FAIL"; else echo "    mixed: PASS"; fi >> $@
+	diff -q ref.txt interpres$*.txt &>/dev/null; x=$$?; if [ $$x -ne 0 ]; then echo "    interp: FAIL, $$(cat interp_time$*)"; else echo "    interp: PASS, $$(cat interp_time$*)"; fi >> $@
+	diff -q ref.txt mixedres$*.txt &>/dev/null; y=$$?; if [ $$y -ne 0 ]; then echo "    mixed: FAIL, $$(cat mixed_time$*)"; else echo "    mixed: PASS, $$(cat mixed_time$*)"; fi >> $@

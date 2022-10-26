@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
-FROM ubuntu:20.04 AS tase_llvm
+FROM ubuntu:22.04 AS tase_llvm
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update -y && apt-get install --no-install-recommends -y build-essential binutils bison flex make cmake git wget curl bash-completion software-properties-common linux-tools-generic linux-tools-common python3-dev python3-pip zip unzip emacs libboost-program-options-dev perl zlib1g-dev libcap-dev libncurses5 libncurses-dev libgmp-dev texinfo less gdb && \
-python3 -m pip install -U mypy && \
-mkdir -p /TASE/llvm-3.4.2 /TASE/include/tase /TASE/include/traps /TASE/openssl/include /TASE/scripts && \
-curl -s https://releases.llvm.org/3.4.2/clang+llvm-3.4.2-x86_64-linux-gnu-ubuntu-14.04.xz | tar xJvf - -C /TASE/llvm-3.4.2 --strip 1 &&\
-chmod -R a+rw /TASE/
+RUN apt-get update -y && apt-get install --no-install-recommends -y build-essential binutils bison flex make cmake git wget curl bash-completion software-properties-common linux-tools-generic linux-tools-common python2 python3-dev python3-pip zip unzip emacs libboost-program-options-dev perl zlib1g-dev libcap-dev libncurses5 libncurses-dev libgmp-dev texinfo less gdb libz3-4 libz3-dev && \
+wget https://bootstrap.pypa.io/pip/2.7/get-pip.py && \
+python2.7 get-pip.py && \
+pip2.7 install -U pygments pyyaml && \
+python3 -m pip install -U mypy
 
 
 FROM tase_llvm AS tase

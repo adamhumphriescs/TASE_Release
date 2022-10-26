@@ -2,9 +2,9 @@ SHELL=/bin/bash
 NAME?=
 TARGET?=tase$(NAME)
 DIR?=
+USER=--user $$(id -u):$$(id -g)
 
-#all: tase_llvm_base update tase_llvm tase
-all: update clean tase_llvm_base tase_llvm tase
+all: update tase_llvm_base tase_llvm tase container
 
 .phony: update
 update:
@@ -15,31 +15,37 @@ tase_llvm_base:
 	docker build --network=host --no-cache --target tase_llvm -t tase_llvm_base .
 
 .tase_llvm_id:
-	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name $(TARGET)_llvm_build -d tase_llvm_base > .tase_llvm_id
+	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --mount type=bind,src=$$(pwd)/install_root/,dst=/TASE/ --name $(TARGET)_llvm_build -d tase_llvm_base > .tase_llvm_id
 
-# seperate command for the objdump move so we have root permissions...
-tase_llvm: .tase_llvm_id
-	docker exec $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /objdump'
-	docker exec $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 tase_clang'
-	docker tag $$(docker commit $(TARGET)_llvm_build | awk '{split($$0, m, /:/); print m[2]}') $(TARGET)_llvm
+base_llvm:
+	mkdir -p install_root/llvm-3.4.2 install_root/include/tase install_root/include/traps install_root/openssl/include install_root/scripts
+	cd install_root && curl -s https://releases.llvm.org/3.4.2/clang+llvm-3.4.2-x86_64-linux-gnu-ubuntu-14.04.xz | tar xJvf - -C llvm-3.4.2 --strip 1
+
+
+tase_llvm: base_llvm .tase_llvm_id
+	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /TASE/objdump'
+	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 tase_clang'
+
+
+tase: .tase_llvm_id
+	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install && make -j 16 setup && make parseltongue'
 	docker stop $(TARGET)_llvm_build
 	docker rm $(TARGET)_llvm_build
 	rm -f .tase_llvm_id
 
-.tase_id:
-	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --name $(TARGET)_build -d $(TARGET)_llvm > .tase_id
 
-
-tase: .tase_id
-	docker exec $(TARGET)_build bash -c 'cp -r /TASE_BUILD/install/ /TASE/ && cd /TASE_BUILD/install && make -j 16 setup && apt-get autoremove'
-	docker tag $$(docker commit $(TARGET)_build | awk '{split($$0, m, /:/); print m[2]}') $(TARGET)
-	docker stop $(TARGET)_build
-	docker rm $(TARGET)_build
-	rm -f .tase_id
-
+container:
+	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --mount type=bind,src=$$(pwd)/install_root/,dst=/install_root/ --name $(TARGET)_llvm_build -d tase_llvm_base
+	docker exec $(TARGET)_llvm_build bash -c 'mkdir -p /TASE && cp -r /install_root/* /TASE/ && cp -r /TASE_BUILD/install/* /TASE/install/ && cp -r /TASE_BUILD/parseltongue86 /TASE/'
+	docker tag $$(docker commit $(TARGET)_llvm_build | awk '{split($$0, m, /:/); print m[2]}') $(TARGET)
+	docker rm -f $(TARGET)_llvm_build
+	rm -f .tase_llvm_id
 
 clean:
-	docker run --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --rm -it cleaner bash -c 'make -C /TASE_BUILD/musl/ clean && rm -rf /TASE_BUILD/build/*'
+	make -C musl clean && rm -rf build/*
+
+#clean:
+#	docker run --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --rm -it cleaner bash -c 'make -C /TASE_BUILD/musl/ clean && rm -rf /TASE_BUILD/build/*'
 
 
 # directory:
@@ -84,5 +90,3 @@ musl-update:
 	git commit -m 'updated musl'
 	git push
 
-#llvm-dev-container:
-#	docker run --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --mount type=bind,src=$$(pwd)/llvm_test/,dst=/test/ --rm -it tase_llvm

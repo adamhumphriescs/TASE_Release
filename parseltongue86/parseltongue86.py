@@ -5,7 +5,7 @@ from hashlib import md5
 from argparse import ArgumentParser
 from translator import elffile
 import sys
-from multiprocessing import Pool
+
 
 
 def md5sum(filename):
@@ -46,9 +46,8 @@ def main(args):
   with open(target_binary.parent / 'cartridge_info.txt') as c:
     cartridge_pairs = {int(head) : (int(head), int(tail)) for head, tail in (line.split() for line in c)}
 
-  with Pool(args['threads']) as pool:
-    p = elffile.ELFFile(target_binary, args['no_batch'], include_path=include_path, cartridge_pairs=cartridge_pairs, filter_functions=filters, springboard_functions=springboard_functions)
-    p.fasm(args['outname'], pool=pool)
+  p = elffile.ELFFile(target_binary, args['no_batch'], include_path=include_path, cartridge_pairs=cartridge_pairs, filter_functions=filters, springboard_functions=springboard_functions)
+  p.fasm(args['outname'], threads=args['threads'] if args['threads'] > 0 else None)
 
 
 parser = ArgumentParser()
