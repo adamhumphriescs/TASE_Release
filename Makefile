@@ -15,7 +15,7 @@ tase_llvm_base:
 	docker build --network=host --no-cache --target tase_llvm -t tase_llvm_base .
 
 .tase_llvm_id:
-	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --mount type=bind,src=$$(pwd)/install_root/,dst=/TASE/ --name $(TARGET)_llvm_build -d tase_llvm_base > .tase_llvm_id
+	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --mount type=bind,src=$$(pwd)/install_root/,dst=/install_root/ --name $(TARGET)_llvm_build -d tase_llvm_base > .tase_llvm_id
 
 base_llvm:
 	mkdir -p install_root/llvm-3.4.2 install_root/include/tase install_root/include/traps install_root/openssl/include install_root/scripts
@@ -23,26 +23,27 @@ base_llvm:
 
 
 tase_llvm: base_llvm .tase_llvm_id
-	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 /TASE/objdump'
-	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 tase_clang'
+	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 RUN_DIR=/install_root/ /TASE/objdump'
+	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 RUN_DIR=/install_root/ tase_clang'
 
 
 tase: .tase_llvm_id
-	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install && make -j 16 setup && make parseltongue'
+	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install && make -j 16 RUN_DIR=/install_root/ setup && make parseltongue'
 	docker stop $(TARGET)_llvm_build
-	docker rm $(TARGET)_llvm_build
-	rm -f .tase_llvm_id
 
 
-container:
-	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --mount type=bind,src=$$(pwd)/install_root/,dst=/install_root/ --name $(TARGET)_llvm_build -d tase_llvm_base
+container: .tase_llvm_id
 	docker exec $(TARGET)_llvm_build bash -c 'mkdir -p /TASE && cp -r /install_root/* /TASE/ && cp -r /TASE_BUILD/install/* /TASE/install/ && cp -r /TASE_BUILD/parseltongue86 /TASE/'
 	docker tag $$(docker commit $(TARGET)_llvm_build | awk '{split($$0, m, /:/); print m[2]}') $(TARGET)
 	docker rm -f $(TARGET)_llvm_build
 	rm -f .tase_llvm_id
 
 clean:
-	make -C musl clean && rm -rf build/*
+	make -C musl clean && rm -rf build/* && docker rm -f tase_llvm_build && rm -f .tase_llvm_id
+
+
+# from container:	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --mount type=bind,src=$$(pwd)/install_root/,dst=/install_root/ --name $(TARGET)_llvm_build -d tase_llvm_base
+
 
 #clean:
 #	docker run --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --rm -it cleaner bash -c 'make -C /TASE_BUILD/musl/ clean && rm -rf /TASE_BUILD/build/*'
