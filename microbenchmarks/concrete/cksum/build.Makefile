@@ -1,4 +1,5 @@
-include /TASE/install/exports.Makefile
+BASE_DIR?=/TASE
+include $(BASE_DIR)/install/exports.Makefile
 
 BIN?=main
 ROOT?=/project
@@ -25,8 +26,8 @@ $(OUTDIR)/%.vars: $(OUTDIR)/%.o $(OUTDIR)/$(BIN)
 	python3 /TASE/parseltongue86/rosettastone.py $(OUTDIR)/$(BIN) -f $< > $@
 
 $(OUTDIR)/everything.o: $(OBJS)
-	ld -r $(OBJS) /TASE/lib/musl.o -o $(OUTDIR)/everything.o
-	cd /TASE/install/ && ./localize.sh $(OUTDIR)/everything.o
+	ld -r $(OBJS) $(RUN_DIR)/lib/musl.o -o $(OUTDIR)/everything.o
+	cd $(BASE_DIR)/install/ && ./localize.sh $(OUTDIR)/everything.o
 
 $(OUTDIR)/$(BIN).tase: $(TASE)
 	cat $(TASE) > $(OUTDIR)/tmp.tase

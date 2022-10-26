@@ -64,8 +64,8 @@ $(BUILD_DIR)/binutils-gdb/binutils/objdump:
 	$(MAKE) -C $(BUILD_DIR)/binutils-gdb/
 
 
-/TASE/objdump: $(BUILD_DIR)/binutils-gdb/binutils/objdump
-	cp $(BUILD_DIR)/binutils-gdb/binutils/objdump /TASE/objdump
+$(RUN_DIR)/objdump: $(BUILD_DIR)/binutils-gdb/binutils/objdump
+	cp $(BUILD_DIR)/binutils-gdb/binutils/objdump $(RUN_DIR)/objdump
 
 
 $(LIBTASE):
@@ -86,7 +86,7 @@ $(RUN_DIR)/lib/musl.o:
 
 $(BUILD_DIR)/build/klee/lib/everything.o: $(RUN_DIR)/lib/musl.o
 	mkdir -p $(BUILD_DIR)/build/klee/lib/
-	$(MAKE) -C $(BUILD_DIR)/microbenchmarks/concrete/cksum/ -f build.Makefile ROOT=$(BUILD_DIR)/build/cksum OUTDIR=$(BUILD_DIR)/build/cksum/build $(BUILD_DIR)/build/cksum/build/everything.o
+	$(MAKE) -C $(BUILD_DIR)/microbenchmarks/concrete/cksum/ -f build.Makefile ROOT=$(BUILD_DIR)/build/cksum OUTDIR=$(BUILD_DIR)/build/cksum/build $(BUILD_DIR)/build/cksum/build/everything.o BASE_DIR=/TASE_BUILD
 	mv $(BUILD_DIR)/build/cksum/build/everything.o $(BUILD_DIR)/build/klee/lib/
 
 
