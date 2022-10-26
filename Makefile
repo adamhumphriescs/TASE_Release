@@ -23,7 +23,7 @@ base_llvm:
 
 
 tase_llvm: base_llvm .tase_llvm_id
-	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 RUN_DIR=/install_root/ /TASE/objdump'
+	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 RUN_DIR=/install_root/ /install_root/objdump'
 	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install/ && make -j 16 RUN_DIR=/install_root/ tase_clang'
 
 
