@@ -25,7 +25,7 @@ start the build.  The build usually takes at least 30 minutes.
 $ git clone https://github.com/adamhumphriescs/TASE_Release.git
 $ cd ./TASE_Release
 $ git checkout noTSX
-$ make tase
+$ make 
 ```
 
 You can then test the build and run some of the microbenchmarks (albeit without transactional hardware) in the TASE paper by typing the following.
