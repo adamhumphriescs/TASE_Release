@@ -29,7 +29,6 @@ tase_llvm: base_llvm .tase_llvm_id
 
 tase: .tase_llvm_id
 	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install && make -j 16 RUN_DIR=/install_root setup && make parseltongue'
-	docker stop $(TARGET)_llvm_build
 
 
 container: .tase_llvm_id
