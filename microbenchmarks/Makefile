@@ -8,7 +8,8 @@ concrete/results.txt:
 	$(MAKE) -C concrete
 
 slidingscale/bigNum/SlidingScaleResults.txt:
-	$(MAKE) -C slidingscale/bigNum/ && cd slidingscale/bigNum && ./runtest.sh
+	$(MAKE) -C slidingscale/bigNum/
+	$(MAKE) -j4 -C slidingscale/bigNum/ SlidingScaleResults.txt
 
 
 clean:
