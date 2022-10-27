@@ -4,7 +4,7 @@ CFLAGS?=-O0
 USER=$$(id -u):$$(id -g)
 DOCKER=docker run --user $(USER) --rm --mount type=bind,src=$$(pwd),dst=/project/ tase bash
 
-SMALL=../haness.c
+SMALL=../harness.c
 LARGE=../GutenburgDictionary.txt
 all: build/main build/obj.dump
 
@@ -27,7 +27,7 @@ clean:
 
 
 
-.PRECIOUS:build/Monitor.interp% interp_time% build/Monitor.mixed% mixed_time% mixedres%.txt interpres%.txt
+#.PRECIOUS:build/Monitor.interp% interp_time% build/Monitor.mixed% mixed_time% mixedres%.txt interpres%.txt
 build/Monitor.interp% interp_time%:
 	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>1 ; } 2> ../interp_time$*'
 
@@ -41,10 +41,10 @@ shortref.txt:
 	cd build/ && cksum $(SMALL) > ../shortref.txt
 
 mixedres%.txt: build/Monitor.mixed%
-	grep harness $< | tail -n1 > $@
+	grep $(LARGE) $< | tail -n1 > $@
 
 interpres%.txt: build/Monitor.interp% 
-	grep harness $< | tail -n1 > $@
+	grep $(SMALL) $< | tail -n1 > $@
 
 
 .PHONY: resx5.txt
