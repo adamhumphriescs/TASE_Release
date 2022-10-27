@@ -38,8 +38,12 @@ container: .tase_llvm_id
 	rm -f .tase_llvm_id
 
 clean:
-	make -C musl clean && rm -rf build/* && docker rm -f tase_llvm_build && rm -f .tase_llvm_id
+	make -C musl clean && rm -rf build/* install_root/* && docker rm -f tase_llvm_build && rm -f .tase_llvm_id
 
+
+reset:
+	rm -rf install_root/* build/klee/ build/tase/ build/cksum/
+	docker rm -f $(TARGET)_llvm_build && rm -f .tase_llvm_id
 
 # from container:	docker run -it --mount type=bind,src=$$(pwd),dst=/TASE_BUILD/ --mount type=bind,src=$$(pwd)/install_root/,dst=/install_root/ --name $(TARGET)_llvm_build -d tase_llvm_base
 

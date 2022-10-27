@@ -1,151 +1,151 @@
 #File contains soft float fns we redefine with "objcopy" to a tase shim.  This
 #makes it easier to trap without modifying the source code heavily.
-__addsf3 __addsf3_tase_shim
-__adddf3 __adddf3_tase_shim
-__addtf3 __addtf3_tase_shim
-__addxf3 __addxf3_tase_shim
+__addsf3 __addsf3_tase
+__adddf3 __adddf3_tase
+__addtf3 __addtf3_tase
+__addxf3 __addxf3_tase
 #
-__subsf3 __subsf3_tase_shim
-__subdf3 __subdf3_tase_shim
-__subtf3 __subtf3_tase_shim
-__subxf3 __subxf3_tase_shim
+__subsf3 __subsf3_tase
+__subdf3 __subdf3_tase
+__subtf3 __subtf3_tase
+__subxf3 __subxf3_tase
 #
-__mulsf3 __mulsf3_tase_shim
-__muldf3 __muldf3_tase_shim
-__multf3 __multf3_tase_shim
-__mulxf3 __mulxf3_tase_shim
+__mulsf3 __mulsf3_tase
+__muldf3 __muldf3_tase
+__multf3 __multf3_tase
+__mulxf3 __mulxf3_tase
 #
-__divsf3 __divsf3_tase_shim
-__divdf3 __divdf3_tase_shim
-__divtf3 __divtf3_tase_shim
-__divxf3 __divxf3_tase_shim
+__divsf3 __divsf3_tase
+__divdf3 __divdf3_tase
+__divtf3 __divtf3_tase
+__divxf3 __divxf3_tase
 #
-__negsf2 __negsf2_tase_shim
-__negdf2 __negdf2_tase_shim
-__negtf2 __negtf2_tase_shim
-__negxf2 __negxf2_tase_shim
+__negsf2 __negsf2_tase
+__negdf2 __negdf2_tase
+__negtf2 __negtf2_tase
+__negxf2 __negxf2_tase
 #
 #Conversion fns
 #
-__extendsfdf2 __extendsfdf2_tase_shim
-__extendsftf2 __extendsftf2_tase_shim
-__extendsfxf2 __extendsfxf2_tase_shim
-__extenddftf2 __extenddftf2_tase_shim
-__extenddfxf2 __extenddfxf2_tase_shim
+__extendsfdf2 __extendsfdf2_tase
+__extendsftf2 __extendsftf2_tase
+__extendsfxf2 __extendsfxf2_tase
+__extenddftf2 __extenddftf2_tase
+__extenddfxf2 __extenddfxf2_tase
 #
-__truncxfdf2 __truncxfdf2_tase_shim
-__trunctfdf2 __trunctfdf2_tase_shim
-__truncxfsf2 __truncxfsf2_tase_shim
-__trunctfsf2 __trunctfsf2_tase_shim
-__truncdfsf2 __truncdfsf2_tase_shim
+__truncxfdf2 __truncxfdf2_tase
+__trunctfdf2 __trunctfdf2_tase
+__truncxfsf2 __truncxfsf2_tase
+__trunctfsf2 __trunctfsf2_tase
+__truncdfsf2 __truncdfsf2_tase
 #
-__fixsfsi __fixsfsi_tase_shim
-__fixdfsi __fixdfsi_tase_shim
-__fixtfsi __fixtfsi_tase_shim
-__fixxfsi __fixxfsi_tase_shim
+__fixsfsi __fixsfsi_tase
+__fixdfsi __fixdfsi_tase
+__fixtfsi __fixtfsi_tase
+__fixxfsi __fixxfsi_tase
 #
-__fixsfdi __fixsfdi_tase_shim
-__fixdfdi __fixdfdi_tase_shim
-__fixtfdi __fixtfdi_tase_shim
-__fixxfdi __fixxfdi_tase_shim
+__fixsfdi __fixsfdi_tase
+__fixdfdi __fixdfdi_tase
+__fixtfdi __fixtfdi_tase
+__fixxfdi __fixxfdi_tase
 #
-__fixsfti __fixsfti_tase_shim
-__fixdfti __fixdfti_tase_shim
-__fixtfti __fixtfti_tase_shim
-__fixxfti __fixxfti_tase_shim
+__fixsfti __fixsfti_tase
+__fixdfti __fixdfti_tase
+__fixtfti __fixtfti_tase
+__fixxfti __fixxfti_tase
 #
-__fixunssfsi __fixunssfsi_tase_shim
-__fixunsdfsi __fixunsdfsi_tase_shim
-__fixunstfsi __fixunstfsi_tase_shim
-__fixunsxfsi __fixunsxfsi_tase_shim
+__fixunssfsi __fixunssfsi_tase
+__fixunsdfsi __fixunsdfsi_tase
+__fixunstfsi __fixunstfsi_tase
+__fixunsxfsi __fixunsxfsi_tase
 #
-__fixunssfdi __fixunssfdi_tase_shim
-__fixunsdfdi __fixunsdfdi_tase_shim
-__fixunstfdi __fixunstfdi_tase_shim
-__fixunsxfdi __fixunsxfdi_tase_shim
+__fixunssfdi __fixunssfdi_tase
+__fixunsdfdi __fixunsdfdi_tase
+__fixunstfdi __fixunstfdi_tase
+__fixunsxfdi __fixunsxfdi_tase
 #
-__fixunssfti __fixunssfti_tase_shim
-__fixunsdfti __fixunsdfti_tase_shim
-__fixunstfti __fixunstfti_tase_shim
-__fixunsxfti __fixunsxfti_tase_shim
+__fixunssfti __fixunssfti_tase
+__fixunsdfti __fixunsdfti_tase
+__fixunstfti __fixunstfti_tase
+__fixunsxfti __fixunsxfti_tase
 #
-__floatsisf __floatsisf_tase_shim
-__floatsidf __floatsidf_tase_shim
-__floatsitf __floatsitf_tase_shim
-__floatsixf __floatsixf_tase_shim
+__floatsisf __floatsisf_tase
+__floatsidf __floatsidf_tase
+__floatsitf __floatsitf_tase
+__floatsixf __floatsixf_tase
 #
-__floatdisf __floatdisf_tase_shim
-__floatdidf __floatdidf_tase_shim
-__floatditf __floatditf_tase_shim
-__floatdixf __floatdixf_tase_shim
+__floatdisf __floatdisf_tase
+__floatdidf __floatdidf_tase
+__floatditf __floatditf_tase
+__floatdixf __floatdixf_tase
 #
-__floattisf __floattisf_tase_shim
-__floattidf __floattidf_tase_shim
-__floattitf __floattitf_tase_shim
-__floattixf __floattixf_tase_shim
+__floattisf __floattisf_tase
+__floattidf __floattidf_tase
+__floattitf __floattitf_tase
+__floattixf __floattixf_tase
 #
-__floatunsisf __floatunsisf_tase_shim
-__floatunsidf __floatunsidf_tase_shim
-__floatunsitf __floatunsitf_tase_shim
-__floatunsixf __floatunsixf_tase_shim
+__floatunsisf __floatunsisf_tase
+__floatunsidf __floatunsidf_tase
+__floatunsitf __floatunsitf_tase
+__floatunsixf __floatunsixf_tase
 #
-__floatundisf __floatundisf_tase_shim
-__floatundidf __floatundidf_tase_shim
-__floatunditf __floatunditf_tase_shim
-__floatundixf __floatundixf_tase_shim
+__floatundisf __floatundisf_tase
+__floatundidf __floatundidf_tase
+__floatunditf __floatunditf_tase
+__floatundixf __floatundixf_tase
 #
-__floatuntisf __floatuntisf_tase_shim
-__floatuntidf __floatuntidf_tase_shim
-__floatuntitf __floatuntitf_tase_shim
-__floatuntixf __floatuntixf_tase_shim
+__floatuntisf __floatuntisf_tase
+__floatuntidf __floatuntidf_tase
+__floatuntitf __floatuntitf_tase
+__floatuntixf __floatuntixf_tase
 #
 #Comparison functions
 #
-__cmpsf2 __cmpsf2_tase_shim
-__cmpdf2 __cmpdf2_tase_shim
-__cmptf2 __cmptf2_tase_shim
+__cmpsf2 __cmpsf2_tase
+__cmpdf2 __cmpdf2_tase
+__cmptf2 __cmptf2_tase
 #
-__unordsf2 __unordsf2_tase_shim
-__unorddf2 __unorddf2_tase_shim
-__unordtf2 __unordtf2_tase_shim
+__unordsf2 __unordsf2_tase
+__unorddf2 __unorddf2_tase
+__unordtf2 __unordtf2_tase
 #
-__eqsf2 __eqsf2_tase_shim
-__eqdf2 __eqdf2_tase_shim
-__eqtf2 __eqtf2_tase_shim
+__eqsf2 __eqsf2_tase
+__eqdf2 __eqdf2_tase
+__eqtf2 __eqtf2_tase
 #
-__nesf2 __nesf2_tase_shim
-__nedf2 __nedf2_tase_shim
-__netf2 __netf2_tase_shim
+__nesf2 __nesf2_tase
+__nedf2 __nedf2_tase
+__netf2 __netf2_tase
 #
-__gesf2 __gesf2_tase_shim
-__gedf2 __gedf2_tase_shim
-__getf2 __getf2_tase_shim
+__gesf2 __gesf2_tase
+__gedf2 __gedf2_tase
+__getf2 __getf2_tase
 #
-__ltsf2 __ltsf2_tase_shim
-__ltdf2 __ltdf2_tase_shim
-__lttf2 __lttf2_tase_shim
+__ltsf2 __ltsf2_tase
+__ltdf2 __ltdf2_tase
+__lttf2 __lttf2_tase
 #
-__lesf2 __lesf2_tase_shim
-__ledf2 __ledf2_tase_shim
-__letf2 __letf2_tase_shim
+__lesf2 __lesf2_tase
+__ledf2 __ledf2_tase
+__letf2 __letf2_tase
 #
-__gtsf2 __gtsf2_tase_shim
-__gtdf2 __gtdf2_tase_shim
-__gttf2 __gttf2_tase_shim
+__gtsf2 __gtsf2_tase
+__gtdf2 __gtdf2_tase
+__gttf2 __gttf2_tase
 #
 #Other
 #
-__powisf2 __powisf2_tase_shim
-__powidf2 __powidf2_tase_shim
-__powitf2 __powitf2_tase_shim
-__powixf2 __powixf2_tase_shim
+__powisf2 __powisf2_tase
+__powidf2 __powidf2_tase
+__powitf2 __powitf2_tase
+__powixf2 __powixf2_tase
 #
-__mulsc3 __mulsc3_tase_shim
-__muldc3 __muldc3_tase_shim
-__multc3 __multc3_tase_shim
-__mulxc3 __mulxc3_tase_shim
+__mulsc3 __mulsc3_tase
+__muldc3 __muldc3_tase
+__multc3 __multc3_tase
+__mulxc3 __mulxc3_tase
 #
-__divsc3 __divsc3_tase_shim
-__divdc3 __divdc3_tase_shim
-__divtc3 __divtc3_tase_shim
-__divxc3 __divxc3_tase_shim
+__divsc3 __divsc3_tase
+__divdc3 __divdc3_tase
+__divtc3 __divtc3_tase
+__divxc3 __divxc3_tase

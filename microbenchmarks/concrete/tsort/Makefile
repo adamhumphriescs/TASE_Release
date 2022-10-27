@@ -1,12 +1,13 @@
 ROOT?=/project
 BIN?=main
 CFLAGS?=-O0
-
+USER=--user $$(id -u):$$(id -g)
+DOCKER=docker run $(USER) --rm --mount type=bind,src=$$(pwd),dst=/project/ tase bash
 all: build/main build/obj.dump
 
 
 build/main: 
-	docker run --user $$(id -u):$$(id -g) --rm --mount type=bind,src=$$(pwd),dst=/project/ tase bash -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
+	$(DOCKER) -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
 
 
 test:
@@ -25,14 +26,11 @@ build/obj.dump: build/main
 clean:
 	rm -rf build/* res*.txt interpres*.txt mixedres*.txt
 
+build/Monitor.interp% interp_time%:
+	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -taseDebug -modelDebug -log=$(notdir $@) - ../harness.c 2>1 ; } 2> ../interp_time$*'
 
-build/Monitor.interp% interp_time%: tsortShort
-	cd build/ && time( ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../tsortShort ) > interp_time$*
-
-
-build/Monitor.mixed% mixed_time%: tsortShort
-	cd build/ && time( ./run.sh -dontFork -taseManager=false  -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - ../tsortShort ) > mixed_time$*
-
+build/Monitor.mixed% mixed_time%:
+	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -taseDebug -modelDebug -log=$(notdir $@) - ../harness.c 2>1 ; } 2> ../mixed_time$*'
 
 interpres%.txt: build/Monitor.interp%
 	grep ^OUT $< | awk '{print $$2}' > $@
@@ -65,5 +63,5 @@ cleanres:
 
 res_%.txt: ref.txt interpres%.txt mixedres%.txt
 	echo "  rep$*:" >> $@
-	diff -q ref.txt interpres$*.txt &>/dev/null; x=$$?; if [ $$x -ne 0 ]; then echo "    interp: FAIL, $$(cat interp_time$*)"; else echo "    interp: PASS, $$(cat interp_time$*)"; fi >> $@
-	diff -q ref.txt mixedres$*.txt &>/dev/null; y=$$?; if [ $$y -ne 0 ]; then echo "    mixed: FAIL, $$(cat mixed_time$*)"; else echo "    mixed: PASS, $$(cat mixed_time$*)"; fi >> $@
+	diff -q ref.txt interpres$*.txt &>/dev/null; x=$$?; if [ $$x -ne 0 ]; then echo "    interp: FAIL, $$(grep user interp_time$* | awk '{print $$2}')"; else echo "    interp: PASS, $$(grep user interp_time$* | awk '{print $$2}')"; fi >> $@
+	diff -q ref.txt mixedres$*.txt &>/dev/null; y=$$?; if [ $$y -ne 0 ]; then echo "    mixed: FAIL, $$(grep user mixed_time$* | awk '{print $$2}')"; else echo "    mixed: PASS, $$(grep user mixed_time$* | awk '{print $$2}')"; fi >> $@
