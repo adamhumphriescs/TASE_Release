@@ -46,7 +46,7 @@ ref.txt:
 	cd build/ && sha256sum $(LARGE) | awk '{print $$1}' > ../ref.txt
 
 shortref.txt:
-	cd build && sha256sum $(SMALL) | awk '{print $$1)' > ../shortref.txt
+	cd build && sha256sum $(SMALL) | awk '{print $$1}' > ../shortref.txt
 
 
 .PHONY: resx5.txt
