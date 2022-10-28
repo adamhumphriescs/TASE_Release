@@ -32,3 +32,4 @@ You can then test the build and run some of the microbenchmarks (albeit without 
 ```
 $ cd microbenchmarks && make
 ```
+The microbenchmark results will be dropped in files named ConcreteResults.txt and SlidingScaleResults.txt.  These correspond to Table 1 and Figure 3 respectively of the TASE paper.
