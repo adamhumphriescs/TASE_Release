@@ -21,6 +21,7 @@ memcpy memcpy_tase
 main tase_project_entry
 fileno fileno_tase
 fread fread_tase
+fread_unlocked fread_unlocked_tase
 ferror ferror_tase
 feof feof_tase
 fclose fclose_tase
