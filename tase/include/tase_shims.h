@@ -51,6 +51,7 @@ extern "C" {
 
   int fileno_tase(FILE *stream);
   size_t fread_tase(void *ptr, size_t size, size_t nmemb, FILE *stream);
+  size_t fread_unlocked_tase(void *ptr, size_t size, size_t nmemb, FILE *stream);
   int ferror_tase(FILE *stream);
   int feof_tase(FILE *stream);
   int fclose_tase(FILE *stream);

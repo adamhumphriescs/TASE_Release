@@ -79,6 +79,10 @@ size_t fread_tase(void *ptr, size_t size, size_t nmemb, FILE *stream) {
   return 0;
 }
 
+size_t fread_unlocked_tase(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+  return 0;
+}
+
 int ferror_tase(FILE *stream) {
   return 0;
 }
