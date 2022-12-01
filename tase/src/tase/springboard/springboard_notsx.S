@@ -55,6 +55,19 @@ DEF_FUNC(sb_eject)
 .Lsb_fallback:
 //  movq       GPR_TMP, %rax
 //.Lsb_eject:
+
+  // r14 holds flags + rax liveness (see NaiveChecks pass in llvm)
+  // first bit boolean rax liveness second bit boolean flags liveness	
+  // check flags liveness, restore saved flags from rax
+  // then check rax liveness, restore rax from saved_rax 
+  
+  addq $0xfffffffffffffffe, %r14       // CF is flags_live, rax_live if !ZF (when flags_live, o.w. don't care) 
+  jnc .Lnoflags                // jmp if !flags_live
+  movb %ah, CTX_REG(GREG_EFL) // store flags from rax
+  jz .Lnoflags               // jmp if flags_live & !rax_live
+  movq saved_rax(%rip), %rax  // rip-relative addressing resolved by the linker
+
+.Lnoflags:
   CTX_STORE(ax)
   CTX_STORE(bx)
   CTX_STORE(cx)
@@ -71,9 +84,10 @@ DEF_FUNC(sb_eject)
   CTX_STORE(13)
   CTX_STORE(14)
   CTX_STORE(15)
-  movq $0, %rax
-  lahf
-  movb %ah, CTX_REG(GREG_EFL)
+
+  // movq $0, %rax
+  // lahf
+  // movb %ah, CTX_REG(GREG_EFL)
   /* The vector junk too... */
   //Let's try to only load and store XMM0. We will see what the                                                                    
   //minimum number of XMM registers is for abi compatability                                                                       
