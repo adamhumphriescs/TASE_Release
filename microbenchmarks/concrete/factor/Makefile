@@ -4,39 +4,39 @@ SMALL=5413218152718641574491217
 LARGE=16895424309675413218152718641574491217
 CFLAGS?=-O0
 USER=--user $$(id -u):$$(id -g)
-DOCKER=docker run $(USER) --rm --mount type=bind,src=$$(pwd),dst=/project/ tase bash
-all: build/main build/obj.dump
+CONTAINER?=tasetest
 
+TSX?=
+
+DOCKER=docker run $(USER) --rm --mount type=bind,src=$$(pwd),dst=/project/ $(CONTAINER) bash
+OPTS?=
+all: build/main
 
 build/main: 
-	$(DOCKER) -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
+	$(DOCKER) -c 'cd $(ROOT) && make $(OPTS) CFLAGS="$(CFLAGS)" TSX="$(TSX)" -f build.Makefile'
 
-.PHONY: test gdbtest smalltest mixedtest objdump clean
-test:
-	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false - $(SMALL)
-
-
-gdbtest:
-	cd build/ && env KLEE_RUNTIME_LIBRARY_PATH=$$(pwd)/bitcode/ gdb --args main -project=main -taseDebug -modelDebug -dontFork -taseManager=false -singleStepping -check-overshift=false - $(SMALL)
-
-mixedtest:
-	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -singleStepping -check-overshift=false - $(LARGE)
+.PHONY: objdump clean
 
 build/obj.dump: build/main
 	objdump -C -D -w -M suffix -j .text build/main > build/obj.dump
 
-longtest:
-	cd build/ && rm -f Monitor* && nohup ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false - $(LARGE) &
-
 clean:
 	rm -rf build/* res*.txt interpres*.txt mixedres*.txt
 
-#.PRECIOUS: build/Monitor.interp% interp_time% build/Monitor.mixed% mixed_time%
+.PRECIOUS: build/Monitor.interp% interp_time% build/Monitor.mixed% mixed_time%
 build/Monitor.interp% interp_time%:
+ifeq ($(TSX), 1)
+	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>1 ; } 2> ../interp_time$*'
+else
 	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>1 ; } 2> ../interp_time$*'
+endif
 
 build/Monitor.mixed% mixed_time%:
+ifeq ($(TSX), 1)
+	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -check-overshift=false -modelDebug -log=$(notdir $@) - $(LARGE) 2>1 ; } 2> ../mixed_time$*'
+else
 	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(LARGE) 2>1 ; } 2> ../mixed_time$*'
+endif
 
 mixedres%.txt: build/Monitor.mixed%
 	grep $(SMALL) $< | tail -n1 | sed 's/.*"//g' > $@

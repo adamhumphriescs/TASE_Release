@@ -1,10 +1,11 @@
 SHELL=/bin/bash
-NAME?=
+NAME?=TEST
 TARGET?=tase$(NAME)
 DIR?=
 USER=--user $$(id -u):$$(id -g)
 
-all: update tase_llvm_base tase_llvm tase container
+#update tase_llvm_base
+all: tase_llvm tase container
 
 .phony: update
 update:
@@ -33,7 +34,7 @@ tase: .tase_llvm_id
 
 container: .tase_llvm_id
 	docker exec $(TARGET)_llvm_build bash -c 'mkdir -p /TASE && cp -r /install_root/* /TASE/ && cp -r /TASE_BUILD/install/* /TASE/install/ && cp -r /TASE_BUILD/parseltongue86 /TASE/'
-	docker tag $$(docker commit $(TARGET)_llvm_build | awk '{split($$0, m, /:/); print m[2]}') $(TARGET)
+	docker tag $$(docker commit $(TARGET)_llvm_build | awk '{split($$0, m, /:/); print m[2]}') $(shell echo $(TARGET) | tr '[:upper:]' '[:lower:]')
 	docker rm -f $(TARGET)_llvm_build
 	rm -f .tase_llvm_id
 

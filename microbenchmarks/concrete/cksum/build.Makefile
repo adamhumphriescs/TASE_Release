@@ -4,11 +4,13 @@ include $(BASE_DIR)/install/exports.Makefile
 BIN?=main
 ROOT?=/project
 OUTDIR?=/project/build
-TASE_CFLAGS=$(CFLAGS) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG)
 
 OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,$(basename $(wildcard *.c))))
 TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,$(basename $(wildcard *.c))))
 VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(wildcard *.c))))
+
+# included for Klee build requirements
+TASE_CFLAGS?=$(CFLAGS)  -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -DTASE_TEST  $(MODELED_FN_ARG_NOTSX) $(NO_FLOAT_ARG)
 
 
 all: $(OUTDIR)/$(BIN) finish
@@ -47,8 +49,6 @@ $(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
 .PHONY: finish
 finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars
 	mkdir -p $(OUTDIR)/bitcode/ $(OUTDIR)/$(RPATH)/ && rm -rf $(OUTDIR)/bitcode/*
-#	cp -p $$(ldd $(OUTDIR)/$(BIN) | awk '{print $$3}') $(OUTDIR)/$(RPATH)/
-#	cp -p $$(readlink -f $$(ldd $(OUTDIR)/$(BIN) | awk '{print $$3}')) $(OUTDIR)/$(RPATH)/
 	echo '#!/bin/bash' > $(OUTDIR)/run.sh
 	echo 'KLEE_RUNTIME_LIBRARY_PATH=$$(pwd)/bitcode/ ./$(BIN) -project=$(BIN) $${@}' >> $(OUTDIR)/run.sh
 	chmod +x $(OUTDIR)/run.sh

@@ -3,7 +3,6 @@ include /TASE/install/exports.Makefile
 BIN?=main
 ROOT?=/project
 OUTDIR?=/project/build
-TASE_CFLAGS=$(CFLAGS) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG)
 
 OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,$(basename $(wildcard *.c))))
 TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,$(basename $(wildcard *.c))))
@@ -13,12 +12,10 @@ VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(wildcard *.c))))
 all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
-	mkdir -p $(OUTDIR)/bitcode/
 	$(TASE_CLANG) $(TASE_CFLAGS) $< -o $@
 	objcopy --localize-hidden $@
 
 $(OUTDIR)/%.tase: $(OUTDIR)/%.o
-	cp /TASE/install/libtasec.syms $@
 	nm --defined-only $< | grep -i " t " | cut -d' ' -f 3 >> $@
 
 $(OUTDIR)/%.vars: $(OUTDIR)/%.o $(OUTDIR)/$(BIN)
@@ -29,7 +26,7 @@ $(OUTDIR)/everything.o: $(OBJS)
 	cd /TASE/install/ && ./localize.sh $(OUTDIR)/everything.o
 
 $(OUTDIR)/$(BIN).tase: $(TASE)
-	cat $(TASE) > $(OUTDIR)/tmp.tase
+	cat $(TASE) /TASE/install/libtasec.syms > $(OUTDIR)/tmp.tase
 	echo "begin_target_inner" >> $(OUTDIR)/tmp.tase
 	sort $(OUTDIR)/tmp.tase | uniq > $(OUTDIR)/$(BIN).tase && rm $(OUTDIR)/tmp.tase
 
@@ -40,7 +37,6 @@ $(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
 
 $(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
 	/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
-#$$(find /TASE/lib/ -name '*.a')
 
 .PHONY: finish
 finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars

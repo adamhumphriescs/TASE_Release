@@ -2,7 +2,10 @@ ROOT?=/project
 BIN?=main
 CFLAGS?=-O0
 USER=$$(id -u):$$(id -g)
-DOCKER=docker run --user $(USER) --rm --mount type=bind,src=$$(pwd),dst=/project/ tase bash
+CONTAINER=tasetest
+DOCKER=docker run --user $(USER) --rm --mount type=bind,src=$$(pwd),dst=/project/ $(CONTAINER) bash
+
+TSX?=
 
 SMALL=../harness.c
 LARGE=../GutenburgDictionary.txt
@@ -10,15 +13,10 @@ all: build/main build/obj.dump
 
 
 build/main:
-	$(DOCKER) -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" -f build.Makefile'
-#RPATH="lib"
+	$(DOCKER) -c 'cd $(ROOT) && make CFLAGS="$(CFLAGS)" TSX="$(TSX)" -f build.Makefile'
 
-test:
-	cd build/ && rm -f Monitor* && cp ../GutenburgDictionary.txt . && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false
 
-mixedtest:
-	cd build/ && rm -f Monitor* && ./run.sh -taseDebug -modelDebug -dontFork -taseManager=false -singleStepping -check-overshift=false  - ../harness.c
-
+.PHONY: build/obj.dump clean
 build/obj.dump: build/main
 	objdump -C -D -w -M suffix -j .text build/main > build/obj.dump
 
@@ -26,13 +24,20 @@ clean:
 	rm -rf build/* res*.txt interpres*.txt mixedres*.txt
 
 
-
 #.PRECIOUS:build/Monitor.interp% interp_time% build/Monitor.mixed% mixed_time% mixedres%.txt interpres%.txt
 build/Monitor.interp% interp_time%:
+ifeq ($(TSX), 1)
+	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>1 ; } 2> ../interp_time$*'
+else
 	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>1 ; } 2> ../interp_time$*'
+endif
 
 build/Monitor.mixed% mixed_time%:
+ifeq ($(TSX), 1)
+	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -check-overshift=false -modelDebug -log=$(notdir $@) - $(LARGE) 2>1 ; } 2> ../mixed_time$*'
+else
 	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(LARGE) 2>1 ; } 2> ../mixed_time$*'
+endif
 
 ref.txt:
 	cd build/ && cksum $(LARGE) > ../ref.txt

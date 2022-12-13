@@ -3,7 +3,6 @@ include /TASE/install/exports.Makefile
 BIN?=main
 ROOT?=/project
 OUTDIR?=/project/build
-TASE_CFLAGS=$(CFLAGS) -Wall -Werror -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG)
 
 OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,harness))
 TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,harness))

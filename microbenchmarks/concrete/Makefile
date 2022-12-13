@@ -5,6 +5,8 @@ dirs=$(realpath $(wildcard */))
 results=$(addsuffix /resx5.txt,$(dirs))
 shortresults=$(addsuffix /res.txt,$(dirs))
 
+TSX?=
+
 all: results.txt
 
 .PHONY: clean %.clean
@@ -17,7 +19,7 @@ progs: $(addsuffix /build/main,$(dirs))
 
 
 %/build/main: %
-	$(MAKE) CFLAGS="$(CFLAGS)" -C $< build/main
+	$(MAKE) CONTAINER=$(CONTAINER) CFLAGS="$(CFLAGS)" TSX="$(TSX)" -C $< build/main
 
 results.txt: $(results)
 	cat $(results) > results.txt
@@ -26,7 +28,7 @@ shortresults.txt: $(shortresults)
 	cat $(shortresults) > shortresults.txt
 
 %/resx5.txt: progs
-	$(MAKE) -C $* resx5.txt
+	$(MAKE) CONTAINER=$(CONTAINER) -C $* resx5.txt
 
 %/res.txt: progs
-	$(MAKE) -C $* res.txt
+	$(MAKE) CONTAINER=$(CONTAINER) -C $* res.txt

@@ -3,44 +3,42 @@ include /TASE/install/exports.Makefile
 BIN?=main
 ROOT?=/project
 OUTDIR?=/project/build
-TASE_CFLAGS=$(CFLAGS) -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -DTASE_TEST  $(MODELED_FN_ARG) $(NO_FLOAT_ARG)
-
-CFILES=factor.c harness.c make_byte_symbolic.c mini-gmp.c readtokens.c xmalloc.c xalloc-die.c
+#CFILES=harness.c make_byte_symbolic.c mini-gmp.c readtokens.c xmalloc.c xalloc-die.c factor.c
+CFILES=$(wildcard *.c)
 OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,$(basename $(CFILES))))
 TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,$(basename $(CFILES))))
 VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(CFILES))))
 
 
-all: $(OUTDIR)/$(BIN) finish
+all: finish
 
 $(OUTDIR)/%.o: %.c
-	mkdir -p $(OUTDIR)/bitcode/
 	$(TASE_CLANG) $(TASE_CFLAGS) -U __amd64__ $< -o $@
 	objcopy --localize-hidden $@
 
-$(OUTDIR)/%.tase: $(OUTDIR)/%.o
-	cp /TASE/install/libtasec.syms $@
+$(OUTDIR)/%.tase: $(OUTDIR)/%.o $(OUTDIR)/$(BIN)
 	nm --defined-only $< | grep -i " t " | cut -d' ' -f 3 >> $@
 
 $(OUTDIR)/%.vars: $(OUTDIR)/%.o $(OUTDIR)/$(BIN)
 	python3 /TASE/parseltongue86/rosettastone.py $(OUTDIR)/$(BIN) -f $< > $@
 
 $(OUTDIR)/everything.o: $(OBJS)
-	ld -r $(OBJS) /TASE/lib/musl.o -o $(OUTDIR)/everything.o
+	ld -o $(OUTDIR)/everything.o -r $(OBJS) /TASE/lib/musl.o 
 	cd /TASE/install/ && ./localize.sh $(OUTDIR)/everything.o
 
 $(OUTDIR)/$(BIN).tase: $(TASE)
-	cat $(TASE) > $(OUTDIR)/tmp.tase
+	cat $(TASE) /TASE/install/libtasec.syms $(OUTDIR)/factor.tase > $(OUTDIR)/tmp.tase
 	echo "begin_target_inner" >> $(OUTDIR)/tmp.tase
 	sort $(OUTDIR)/tmp.tase | uniq > $(OUTDIR)/$(BIN).tase && rm $(OUTDIR)/tmp.tase
 
-$(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
+$(OUTDIR)/$(BIN).vars: $(VARS)
 	readelf --relocs $(OUTDIR)/$(BIN)| grep GLOB_DAT | awk '{print $$1, "0x8"; print $$4, "0x10"}' > vars.tmp
-	cat $(VARS) vars.tmp | sort | uniq > $(OUTDIR)/$(BIN).vars
+	cat $(VARS) $(OUTDIR)/factor.vars vars.tmp | sort | uniq > $(OUTDIR)/$(BIN).vars
 	rm vars.tmp
 
 $(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
-	/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $$(find /TASE/lib/ -name '*.a') $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
+	/usr/bin/c++  -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $$(find /TASE/lib/ -name '*.a') $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
+
 
 .PHONY: finish
 finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars
