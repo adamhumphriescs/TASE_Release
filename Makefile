@@ -29,17 +29,19 @@ tase_llvm: base_llvm .tase_llvm_id
 
 
 tase: .tase_llvm_id
+	mkdir -p install_root/install/klee_bitcode/
+	docker exec $(TARGET)_llvm_build bash -c 'cp -r /TASE_BUILD/install/* /install_root/install/'
 	docker exec $(USER) $(TARGET)_llvm_build bash -c 'cd /TASE_BUILD/install && make -j 16 RUN_DIR=/install_root setup && make parseltongue'
 
 
 container: .tase_llvm_id
-	docker exec $(TARGET)_llvm_build bash -c 'mkdir -p /TASE && cp -r /install_root/* /TASE/ && cp -r /TASE_BUILD/install/* /TASE/install/ && cp -r /TASE_BUILD/parseltongue86 /TASE/'
+	docker exec $(TARGET)_llvm_build bash -c 'mkdir -p /TASE/ && cp -r /install_root/* /TASE/ && cp -r /TASE_BUILD/parseltongue86 /TASE/'
 	docker tag $$(docker commit $(TARGET)_llvm_build | awk '{split($$0, m, /:/); print m[2]}') $(shell echo $(TARGET) | tr '[:upper:]' '[:lower:]')
 	docker rm -f $(TARGET)_llvm_build
 	rm -f .tase_llvm_id
 
 clean:
-	make -C musl clean && rm -rf build/* install_root/* && docker rm -f tase_llvm_build && rm -f .tase_llvm_id
+	make -C musl clean && rm -rf build/* install_root/* && docker rm -f $(TARGET)_llvm_build && rm -f .tase_llvm_id
 
 
 reset:

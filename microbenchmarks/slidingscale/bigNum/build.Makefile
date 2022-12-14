@@ -1,3 +1,4 @@
+BASE_DIR?=/TASE
 include /TASE/install/exports.Makefile
 
 BIN?=main
@@ -24,7 +25,11 @@ $(OUTDIR)/%.vars: $(OUTDIR)/%.o $(OUTDIR)/$(BIN)
 	python3 /TASE/parseltongue86/rosettastone.py $(OUTDIR)/$(BIN) -f $< > $@
 
 $(OUTDIR)/everything.o: $(OBJS)
-	ld -r $(OBJS) /TASE/lib/musl.o -o $(OUTDIR)/everything.o
+ifeq ($(TSX), 1)
+	ld -r $(OBJS) $(BASE_DIR)/lib/musl.o -o $(OUTDIR)/everything.o
+else
+	ld -r $(OBJS) $(BASE_DIR)/lib/musl_notsx.o -o $(OUTDIR)/everything.o
+endif
 	cd /TASE/install/ && ./localize.sh $(OUTDIR)/everything.o
 
 $(OUTDIR)/$(BIN).tase: $(TASE)
@@ -37,9 +42,10 @@ $(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
 	cat $(VARS) vars.tmp | sort | uniq > $(OUTDIR)/$(BIN).vars
 	rm vars.tmp
 
+
 $(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
 	/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Werror -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
-#$$(find /TASE/lib/ -name '*.a')
+
 
 .PHONY: finish
 finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars

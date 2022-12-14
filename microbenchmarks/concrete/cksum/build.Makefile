@@ -29,9 +29,9 @@ $(OUTDIR)/%.vars: $(OUTDIR)/%.o $(OUTDIR)/$(BIN)
 
 $(OUTDIR)/everything.o: $(OBJS)
 ifeq ($(TSX), 1)
-	ld -r $(OBJS) /TASE/lib/musl.o -o $(OUTDIR)/everything.o
+	ld -r $(OBJS) $(BASE_DIR)/lib/musl.o -o $(OUTDIR)/everything.o
 else
-	ld -r $(OBJS) /TASE/lib/musl_notsx.o -o $(OUTDIR)/everything.o
+	ld -r $(OBJS) $(BASE_DIR)/lib/musl_notsx.o -o $(OUTDIR)/everything.o
 endif
 	cd $(BASE_DIR)/install/ && ./localize.sh $(OUTDIR)/everything.o
 
@@ -46,7 +46,7 @@ $(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
 	rm vars.tmp
 
 $(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
-	/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $$(find /TASE/lib/ -name '*.a') $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
+	/usr/bin/c++ -T$(BASE_DIR)/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I$(BASE_DIR)/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic $(BASE_DIR)/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $$(find $(BASE_DIR)/lib/ -name '*.a') $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
 
 #LD_RUN_PATH='$ORIGIN/$(RPATH)'   -Wl,-rpath $(RPATH) 
 
@@ -57,14 +57,14 @@ finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars
 	echo 'KLEE_RUNTIME_LIBRARY_PATH=$$(pwd)/bitcode/ ./$(BIN) -project=$(BIN) $${@}' >> $(OUTDIR)/run.sh
 	chmod +x $(OUTDIR)/run.sh
 	cd $(OUTDIR)/ && ./run.sh -tasePreProcess=TRUE
-	cp /TASE/install/compile.sh $(OUTDIR)/
-	cp /TASE/install/klee_bitcode/* $(OUTDIR)/bitcode/
-	cd $(ROOT) && python3 /TASE/parseltongue86/parseltongue86.py -n -f $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN) /TASE/include/tase/ $(BIN) -t 40 
+	cp $(BASE_DIR)/install/compile.sh $(OUTDIR)/
+	cp $(BASE_DIR)/install/klee_bitcode/* $(OUTDIR)/bitcode/
+	cd $(ROOT) && python3 $(BASE_DIR)/parseltongue86/parseltongue86.py -n -f $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN) $(BASE_DIR)/include/tase/ $(BIN) -t 40 
 	cd $(OUTDIR) && ls bitcode/ | grep .cpp$ | xargs -n1 -P20 -I{} ./compile.sh bitcode/{}
 
 	if [ $$(find $(OUTDIR)/bitcode/ -name '$(BIN).interp.*.bc' | wc -l) -gt 1 ]; \
 	then\
-		/TASE/llvm-3.4.2/bin/llvm-link $$(find $(OUTDIR)/bitcode/ -name '$(BIN).interp.*.bc') -o $(OUTDIR)/bitcode/$(BIN).interp.bc;\
+		$(BASE_DIR)/llvm-3.4.2/bin/llvm-link $$(find $(OUTDIR)/bitcode/ -name '$(BIN).interp.*.bc') -o $(OUTDIR)/bitcode/$(BIN).interp.bc;\
 	else\
 		mv $(OUTDIR)/bitcode/$(BIN).interp.0.bc $(OUTDIR)/bitcode/$(BIN).interp.bc;\
 	fi

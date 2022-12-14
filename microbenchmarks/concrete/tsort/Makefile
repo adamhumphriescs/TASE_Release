@@ -22,7 +22,7 @@ build/obj.dump: build/main
 clean:
 	rm -rf build/* res*.txt interpres*.txt mixedres*.txt
 
-#.PRECIOUS: build/Monitor.interp% interp_time% build/Monitor.mixed% mixed_time% 
+.PRECIOUS: build/Monitor.interp% interp_time% build/Monitor.mixed% mixed_time% 
 build/Monitor.interp% interp_time%:
 ifeq ($(TSX), 1)
 	$(DOCKER) -c 'cd /project/build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>1 ; } 2> ../interp_time$*'
