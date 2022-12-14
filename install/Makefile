@@ -52,7 +52,7 @@ parseltongue:
 
 
 .PHONY: klee
-klee: $(LIBTASE) $(RUN_DIR)/lib/musl.o $(BUILD_DIR)/build/klee/lib/everything.o $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
+klee: $(LIBTASE) $(RUN_DIR)/lib/musl.o $(RUN_DIR)/lib/musl_notxs.o $(BUILD_DIR)/build/klee/lib/everything.o $(RUN_DIR)/lib/libstp.a $(RUN_DIR)/lib/libminisat.a
 	mkdir -p $(BUILD_DIR)/build/klee
 	$(MAKE) -C $(BUILD_DIR)/klee/
 
@@ -83,8 +83,17 @@ $(RUN_DIR)/lib/musl.o:
 	rm -rf ltbuild
 	rm libtasec.a
 
+$(RUN_DIR)/lib/musl_notsx.o:
+        cp $(MUSL_PATH)/TASEConfig/config.mak_no_simd $(MUSL_PATH)/config.mak
+        env PATH="$(RUN_DIR)/bin:$${PATH}" $(MAKE) MODELED_FN_ARG=$(MODELED_FN_ARG_NOTSX) -C $(MUSL_PATH)
+        ar crs libtasec.a $(MUSL_OBJS)
+        mkdir -p ltbuild lib
+        cd ltbuild && ar -x ../libtasec.a && ld -o $(RUN_DIR)/lib/musl_notsx.o -r *.o
+        rm -rf ltbuild
+        rm libtasec.a
 
-$(BUILD_DIR)/build/klee/lib/everything.o: $(RUN_DIR)/lib/musl.o
+
+$(BUILD_DIR)/build/klee/lib/everything.o: $(RUN_DIR)/lib/musl.o $(RUN_DIR)/lib/musl_notsx.o
 	mkdir -p $(BUILD_DIR)/build/klee/lib/
 	$(MAKE) -C $(BUILD_DIR)/microbenchmarks/concrete/cksum/ -f build.Makefile ROOT=$(BUILD_DIR)/build/cksum OUTDIR=$(BUILD_DIR)/build/cksum/build $(BUILD_DIR)/build/cksum/build/everything.o BASE_DIR=/TASE_BUILD
 	mv $(BUILD_DIR)/build/cksum/build/everything.o $(BUILD_DIR)/build/klee/lib/
