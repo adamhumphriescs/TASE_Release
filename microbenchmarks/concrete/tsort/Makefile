@@ -2,6 +2,7 @@ ROOT?=/project
 BIN?=main
 CFLAGS?=-O0
 USER=--user $$(id -u):$$(id -g)
+CONTAINER?=tasetest
 DOCKER=docker run $(USER) --rm --mount type=bind,src=$$(pwd),dst=/project/ $(CONTAINER) bash
 
 TSX?=

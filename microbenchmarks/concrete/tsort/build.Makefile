@@ -24,7 +24,11 @@ $(OUTDIR)/%.vars: $(OUTDIR)/%.o $(OUTDIR)/$(BIN)
 	python3 /TASE/parseltongue86/rosettastone.py $(OUTDIR)/$(BIN) -f $< > $@
 
 $(OUTDIR)/everything.o: $(OBJS)
+ifeq ($(TSX), 1)
 	ld -r $(OBJS) /TASE/lib/musl.o -o $(OUTDIR)/everything.o
+else
+	ld -r $(OBJS) /TASE/lib/musl_notsx.o -o $(OUTDIR)/everything.o
+endif
 	cd /TASE/install/ && ./localize.sh $(OUTDIR)/everything.o
 
 $(OUTDIR)/$(BIN).tase: $(TASE)
@@ -35,7 +39,6 @@ $(OUTDIR)/$(BIN).tase: $(TASE)
 
 $(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
 	readelf -a $(OUTDIR)/$(BIN)| grep GLOB_DAT | awk '{if($$1!="000000000000"){print $$1, "0x8"} if($$4!="0000000000000000"){ print $$4, "0x10"}}' > vars.tmp
-#	objdump -D -j .plt $(OUTDIR)/$(BIN) | grep @plt | awk '{print $$1, "0x10"}' >> vars.tmp
 	cat $(VARS) vars.tmp | sort | uniq > $(OUTDIR)/$(BIN).vars
 	rm vars.tmp
 

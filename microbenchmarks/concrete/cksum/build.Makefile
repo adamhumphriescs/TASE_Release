@@ -28,7 +28,11 @@ $(OUTDIR)/%.vars: $(OUTDIR)/%.o $(OUTDIR)/$(BIN)
 	python3 /TASE/parseltongue86/rosettastone.py $(OUTDIR)/$(BIN) -f $< > $@
 
 $(OUTDIR)/everything.o: $(OBJS)
-	ld -r $(OBJS) $(RUN_DIR)/lib/musl.o -o $(OUTDIR)/everything.o
+ifeq ($(TSX), 1)
+	ld -r $(OBJS) /TASE/lib/musl.o -o $(OUTDIR)/everything.o
+else
+	ld -r $(OBJS) /TASE/lib/musl_notsx.o -o $(OUTDIR)/everything.o
+endif
 	cd $(BASE_DIR)/install/ && ./localize.sh $(OUTDIR)/everything.o
 
 $(OUTDIR)/$(BIN).tase: $(TASE)
