@@ -24,14 +24,14 @@ ifeq ($(TSX), 1)
 	cd build && \
 	for i in {0..50000..1000}; \
 	do \
-	{ time ./run.sh -optimizeConstMemOps=TRUE -use-forked-solver=FALSE -rewrite-equalities=FALSE -use-independent-solver=TRUE   -use-cex-cache=TRUE -use-cache=FALSE -retryMax=1 -tranBBMax=16 -modelDebug=FALSE -useCMS4=FALSE -use-legacy-independent-solver=TRUE -UseCanonicalization=TRUE -check-overshift=FALSE -log=false - $$i 50000 1 2>1 >/dev/null ; } 2>&1 | grep user | awk '{print $$i, $$2}' >> ../res$* ; \
+	{ time ./run.sh -optimizeConstMemOps=TRUE -use-forked-solver=FALSE -rewrite-equalities=FALSE -use-independent-solver=TRUE   -use-cex-cache=TRUE -use-cache=FALSE -retryMax=1 -tranBBMax=16 -modelDebug=FALSE -useCMS4=FALSE -use-legacy-independent-solver=TRUE -UseCanonicalization=TRUE -check-overshift=FALSE -log=false - $$i 50000 1 2>1 >/dev/null ; } 2>&1 | grep user | awk '{print "'"$$i"'", $$2}' >> ../res$* ; \
 done
 
 else
 	cd build && \
 	for i in {0..50000..1000}; \
 	do \
-	{ time ./run.sh -optimizeConstMemOps=TRUE -use-forked-solver=FALSE -rewrite-equalities=FALSE -use-independent-solver=TRUE   -use-cex-cache=TRUE -use-cache=FALSE -retryMax=1 -tranBBMax=16 -modelDebug=FALSE -useCMS4=FALSE  -use-legacy-independent-solver=TRUE -UseCanonicalization=TRUE -check-overshift=FALSE -singleStepping -log=false - $$i 50000 1 2>1 >/dev/null ; } 2>&1 | grep user | awk '{print $$i, $$2}' >> ../res$* ; \
+	{ time ./run.sh -optimizeConstMemOps=TRUE -use-forked-solver=FALSE -rewrite-equalities=FALSE -use-independent-solver=TRUE   -use-cex-cache=TRUE -use-cache=FALSE -retryMax=1 -tranBBMax=16 -modelDebug=FALSE -useCMS4=FALSE  -use-legacy-independent-solver=TRUE -UseCanonicalization=TRUE -check-overshift=FALSE -singleStepping -log=false - $$i 50000 1 2>1 >/dev/null ; } 2>&1 | grep user | awk '{print "'"$$i"'", $$2}' >> ../res$* ; \
 	done
 endif
 
