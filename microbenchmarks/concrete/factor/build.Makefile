@@ -13,6 +13,7 @@ VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(CFILES))))
 all: finish
 
 $(OUTDIR)/%.o: %.c
+	mkdir -p $(OUTDIR)/bitcode/
 	$(TASE_CLANG) $(TASE_CFLAGS) -U __amd64__ $< -o $@
 	objcopy --localize-hidden $@
 

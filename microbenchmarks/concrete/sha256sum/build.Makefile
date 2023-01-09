@@ -12,6 +12,7 @@ VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(wildcard *.c))))
 all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
+	mkdir -p $(OUTDIR)/bitcode/
 	$(TASE_CLANG) $(TASE_CFLAGS) $< -o $@
 	objcopy --localize-hidden $@
 
@@ -44,7 +45,7 @@ $(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
 
 .PHONY: finish
 finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars
-	mkdir -p $(OUTDIR)/bitcode/ && rm -rf $(OUTDIR)/bitcode/*
+	rm -rf $(OUTDIR)/bitcode/*
 	echo '#!/bin/bash' > $(OUTDIR)/run.sh
 	echo 'KLEE_RUNTIME_LIBRARY_PATH=$$(pwd)/bitcode/ ./$(BIN) -project=$(BIN) $${@}' >> $(OUTDIR)/run.sh
 	chmod +x $(OUTDIR)/run.sh

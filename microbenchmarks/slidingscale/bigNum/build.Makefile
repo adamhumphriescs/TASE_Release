@@ -9,12 +9,14 @@ OBJS=$(addprefix $(OUTDIR)/,$(addsuffix .o,harness))
 TASE=$(addprefix $(OUTDIR)/,$(addsuffix .tase,harness))
 VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,harness))
 
+GLIBC_PATH=/external/lib/
+GLIBC_HEADERS=/external/header/
 
 all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
-	$(TASE_CLANG) $(TASE_CFLAGS) $< -o $@
+	$(TASE_CLANG) -I $(GLIBC_HEADERS) $(TASE_CFLAGS) $< -o $@
 	objcopy --localize-hidden $@
 
 $(OUTDIR)/%.tase: $(OUTDIR)/%.o
@@ -44,7 +46,7 @@ $(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
 
 
 $(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
-	/usr/bin/c++ -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Werror -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
+	/usr/bin/c++ -L $(GLIBC_PATH) -T/TASE/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I/TASE/include/openssl/ -Wall -Wextra -Werror -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic /TASE/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
 
 
 .PHONY: finish

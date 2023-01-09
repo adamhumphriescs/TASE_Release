@@ -13,7 +13,7 @@ VARS=$(addprefix $(OUTDIR)/,$(addsuffix .vars,$(basename $(wildcard *.c))))
 TASE_CFLAGS?=$(CFLAGS)  -c -I$(INCLUDE_DIR)/tase/ -I$(INCLUDE_DIR)/traps/ -DTASE_TEST  $(MODELED_FN_ARG_NOTSX) $(NO_FLOAT_ARG)
 
 
-all: $(OUTDIR)/$(BIN) finish
+all: $(OUTDIR)/everything.o finish
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
@@ -45,10 +45,8 @@ $(OUTDIR)/$(BIN).vars: $(VARS) $(OUTDIR)/$(BIN)
 	cat $(VARS) vars.tmp | sort | uniq > $(OUTDIR)/$(BIN).vars
 	rm vars.tmp
 
-$(OUTDIR)/$(BIN): $(OUTDIR)/everything.o
-	/usr/bin/c++ -T$(BASE_DIR)/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I$(BASE_DIR)/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic $(BASE_DIR)/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $$(find $(BASE_DIR)/lib/ -name '*.a') $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -lstdc++ -Wl,--end-group
-
-#LD_RUN_PATH='$ORIGIN/$(RPATH)'   -Wl,-rpath $(RPATH) 
+$(OUTDIR)/$(BIN):
+	/usr/bin/c++ -T$(BASE_DIR)/tase_link.ld -fno-pie -no-pie -D_GLIBCXX_USE_CXX11_ABI=0 -I$(BASE_DIR)/include/openssl/ -Wall -Wextra -Wno-unused-parameter -O0 -o $(OUTDIR)/$(BIN)  -rdynamic $(BASE_DIR)/lib/main.cpp.o $(OUTDIR)/everything.o -Wl,--start-group $$(find $(BASE_DIR)/lib/ -name '*.a') $(LLVM_LIBS) $(KLEE_LINK_LIBS) -lz -lpthread -ltinfo -ldl -lm -static-libstdc++ -static-libgcc -Wl,--end-group
 
 .PHONY: finish
 finish: $(OUTDIR)/$(BIN) $(OUTDIR)/$(BIN).tase $(OUTDIR)/$(BIN).vars

@@ -47,7 +47,6 @@ setup: klee cleanup
 
 .PHONY: parseltongue
 parseltongue:
-#	cp -r $(BUILD_DIR)/parseltongue86/ $(RUN_DIR)/parseltongue86/
 	cd $(BUILD_DIR)/parseltongue86/ && ./setup.sh
 
 
