@@ -12,12 +12,12 @@ TASE_DIR=$(BUILD_DIR)/tase
 export TASE_LINK=$(RUN_DIR)/tase_link.ld
 
 
-ifndef TASE_TSX
-export LIBTASE=libtase_notsx.a
-export KLEE_LINK=link_notsx.txt
-else
+ifeq ($(TSX), 1)
 export LIBTASE=libtase.a
 export KLEE_LINK=link.txt
+else
+export LIBTASE=libtase_notsx.a
+export KLEE_LINK=link_notsx.txt
 endif
 
 

@@ -1,4 +1,6 @@
 BASE_DIR?=/TASE
+
+TSX?=0
 include /TASE/install/exports.Makefile
 
 BIN?=main
