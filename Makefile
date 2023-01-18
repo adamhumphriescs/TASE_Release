@@ -37,8 +37,8 @@ container: .tase_llvm_id
 	rm -f .tase_llvm_id
 
 clean:
-	make -C musl clean && make -C binutils-gdb clean && rm -rf build/* install_root/* && docker rm -f $(TARGET)_llvm_build && rm -f .tase_llvm_id
-
+	make -C musl clean && rm -rf build/* install_root/* && docker rm -f $(TARGET)_llvm_build && rm -f .tase_llvm_id
+#make -C binutils-gdb clean &&
 
 reset:
 	rm -rf install_root/* build/klee/ build/tase/ build/cksum/

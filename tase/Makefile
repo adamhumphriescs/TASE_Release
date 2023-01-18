@@ -5,12 +5,14 @@ TASE_OBJSA=$(addsuffix .o,$(addprefix $(DST)/springboard/,$(basename $(notdir $(
 
 TASE_OBJSA2=$(addsuffix .o,$(addprefix $(DST)/springboard/,$(basename $(notdir $(wildcard $(SRC)/tase/springboard/*.c) $(wildcard $(SRC)/tase/springboard/springboard_notsx.S)))))
 
+MBS_OBJ=$(addsuffix .o,$(addprefix $(DST)/mbs/,$(basename $(notdir $(wildcard $(SRC)/tase/mbs/*.c)))))
+
 TASE_OBJSB=$(addsuffix .o,$(addprefix $(DST)/,$(basename $(notdir $(wildcard $(SRC)/tase/*.c)))))
 
 TASE_SHIMOBJS=$(DST)/traps/tase_shims.o
 
-TASE_OBJS=$(TASE_OBJSA) $(TASE_OBJSB) $(TASE_SHIMOBJS) $(SFLOAT_OBJS)
-TASE_OBJS2=$(TASE_OBJSA2) $(TASE_OBJSB) $(TASE_SHIMOBJS) $(SFLOAT_OBJS)
+TASE_OBJS=$(TASE_OBJSA) $(TASE_OBJSB) $(TASE_SHIMOBJS) $(SFLOAT_OBJS) $(MBS_OBJ)
+TASE_OBJS2=$(TASE_OBJSA2) $(TASE_OBJSB) $(TASE_SHIMOBJS) $(SFLOAT_OBJS) $(MBS_OBJ)
 
 SFLOAT_OBJS=$(addprefix $(DST)/compiler-rt_soft_float/,$(addsuffix .o,$(basename $(notdir $(wildcard $(SRC)/compiler-rt_soft_float/*.c)))))
 
@@ -28,7 +30,7 @@ $(RUN_DIR)/lib/libtase_notsx.a: dirs $(TASE_OBJS2)
 
 .phony: dirs
 dirs:
-	mkdir -p $(DST)/traps/ $(DST)/compiler-rt_soft_float/ $(DST)/springboard/ $(RUN_DIR)/lib/
+	mkdir -p $(DST)/traps/ $(DST)/compiler-rt_soft_float/ $(DST)/springboard/ $(RUN_DIR)/lib/ $(DST)/mbs/
 
 $(DST)/springboard/%.o: $(SRC)/tase/springboard/%.c
 	$(TASE_CLANG) -fPIC -c -O1 -DTASE_TSX -DTASE_ENABLE=1 -I$(INCLUDE_DIR)/tase/  $(MODELED_FN_ARG) $< -o $@
@@ -39,6 +41,9 @@ $(DST)/springboard/%.o: $(SRC)/tase/springboard/%.S
 
 $(DST)/%.o: $(SRC)/tase/%.c
 	$(CLANG) -fPIC -c -O1 -I$(INCLUDE_DIR)/tase/ $< -o $@
+
+$(DST)/mbs/%.o: $(SRC)/tase/mbs/%.c
+	$(TASE_CLANG) -fPIC -c -O1 -I$(INCLUDE_DIR)/tase/  $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
 
 $(DST)/traps/%.o: $(SRC)/tase/traps/%.c
 	$(TASE_CLANG) -fPIC -c -O0 -I$(INCLUDE_DIR)/tase/ $(NO_FLOAT_ARG) $(MODELED_FN_ARG) $< -o $@
