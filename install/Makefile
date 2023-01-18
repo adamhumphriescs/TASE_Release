@@ -1,6 +1,6 @@
 include exports.Makefile
 
-INCLUDES=$(addprefix $(INCLUDE_DIR)/tase/,$(notdir $(wildcard $(BUILD_DIR)/tase/include/*.h)))
+INCLUDES=$(addprefix $(INCLUDE_DIR)/tase/,$(notdir $(wildcard $(BUILD_DIR)/tase/include/tase/*.h)))
 
 LIBTASEC_PATH=$(BUILD_DIR)/test/libc
 MUSL_PATH=$(BUILD_DIR)/musl
@@ -19,7 +19,7 @@ MINISAT_OPTS=-DSTATIC_BINARIES=ON -DCMAKE_INSTALL_PREFIX="$(RUN_DIR)"
 STP_OPTS=-DBUILD_SHARED_LIBS:BOOL=OFF -DENABLE_PYTHON_INTERFACE:BOOL=OFF -DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DUSE_CRYPTOMINISAT4:BOOL=OFF -DNO_BOOST:BOOL=ON
 
 # tsx_llvm cmake
-TSX_LLVM_OPTS=-DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DCMAKE_BUILD_TYPE="Debug" -DCMAKE_C_FLAGS="-fdiagnostics-color=always -fmax-errors=3" -DCMAKE_CXX_FLAGS="-fdiagnostics-color=always -fmax-errors=3" -DLLVM_USE_LINKER="gold" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_PROJECTS="clang" -DBUILD_SHARED_LIBS=FALSE -DLLVM_OPTIMIZED_TABLEGEN=TRUE -DLLVM_INCLUDE_EXAMPLES=FALSE -DLLVM_INCLUDE_TESTS=FALSE -DLLVM_INCLUDE_GO_TESTS=FALSE -DLLVM_INCLUDE_BENCHMARKS=FALSE -DLLVM_INCLUDE_DOCS=FALSE -DLLVM_ENABLE_OCAMLDOC=FALSE -DLLVM_ENABLE_BINDINGS=FALSE -DLLVM_INCLUDE_UTILS=FALSE -DLLVM_INCLUDE_RUNTIMES=FALSE -DLLVM_BUILD_STATIC=FALSE -DTASE_INCLUDE_DIR="$(INCLUDE_DIR)" -DPYTHON_EXECUTABLE="/usr/bin/python2" -DPYTHON_VERSION_STRING="2.7.18" -DCXX_STANDARD="C++17"
+TSX_LLVM_OPTS=-DCMAKE_INSTALL_PREFIX="$(RUN_DIR)" -DCMAKE_BUILD_TYPE="Debug" -DCMAKE_C_FLAGS="-fdiagnostics-color=always -fmax-errors=3" -DCMAKE_CXX_FLAGS="-fdiagnostics-color=always -fmax-errors=3 -std=c++17" -DLLVM_USE_LINKER="gold" -DLLVM_TARGETS_TO_BUILD="X86" -DLLVM_ENABLE_PROJECTS="clang" -DBUILD_SHARED_LIBS=FALSE -DLLVM_OPTIMIZED_TABLEGEN=TRUE -DLLVM_INCLUDE_EXAMPLES=FALSE -DLLVM_INCLUDE_TESTS=FALSE -DLLVM_INCLUDE_GO_TESTS=FALSE -DLLVM_INCLUDE_BENCHMARKS=FALSE -DLLVM_INCLUDE_DOCS=FALSE -DLLVM_ENABLE_OCAMLDOC=FALSE -DLLVM_ENABLE_BINDINGS=FALSE -DLLVM_INCLUDE_UTILS=FALSE -DLLVM_INCLUDE_RUNTIMES=FALSE -DLLVM_BUILD_STATIC=FALSE -DTASE_INCLUDE_DIR="$(INCLUDE_DIR)" -DPYTHON_EXECUTABLE="/usr/bin/python2" -DPYTHON_VERSION_STRING="2.7.18" -DCXX_STANDARD="C++17" -DCXX_COMPILER="g++"
 
 
 # for cleanup - we don't need these tools in the container but they are built with TASE_CLANG
@@ -32,11 +32,11 @@ tase_clang: $(TASE_CLANG) parseltongue
 $(TASE_CLANG): $(INCLUDES)
 	mkdir -p $(BUILD_DIR)/build/llvm/
 	cd $(BUILD_DIR)/build/llvm/ && cmake $(TSX_LLVM_OPTS) $(BUILD_DIR)/llvm
-	$(MAKE) -C $(BUILD_DIR)/build/llvm/
+	$(MAKE) -vvv -C $(BUILD_DIR)/build/llvm/
 	$(MAKE) -C $(BUILD_DIR)/build/llvm/ install
+	cp $(BUILD_DIR)/ExtAPI.json /install_root/lib/
 
-
-$(INCLUDE_DIR)/tase/%.h: $(BUILD_DIR)/tase/include/%.h
+$(INCLUDE_DIR)/tase/%.h: $(BUILD_DIR)/tase/include/tase/%.h
 	mkdir -p $(INCLUDE_DIR)/tase/
 	cp $< $@ 
 
@@ -117,13 +117,3 @@ $(RUN_DIR)/lib/libminisat.a:
 cleanup:
 	rm -f $(RUN_DIR)/lib/libLL*.a $(RUN_DIR)/lib/libclang* $(RUN_DIR)/lib/*.so* $(RUN_DIR)/bin/ll* $(RUN_DIR)/bin/minisat* $(RUN_DIR)/bin/s* $(addprefix $(RUN_DIR)/bin/,$(BIN_RM))
 
-
-
-
-# openssl cmake
-#SSL_OPTS=--prefix="$(RUN_DIR)" --openssldir="$(RUN_DIR)" -DPURIFY -DCLIVER -DTASE_TSX $(MODELED_FN_ARG) -I$(INCLUDE_DIR)/tase/ -T$(TASE_LINK) $(NO_FLOAT_ARG) -mllvm -verify-regalloc -mllvm -verify-machineinstrs -mllvm -x86-tase-paranoid-control-flow=true -O1 -Qunused-arguments no-asm no-engine no-err no-gmp no-hw no-hardware no-locking no-shared no-threads no-zlib no-cast no-comp no-dso no-dtls no-dtls1 no-md4 no-mdc2 no-nextprotoneg no-npn no-psk no-ripemd no-srtp no-ssl2 no-weak-ssl-ciphers
-
-#.PHONY: openssl
-#openssl:
-#	cd openssl && ./config $(SSL_OPTS)
-#	$(MAKE) -C $(BUILD_DIR)/openssl/ build_taseall
