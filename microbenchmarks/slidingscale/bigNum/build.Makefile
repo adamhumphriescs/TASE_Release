@@ -18,7 +18,7 @@ all: $(OUTDIR)/$(BIN) finish
 
 $(OUTDIR)/%.o: %.c
 	mkdir -p $(OUTDIR)/bitcode/
-	$(TASE_CLANG) -I $(GLIBC_HEADERS) $(TASE_CFLAGS) $< -o $@
+	$(TASE_CLANG) -I $(TASE_CFLAGS) $< -o $@
 	objcopy --localize-hidden $@
 
 $(OUTDIR)/%.tase: $(OUTDIR)/%.o

@@ -19,7 +19,7 @@ progs: $(addsuffix /build/main,$(dirs))
 
 
 %/build/main: %
-	$(MAKE) CONTAINER=$(CONTAINER) CFLAGS="$(CFLAGS)" TSX="$(TSX)" -C $< build/main
+	$(MAKE) CONTAINER=$(CONTAINER) CFLAGS="$(CFLAGS)" TSX=$(TSX) -C $< build/main
 
 results.txt: $(results)
 	cat $(results) > results.txt
