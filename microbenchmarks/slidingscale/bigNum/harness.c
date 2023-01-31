@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include "tasetraps.h"
 
+extern void make_byte_symbolic(void* addr);
+
 /*void __attribute__((noinline)) make_byte_symbolic(void* addr) {
   printf("Should never reach this line! Should've marked 0x%lx symbolic \n", (uint64_t) addr);
   return;
