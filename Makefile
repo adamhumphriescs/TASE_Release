@@ -1,6 +1,6 @@
 SHELL=/bin/bash
 NAME?=TEST
-TARGET?=tase$(NAME)
+TARGET?=tase$(NAME)2
 DIR?=
 USER=--user $$(id -u):$$(id -g)
 GLIBC_VERSION=2.31
