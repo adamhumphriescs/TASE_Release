@@ -81,7 +81,7 @@ $(RUN_DIR)/lib/musl.o:
 	cd ltbuild && ar -x ../libtasec.a && ld -o $(RUN_DIR)/lib/musl.o -r *.o
 	rm -rf ltbuild
 	rm libtasec.a
-	make -C $(MUSL_PATH) clean
+	$(MAKE) -C $(MUSL_PATH) clean
 
 $(RUN_DIR)/lib/musl_notsx.o: $(RUN_DIR)/lib/musl.o
 	cp $(MUSL_PATH)/TASEConfig/config.mak_no_simd $(MUSL_PATH)/config.mak

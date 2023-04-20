@@ -98,7 +98,7 @@ int main (int argc, char * argv[]) {
 #endif
 
 
-void make_byte_symbolic (void * addr){
+/*void make_byte_symbolic (void * addr){
   //For tase test, we've already trapped and
   //don't execute any code.
 
@@ -149,7 +149,7 @@ void make_byte_symbolic (void * addr){
 #endif
 
  return;
-}
+ }*/
 
 //The purpose of this file is to provide a microbenchmark for TASE.
 //In this microbenchmark, we add together two arrays of 8 bit values

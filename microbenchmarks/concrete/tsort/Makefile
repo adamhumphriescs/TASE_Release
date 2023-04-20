@@ -25,16 +25,16 @@ clean:
 .PRECIOUS: build/Monitor.interp% interp_time% build/Monitor.mixed% mixed_time% 
 build/Monitor.interp% interp_time%:
 ifeq ($(TSX), 1)
-	bash -c 'cd build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>1 ; } 2> ../interp_time$*'
+	bash -c 'cd build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>&1 ; } 2> ../interp_time$*'
 else
-	bash -c 'cd build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>1 ; } 2> ../interp_time$*'
+	bash -c 'cd build/ && { time ./run.sh -dontFork -taseManager=false -execMode=INTERP_ONLY -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(SMALL) 2>&1 ; } 2> ../interp_time$*'
 endif
 
 build/Monitor.mixed% mixed_time%:
 ifeq ($(TSX), 1)
-	bash -c 'cd build/ && { time ./run.sh -dontFork -taseManager=false -modelDebug -log=$(notdir $@) - $(LARGE) 2>1 ; } 2> ../mixed_time$*'
+	bash -c 'cd build/ && { time ./run.sh -dontFork -taseManager=false -modelDebug -log=$(notdir $@) - $(LARGE) 2>&1 ; } 2> ../mixed_time$*'
 else
-	bash -c 'cd build/ && { time ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(LARGE) 2>1 ; } 2> ../mixed_time$*'
+	bash -c 'cd build/ && { time ./run.sh -dontFork -taseManager=false -singleStepping -check-overshift=false -modelDebug -log=$(notdir $@) - $(LARGE) 2>&1 ; } 2> ../mixed_time$*'
 endif
 
 interpres%.txt: build/Monitor.interp%
